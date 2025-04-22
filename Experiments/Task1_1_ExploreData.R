@@ -2,8 +2,6 @@ use("tidyverse")
 use("readxl")
 use("conflicted")
 use("ggplot2")
-use("knitr")  # For creating tables
-use("vegan")  # For ecological analyses
 use("janitor") # For clean_names function
 
 # Load the main data sheet
