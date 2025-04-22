@@ -66,3 +66,4 @@ for(i in 2:min(ncol(main_data), eunis_col_index - 1)) {
 }
 cat("Conversion complete\n\n")
 
+save(main_data, file = "data/processed_data_clean.RData")
