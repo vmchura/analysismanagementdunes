@@ -1,5 +1,0 @@
-use("tidyverse")
-use("readxl")
-use("conflicted")
-df <- read_excel("data/db_species_20250214.xlsx", sheet="original_data")
-df_clean <- df %>% select(where(~ !all(is.na(.))))
