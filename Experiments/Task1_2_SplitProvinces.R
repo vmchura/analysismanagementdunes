@@ -13,6 +13,10 @@ conflicted::conflict_prefer("select", "dplyr")
 # First, load the saved data
 load("data/processed_data_clean.RData")
 
+# Select only the columns needed: first column (plot), columns from 2 to the one before eunis, and id_beach
+main_data <- main_data %>%
+  select(plot, 2:(which(names(main_data) == "eunis") - 1), id_beach)
+
 # Create a named list to store the regional data
 beaches_by_region <- list()
 
@@ -31,6 +35,4 @@ cat("Tarragona:", nrow(beaches_by_region[["Tarragona"]]), "observations\n")
 # beaches_by_region[["Girona"]]
 # Or with $ notation:
 # beaches_by_region$Girona
-
-load("data/all_land_cover_data.RData")
-land_cover_data$Girona
+save(beaches_by_region, file = "data/all_observations_split.RData")
