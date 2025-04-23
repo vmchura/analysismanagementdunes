@@ -32,3 +32,5 @@ cat("Tarragona:", nrow(beaches_by_region[["Tarragona"]]), "observations\n")
 # Or with $ notation:
 # beaches_by_region$Girona
 
+load("data/all_land_cover_data.RData")
+land_cover_data$Girona

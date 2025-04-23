@@ -65,58 +65,75 @@ save(main_data, file = "data/processed_data_clean.RData")
 # Load and process the land cover sheets
 cat("\n==== Processing land cover sheets ====\n\n")
 
-# Function to process land cover sheets
+# Simple function to process land cover sheets with direct transformation of values
 process_land_cover <- function(sheet_name) {
   cat("Processing sheet:", sheet_name, "\n")
   
-  # Read the land cover sheet
+  # Read the sheet - we'll read as numeric to get the raw Excel date values
   land_cover_data <- read_excel("data/db_species_20250214.xlsx", sheet = sheet_name)
   
   # Clean column names
   land_cover_data <- land_cover_data %>% janitor::clean_names()
   
   # Print original column names
-  cat("Original column names (after cleaning):\n")
+  cat("Column names after cleaning:\n")
   print(names(land_cover_data))
   
-  # Select only id_plot and columns with prefix 50m_ and 100m_
-  id_col <- grep("^id_beach$", names(land_cover_data), value = TRUE)
+  # Select id_beach/id_plot column
+  id_col <- grep("^id_beach$|^id_plot$", names(land_cover_data), value = TRUE)[1]
+  if(is.na(id_col)) {
+    id_col <- grep("id.*beach|beach.*id|id.*plot|plot.*id", names(land_cover_data), value = TRUE)[1]
+  }
+  cat("Using ID column:", id_col, "\n")
   
-  # If id_plot doesn't exist, try to find similar column names
-  if(length(id_col) == 0) {
-    id_col <- grep("id.*plot|plot.*id", names(land_cover_data), value = TRUE)[1]
-    cat("Using", id_col, "as the ID column\n")
+  # Get 50m and 100m columns
+  cols_50m <- grep("^(x)?50m_", names(land_cover_data), value = TRUE)
+  cols_100m <- grep("^(x)?100m_", names(land_cover_data), value = TRUE)
+  
+  if(length(cols_50m) == 0) {
+    cols_50m <- grep("50.*m|50m|50 m", names(land_cover_data), value = TRUE)
   }
   
-  # Get columns with 50m_ and 100m_ prefixes
-  cols_50m <- grep("^50m_", names(land_cover_data), value = TRUE)
-  cols_100m <- grep("^100m_", names(land_cover_data), value = TRUE)
-  
-  # Select the columns
-  selected_cols <- c(id_col, cols_50m, cols_100m)
-  
-  # Check if any columns were found
-  if(length(selected_cols) <= 1) {
-    cat("Warning: No columns with 50m_ or 100m_ prefix found. Check column names.\n")
-    # Try finding similar patterns
-    possible_50m <- grep("50.*m|50m|50 m", names(land_cover_data), value = TRUE)
-    possible_100m <- grep("100.*m|100m|100 m", names(land_cover_data), value = TRUE)
-    
-    cat("Possible 50m columns:", toString(possible_50m), "\n")
-    cat("Possible 100m columns:", toString(possible_100m), "\n")
-    
-    # If alternatives found, use them
-    if(length(possible_50m) > 0 || length(possible_100m) > 0) {
-      selected_cols <- c(id_col, possible_50m, possible_100m)
-    }
+  if(length(cols_100m) == 0) {
+    cols_100m <- grep("100.*m|100m|100 m", names(land_cover_data), value = TRUE)
   }
   
-  # Filter the data to include only selected columns
+  # Select columns
+  distance_cols <- c(cols_50m, cols_100m)
+  selected_cols <- c(id_col, distance_cols)
+  
+  # Filter data
   filtered_data <- land_cover_data %>% select(all_of(selected_cols)) %>% distinct()
   
-  cat("Selected", ncol(filtered_data), "columns from", sheet_name, "\n")
-  cat("Final column names:\n")
-  print(names(filtered_data))
+  # Print column info
+  cat("Selected", length(selected_cols), "columns:", toString(selected_cols), "\n")
+  
+  # Check each column's class and sample values
+  cat("\nColumn types before conversion:\n")
+  for(col in names(filtered_data)) {
+    cat(col, ":", class(filtered_data[[col]]), "\n")
+    cat("  Sample values:", toString(head(filtered_data[[col]])), "\n")
+  }
+  
+  # DIRECT TRANSFORMATION APPROACH
+  # For each 50m and 100m column, apply a direct transformation if needed
+  for(col in distance_cols) {
+    # If already numeric, check if it looks like an Excel date (values > 40000)
+    filtered_data[[col]] <- as.numeric(filtered_data[[col]])
+  }
+  
+  # Convert ID column to integer
+  filtered_data[[id_col]] <- as.integer(filtered_data[[id_col]])
+  
+  # Check final column types
+  cat("\nColumn types after conversion:\n")
+  for(col in names(filtered_data)) {
+    cat(col, ":", class(filtered_data[[col]]), "\n")
+    if(is.numeric(filtered_data[[col]])) {
+      cat("  Range:", min(filtered_data[[col]], na.rm = TRUE), "-", 
+          max(filtered_data[[col]], na.rm = TRUE), "\n")
+    }
+  }
   
   return(filtered_data)
 }
@@ -126,7 +143,6 @@ girona_land_cover <- process_land_cover("girona_land cover")
 barcelona_land_cover <- process_land_cover("barcelona_land cover")
 tarragona_land_cover <- process_land_cover("tarragona_land cover")
 
-girona_land_cover
 # Save each processed land cover dataset
 save(girona_land_cover, file = "data/girona_land_cover_clean.RData")
 save(barcelona_land_cover, file = "data/barcelona_land_cover_clean.RData")
