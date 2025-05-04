@@ -307,8 +307,81 @@ validate_land_cover_data <- function(data) {
 validate_management_data <- function(data) {
   cat("===== Validating management_data =====\n\n")
   
-  # This will be implemented in a future update
-  cat("Management data validation not implemented yet.\n")
+  # Check if it's a list with expected regions
+  expected_regions <- c("Girona", "Barcelona", "Tarragona")
+  expected_rows <- c("Girona" = 19, "Barcelona" = 4, "Tarragona" = 16)
+  
+  cat("Region presence check:\n")
+  for (region in expected_regions) {
+    if (region %in% names(data)) {
+      cat("  Region '", region, "' is present with ", nrow(data[[region]]), " observations\n", sep = "")
+      
+      # Check row count
+      if (nrow(data[[region]]) != expected_rows[region]) {
+        cat("  WARNING: Expected ", expected_rows[region], " rows for ", 
+            region, ", but found ", nrow(data[[region]]), "\n", sep = "")
+      }
+    } else {
+      cat("  WARNING: Region '", region, "' is missing!\n", sep = "")
+    }
+  }
+  
+  # Expected columns for management data
+  expected_columns <- c("id_plot", "id_beach", 
+                        "managed_paths", "rope_fences", "mechanical_cleaning",
+                        "surface_area_occupied_by_seasonal_services_and_amenities_on_or_less_than_5_m_from_the_dunes",
+                        "surface_area_of_parking_or_other_fixed_services_on_or_less_than_5_m_from_the_dunes",
+                        "protection_of_the_system_and_the_immediate_environment",
+                        "degree_of_protection_according_to_the_iucn_classification")
+  
+  # Validate each region's data structure
+  cat("\nValidating data structure for each region:\n")
+  
+  for (region in intersect(names(data), expected_regions)) {
+    region_data <- data[[region]]
+    cat("\n  Region:", region, "\n")
+    
+    # Check columns exist
+    cat("  Column presence check:\n")
+    missing_cols <- setdiff(expected_columns, names(region_data))
+    present_cols <- intersect(expected_columns, names(region_data))
+    
+    cat("  Present expected columns:", length(present_cols), "out of", length(expected_columns), "\n")
+    if (length(missing_cols) > 0) {
+      cat("  WARNING: Missing expected columns:", toString(missing_cols), "\n")
+    }
+    
+    # Validate that management rating columns only contain integer values 0-5
+    # These are all columns from managed_paths onwards
+    management_cols <- expected_columns[4:length(expected_columns)]
+    present_management_cols <- intersect(management_cols, names(region_data))
+    
+    cat("\n  Validating management rating columns (integers 0-5):\n")
+    
+    # Function to check if column has valid values (0-5 integer values or NA)
+    check_management_col <- function(col_name) {
+      values <- region_data[[col_name]]
+      valid_values <- is.na(values) | 
+                     (values >= 0 & values <= 5 & values == floor(values))
+      return(list(
+        valid = all(valid_values),
+        invalid_values = values[!valid_values]
+      ))
+    }
+    
+    # Apply check to all management columns
+    for (col in present_management_cols) {
+      col_check <- check_management_col(col)
+      cat("  Column '", col, "': ", ifelse(col_check$valid, "VALID", "INVALID"), "\n", sep = "")
+      
+      # If invalid, show examples
+      if (!col_check$valid) {
+        cat("    Invalid values: ", toString(head(col_check$invalid_values, 5)), "\n", sep = "")
+      }
+    }
+  }
+  
+  cat("\nManagement data validation complete.\n")
   cat("=============================================\n\n")
 }
 
