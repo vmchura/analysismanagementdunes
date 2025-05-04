@@ -9,19 +9,11 @@ main_data <- read_excel("data/db_species_20250214.xlsx", sheet = "original_data"
 main_data <- main_data %>% select(where(~ !all(is.na(.))))
 
 # Clean column names - replace spaces and special characters with underscores
-cat("Original column names:\n")
-print(names(main_data))
+
 
 # Clean the column names using the janitor package
 main_data <- main_data %>% janitor::clean_names()
 
-cat("\nCleaned column names:\n")
-print(names(main_data))
-
-# Initial exploration
-cat("\nDataset dimensions:", dim(main_data), "\n")
-cat("Number of observations:", nrow(main_data), "\n")
-cat("Number of variables:", ncol(main_data), "\n\n")
 
 # Find the index of the EUNIS column
 eunis_col_index <- which(grepl("eunis", names(main_data), ignore.case = TRUE))
@@ -30,7 +22,6 @@ if(length(eunis_col_index) == 0) {
   eunis_col_index <- ncol(main_data) + 1  # Set to beyond the last column
 } else {
   eunis_col_index <- min(eunis_col_index)  # Take the first match if multiple
-  cat("Found EUNIS column at index:", eunis_col_index, "with name:", names(main_data)[eunis_col_index], "\n\n")
 }
 
 # Parse columns from second to EUNIS as numeric
@@ -55,9 +46,8 @@ for(i in 2:min(ncol(main_data), eunis_col_index - 1)) {
     }
   }
   
-  cat("Converted column", i, ":", col_name, "to numeric\n")
+  
 }
-cat("Conversion complete\n\n")
 
 # Save the processed main data
 save(main_data, file = "data/processed_data_clean.RData")
@@ -75,16 +65,12 @@ process_land_cover <- function(sheet_name) {
   # Clean column names
   land_cover_data <- land_cover_data %>% janitor::clean_names()
   
-  # Print original column names
-  cat("Column names after cleaning:\n")
-  print(names(land_cover_data))
   
   # Select id_beach/id_plot column
   id_col <- grep("^id_beach$|^id_plot$", names(land_cover_data), value = TRUE)[1]
   if(is.na(id_col)) {
     id_col <- grep("id.*beach|beach.*id|id.*plot|plot.*id", names(land_cover_data), value = TRUE)[1]
   }
-  cat("Using ID column:", id_col, "\n")
   
   # Get 50m and 100m columns
   cols_50m <- grep("^(x)?50m_", names(land_cover_data), value = TRUE)
@@ -105,15 +91,6 @@ process_land_cover <- function(sheet_name) {
   # Filter data
   filtered_data <- land_cover_data %>% select(all_of(selected_cols)) %>% distinct()
   
-  # Print column info
-  cat("Selected", length(selected_cols), "columns:", toString(selected_cols), "\n")
-  
-  # Check each column's class and sample values
-  cat("\nColumn types before conversion:\n")
-  for(col in names(filtered_data)) {
-    cat(col, ":", class(filtered_data[[col]]), "\n")
-    cat("  Sample values:", toString(head(filtered_data[[col]])), "\n")
-  }
   
   # DIRECT TRANSFORMATION APPROACH
   # For each 50m and 100m column, apply a direct transformation if needed
@@ -125,16 +102,6 @@ process_land_cover <- function(sheet_name) {
   # Convert ID column to integer
   filtered_data[[id_col]] <- as.integer(filtered_data[[id_col]])
   
-  # Check final column types
-  cat("\nColumn types after conversion:\n")
-  for(col in names(filtered_data)) {
-    cat(col, ":", class(filtered_data[[col]]), "\n")
-    if(is.numeric(filtered_data[[col]])) {
-      cat("  Range:", min(filtered_data[[col]], na.rm = TRUE), "-", 
-          max(filtered_data[[col]], na.rm = TRUE), "\n")
-    }
-  }
-  
   return(filtered_data)
 }
 
@@ -142,11 +109,6 @@ process_land_cover <- function(sheet_name) {
 girona_land_cover <- process_land_cover("girona_land cover")
 barcelona_land_cover <- process_land_cover("barcelona_land cover")
 tarragona_land_cover <- process_land_cover("tarragona_land cover")
-
-# Save each processed land cover dataset
-save(girona_land_cover, file = "data/girona_land_cover_clean.RData")
-save(barcelona_land_cover, file = "data/barcelona_land_cover_clean.RData")
-save(tarragona_land_cover, file = "data/tarragona_land_cover_clean.RData")
 
 # Create a list containing all land cover datasets
 land_cover_data <- list(
@@ -159,10 +121,6 @@ land_cover_data <- list(
 save(land_cover_data, file = "data/all_land_cover_data.RData")
 
 cat("\nLand cover data processing complete.\n")
-cat("Individual datasets saved as:\n")
-cat("- data/girona_land_cover_clean.RData\n")
-cat("- data/barcelona_land_cover_clean.RData\n")
-cat("- data/tarragona_land_cover_clean.RData\n")
 cat("Combined datasets saved as a list in: data/all_land_cover_data.RData\n")
 cat("Access the combined data using: land_cover_data$Girona, land_cover_data$Barcelona, etc.\n")
 
@@ -179,9 +137,6 @@ process_management <- function(sheet_name) {
   # Clean column names
   management_data <- management_data %>% janitor::clean_names()
   
-  # Print original column names
-  cat("Column names after cleaning:\n")
-  print(names(management_data))
   
   # Standardize key column names based on what is expected
   expected_cols <- c(
@@ -203,7 +158,6 @@ process_management <- function(sheet_name) {
     
     if (length(matches) > 0) {
       actual_cols[i] <- matches[1]
-      cat("Found column for '", expected_cols[i], "' as '", matches[1], "'\n", sep = "")
     } else {
       cat("Warning: Could not find a column matching '", expected_cols[i], "'\n", sep = "")
       actual_cols[i] <- NA
@@ -232,9 +186,9 @@ process_management <- function(sheet_name) {
     }
     
     # Check each column's class and sample values
-    cat("\nColumn types after processing:\n")
+    
     for (col in names(filtered_data)) {
-      cat(col, ":", class(filtered_data[[col]]), "\n")
+    
       
       # Convert appropriate columns to factors if they have categorical values
       if (is.character(filtered_data[[col]]) && 
@@ -242,18 +196,13 @@ process_management <- function(sheet_name) {
         unique_vals <- unique(na.omit(filtered_data[[col]]))
         if (length(unique_vals) < 10) {  # Assume categorical if fewer than 10 unique values
           filtered_data[[col]] <- factor(filtered_data[[col]])
-          cat("  Converted to factor with levels:", toString(levels(filtered_data[[col]])), "\n")
+          cat("  Converted to factor with levels:",
+              toString(levels(filtered_data[[col]])), "\n")
         } else {
           cat("  Sample values:", toString(head(filtered_data[[col]])), "\n")
         }
       } else {
-        # For numeric columns, show the range
-        if (is.numeric(filtered_data[[col]])) {
-          cat("  Range:", min(filtered_data[[col]], na.rm = TRUE), "-", 
-              max(filtered_data[[col]], na.rm = TRUE), "\n")
-        } else {
-          cat("  Sample values:", toString(head(filtered_data[[col]])), "\n")
-        }
+       
       }
     }
     
@@ -285,10 +234,6 @@ management_data <- list(
 save(management_data, file = "data/all_management_data.RData")
 
 cat("\nManagement data processing complete.\n")
-cat("Individual datasets saved as:\n")
-cat("- data/girona_management_clean.RData\n")
-cat("- data/barcelona_management_clean.RData\n")
-cat("- data/tarragona_management_clean.RData\n")
 cat("Combined datasets saved as a list in: data/all_management_data.RData\n")
 cat("Access the combined data using: management_data$Girona, management_data$Barcelona, etc.\n")
 
