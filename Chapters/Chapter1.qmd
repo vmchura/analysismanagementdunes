@@ -34,7 +34,7 @@ The main dataset containing species observations was loaded from the `original_d
 
 ```{r}
 #| label: load-packages
-#| echo: true
+#| echo: false
 #| eval: true
 # Load required packages
 library(tidyverse)
@@ -47,7 +47,7 @@ library(dplyr)
 
 ```{r}
 #| label: load-data
-#| echo: true
+#| echo: false
 #| eval: true
 # Load the main data sheet
 main_data <- read_excel("../data/db_species_20250214.xlsx", sheet = "original_data")
@@ -65,7 +65,7 @@ The species abundance data needed to be converted to numeric format for analysis
 
 ```{r}
 #| label: numeric-conversion
-#| echo: true
+#| echo: false
 #| eval: true
 # Find the index of the EUNIS column
 eunis_col_index <- which(grepl("eunis", names(main_data), ignore.case = TRUE))
@@ -107,7 +107,7 @@ To ensure consistency in data structure, the columns were reordered to follow a 
 
 ```{r}
 #| label: column-reorder
-#| echo: true
+#| echo: false
 #| eval: true
 # Identify all desired columns
 species_cols <- setdiff(names(main_data),
@@ -130,7 +130,7 @@ For each province (Girona, Barcelona, and Tarragona), the land cover data was pr
 
 ```{r}
 #| label: land-cover-processing
-#| echo: true
+#| echo: false
 #| eval: true
 # Function to process land cover sheets
 process_land_cover <- function(sheet_name) {
@@ -208,7 +208,7 @@ The management data followed a similar processing pattern, but with special hand
 
 ```{r}
 #| label: management-data-processing
-#| echo: true
+#| echo: false
 #| eval: true
 # Function to process management sheets
 process_management <- function(sheet_name) {
@@ -321,7 +321,7 @@ The main data validation included these key checks:
 
 ```{r}
 #| label: main-data-validation
-#| echo: true
+#| echo: false
 #| eval: true
 validate_main_data <- function(data) {
   cat("===== Validating main_data =====\n\n")
@@ -485,7 +485,7 @@ Validation for the land cover data focused on:
 
 ```{r}
 #| label: land-cover-validation
-#| echo: true
+#| echo: false
 #| eval: true
 validate_land_cover_data <- function(data) {
   cat("===== Validating land_cover_data =====\n\n")
@@ -625,7 +625,7 @@ The management data validation focused on:
 
 ```{r}
 #| label: management-validation
-#| echo: true
+#| echo: false
 #| eval: true
 validate_management_data <- function(data) {
   cat("===== Validating management_data =====\n\n")
