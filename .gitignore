@@ -6,3 +6,4 @@ data/*
 previous_report/*
 .idea/
 .quarto/
+*.pdf
