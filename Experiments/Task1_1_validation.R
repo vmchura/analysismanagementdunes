@@ -167,6 +167,154 @@ validate_main_data <- function(data) {
   cat("=============================================\n\n")
 }
 
+# =================================================================
+# Validation function for land_cover_data
+# =================================================================
+
+validate_land_cover_data <- function(data) {
+  cat("===== Validating land_cover_data =====\n\n")
+  
+  # Check if it's a list with expected regions
+  expected_regions <- c("Girona", "Barcelona", "Tarragona")
+  expected_rows <- c("Girona" = 19, "Barcelona" = 4, "Tarragona" = 16)
+  
+  cat("Region presence check:\n")
+  for (region in expected_regions) {
+    if (region %in% names(data)) {
+      cat("  Region '", region, "' is present with ", nrow(data[[region]]), " observations\n", sep = "")
+      
+      # Check row count
+      if (nrow(data[[region]]) != expected_rows[region]) {
+        cat("  WARNING: Expected ", expected_rows[region], " rows for ", 
+            region, ", but found ", nrow(data[[region]]), "\n", sep = "")
+      }
+    } else {
+      cat("  WARNING: Region '", region, "' is missing!\n", sep = "")
+    }
+  }
+  
+  # Expected column patterns for land cover data
+  id_col_pattern <- "^id_beach$"
+  expected_50m_patterns <- c(
+    "scrubland", "grassland", "communication_routes", "urban", 
+    "forestry_bare_soil", "forests", "lagoon_and_salt_marshes", 
+    "crops", "freshwater"
+  )
+  
+  # Validate each region's data structure
+  cat("\nValidating data structure for each region:\n")
+  
+  for (region in intersect(names(data), expected_regions)) {
+    region_data <- data[[region]]
+    cat("\n  Region:", region, "\n")
+    
+    # Check for 19 columns (id_beach + 9 for 50m + 9 for 100m)
+    cat("  Column count:", ncol(region_data), "(expected 19)\n")
+    if (ncol(region_data) != 19) {
+      cat("  WARNING: Expected 19 columns, found", ncol(region_data), "\n")
+    }
+    
+    # Check for id_beach column
+    id_cols <- grep(id_col_pattern, names(region_data), value = TRUE)
+    if (length(id_cols) > 0) {
+      cat("  ID column found:", id_cols[1], "\n")
+    } else {
+      cat("  WARNING: No 'id_beach' column found!\n")
+    }
+    
+    # Find 50m and 100m columns
+    cols_50m <- grep("50m|50 m|x50", names(region_data), ignore.case = TRUE, value = TRUE)
+    cols_100m <- grep("100m|100 m|x100", names(region_data), ignore.case = TRUE, value = TRUE)
+    
+    cat("  Found", length(cols_50m), "columns for 50m land cover (expected 9)\n")
+    cat("  Found", length(cols_100m), "columns for 100m land cover (expected 9)\n")
+    
+    # Check for expected land cover types in 50m columns
+    cat("\n  Checking for expected 50m land cover types:\n")
+    for (pattern in expected_50m_patterns) {
+      matches <- grep(pattern, cols_50m, ignore.case = TRUE, value = TRUE)
+      if (length(matches) <= 0) {
+        cat("    WARNING: No column matching '", pattern, "' pattern for 50m\n", sep = "")
+      }
+    }
+    
+    # Check for expected land cover types in 100m columns
+    cat("\n  Checking for expected 100m land cover types:\n")
+    for (pattern in expected_50m_patterns) {
+      matches <- grep(pattern, cols_100m, ignore.case = TRUE, value = TRUE)
+      if (length(matches) <= 0) {
+        cat("    WARNING: No column matching '", pattern, "' pattern for 100m\n", sep = "")
+      }
+    }
+    
+    # Check if all columns are numeric
+    numeric_cols <- sapply(region_data, is.numeric)
+    cat("\n  Numeric columns:", sum(numeric_cols), "out of", ncol(region_data), "\n")
+    if (sum(!numeric_cols) > 0) {
+      cat("  WARNING: The following columns are not numeric:\n")
+      for (col in names(region_data)[!numeric_cols]) {
+        cat("    '", col, "' (class: ", class(region_data[[col]]), ")\n", sep = "")
+      }
+    }
+    
+    # Validate that 50m columns sum to 100 (allowing for rounding errors)
+    if (length(cols_50m) > 0) {
+      cat("\n  Validating 50m columns sum to 100%:\n")
+      
+      # Calculate row sums for 50m columns
+      row_sums_50m <- rowSums(region_data[, cols_50m, drop = FALSE], na.rm = TRUE)
+      valid_sums <- abs(row_sums_50m - 100) <= 0.15  # Allow for small rounding errors
+      
+      cat("    Rows with valid sums (approx 100%):", sum(valid_sums), "out of", length(row_sums_50m), "\n")
+      if (sum(!valid_sums) > 0) {
+        cat("    WARNING: The following rows have 50m sums significantly different from 100%:\n")
+        invalid_rows <- which(!valid_sums)
+        for (i in head(invalid_rows, 5)) {
+          cat("      Row ", i, " (id_beach=", region_data$id_beach[i], 
+              "): sum = ", row_sums_50m[i], "\n", sep = "")
+        }
+      }
+    }
+    
+    # Validate that 100m columns sum to 100 (allowing for rounding errors)
+    if (length(cols_100m) > 0) {
+      cat("\n  Validating 100m columns sum to 100%:\n")
+      
+      # Calculate row sums for 100m columns
+      row_sums_100m <- rowSums(region_data[, cols_100m, drop = FALSE], na.rm = TRUE)
+      valid_sums <- abs(row_sums_100m - 100) <= 0.15  # Allow for small rounding errors
+      
+      cat("    Rows with valid sums (approx 100%):", sum(valid_sums), "out of", length(row_sums_100m), "\n")
+      if (sum(!valid_sums) > 0) {
+        cat("    WARNING: The following rows have 100m sums significantly different from 100%:\n")
+        invalid_rows <- which(!valid_sums)
+        for (i in head(invalid_rows, 5)) {
+          cat("      Row ", i, " (id_beach=", region_data$id_beach[i], 
+              "): sum = ", row_sums_100m[i], "\n", sep = "")
+        }
+      }
+    }
+  }
+  
+  cat("\nLand cover data validation complete.\n")
+  cat("=============================================\n\n")
+}
+
+# =================================================================
+# Validation function for management_data
+# =================================================================
+
+validate_management_data <- function(data) {
+  cat("===== Validating management_data =====\n\n")
+  
+  # This will be implemented in a future update
+  cat("Management data validation not implemented yet.\n")
+  cat("=============================================\n\n")
+}
+
+# =================================================================
+# Load and validate the data files
+# =================================================================
 
 cat("Starting data validation...\n\n")
 
@@ -177,6 +325,24 @@ if (file.exists("data/processed_data_clean.RData")) {
   validate_main_data(main_data)
 } else {
   cat("ERROR: File 'data/processed_data_clean.RData' not found!\n\n")
+}
+
+# Load land_cover_data
+cat("Loading land_cover_data...\n")
+if (file.exists("data/all_land_cover_data.RData")) {
+  load("data/all_land_cover_data.RData")
+  validate_land_cover_data(land_cover_data)
+} else {
+  cat("ERROR: File 'data/all_land_cover_data.RData' not found!\n\n")
+}
+
+# Load management_data (placeholder for future implementation)
+cat("Loading management_data...\n")
+if (file.exists("data/all_management_data.RData")) {
+  load("data/all_management_data.RData")
+  validate_management_data(management_data)
+} else {
+  cat("ERROR: File 'data/all_management_data.RData' not found!\n\n")
 }
 
 cat("Validation complete.\n")
