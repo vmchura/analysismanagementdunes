@@ -49,7 +49,20 @@ for(i in 2:min(ncol(main_data), eunis_col_index - 1)) {
   
 }
 
-# Save the processed main data
+# Reorder columns in main_data before saving
+# Identify all desired columns
+species_cols <- setdiff(names(main_data),
+                        c("plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis"))
+
+# Create the desired column order
+ordered_cols <- c("plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis", species_cols)
+# Reorder columns (only those that exist)
+main_data <- main_data %>% select(all_of(ordered_cols), everything())
+
+cat("\nColumn order after reordering:\n")
+print(head(names(main_data), 10))  # Print first 10 column names to verify order
+
+# Save the processed main data with ordered columns
 save(main_data, file = "data/processed_data_clean.RData")
 
 # Load and process the land cover sheets
