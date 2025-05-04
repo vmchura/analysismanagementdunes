@@ -165,3 +165,131 @@ cat("- data/barcelona_land_cover_clean.RData\n")
 cat("- data/tarragona_land_cover_clean.RData\n")
 cat("Combined datasets saved as a list in: data/all_land_cover_data.RData\n")
 cat("Access the combined data using: land_cover_data$Girona, land_cover_data$Barcelona, etc.\n")
+
+# Load and process the management sheets
+cat("\n==== Processing management sheets ====\n\n")
+
+# Function to process management sheets
+process_management <- function(sheet_name) {
+  cat("Processing sheet:", sheet_name, "\n")
+  
+  # Read the sheet
+  management_data <- read_excel("data/db_species_20250214.xlsx", sheet = sheet_name)
+  
+  # Clean column names
+  management_data <- management_data %>% janitor::clean_names()
+  
+  # Print original column names
+  cat("Column names after cleaning:\n")
+  print(names(management_data))
+  
+  # Standardize key column names based on what is expected
+  expected_cols <- c(
+    "id_plot", "id_beach", "beach", 
+    "managed_paths", "rope_fences", "mechanical_cleaning",
+    "surface_area_occupied_by_seasonal_services_and_amenities_on_or_less_than_5_m_from_the_dunes",
+    "surface_area_of_parking_or_other_fixed_services_on_or_less_than_5_m_from_the_dunes",
+    "protection_of_the_system_and_the_immediate_environment",
+    "degree_of_protection_according_to_the_iucn_classification"
+  )
+  
+  # Try to find each expected column
+  actual_cols <- vector("character", length(expected_cols))
+  for (i in seq_along(expected_cols)) {
+    pattern <- expected_cols[i]
+    # Create a simplified regex pattern
+    simple_pattern <- gsub("_", ".*", pattern)
+    matches <- grep(simple_pattern, names(management_data), ignore.case = TRUE, value = TRUE)
+    
+    if (length(matches) > 0) {
+      actual_cols[i] <- matches[1]
+      cat("Found column for '", expected_cols[i], "' as '", matches[1], "'\n", sep = "")
+    } else {
+      cat("Warning: Could not find a column matching '", expected_cols[i], "'\n", sep = "")
+      actual_cols[i] <- NA
+    }
+  }
+  
+  # Remove NA values
+  actual_cols <- actual_cols[!is.na(actual_cols)]
+  
+  # Create a new data frame with standardized column names
+  if (length(actual_cols) > 0) {
+    # Subset the original data
+    filtered_data <- management_data %>% select(all_of(actual_cols))
+    
+    # Detect ID columns
+    id_plot_col <- grep("id.*plot|plot.*id", names(filtered_data), ignore.case = TRUE, value = TRUE)[1]
+    id_beach_col <- grep("id.*beach|beach.*id", names(filtered_data), ignore.case = TRUE, value = TRUE)[1]
+    
+    # Ensure ID columns are integers
+    if (!is.na(id_plot_col)) {
+      filtered_data[[id_plot_col]] <- as.integer(filtered_data[[id_plot_col]])
+    }
+    
+    if (!is.na(id_beach_col)) {
+      filtered_data[[id_beach_col]] <- as.integer(filtered_data[[id_beach_col]])
+    }
+    
+    # Check each column's class and sample values
+    cat("\nColumn types after processing:\n")
+    for (col in names(filtered_data)) {
+      cat(col, ":", class(filtered_data[[col]]), "\n")
+      
+      # Convert appropriate columns to factors if they have categorical values
+      if (is.character(filtered_data[[col]]) && 
+          !grepl("^id|^beach$", col, ignore.case = TRUE)) {
+        unique_vals <- unique(na.omit(filtered_data[[col]]))
+        if (length(unique_vals) < 10) {  # Assume categorical if fewer than 10 unique values
+          filtered_data[[col]] <- factor(filtered_data[[col]])
+          cat("  Converted to factor with levels:", toString(levels(filtered_data[[col]])), "\n")
+        } else {
+          cat("  Sample values:", toString(head(filtered_data[[col]])), "\n")
+        }
+      } else {
+        # For numeric columns, show the range
+        if (is.numeric(filtered_data[[col]])) {
+          cat("  Range:", min(filtered_data[[col]], na.rm = TRUE), "-", 
+              max(filtered_data[[col]], na.rm = TRUE), "\n")
+        } else {
+          cat("  Sample values:", toString(head(filtered_data[[col]])), "\n")
+        }
+      }
+    }
+    
+    return(filtered_data)
+  } else {
+    warning("No usable columns found in the management sheet")
+    return(NULL)
+  }
+}
+
+# Process each management sheet
+girona_management <- process_management("girona_management")
+barcelona_management <- process_management("barcelona_management")
+tarragona_management <- process_management("tarragona_management")
+
+# Save each processed management dataset
+save(girona_management, file = "data/girona_management_clean.RData")
+save(barcelona_management, file = "data/barcelona_management_clean.RData")
+save(tarragona_management, file = "data/tarragona_management_clean.RData")
+
+# Create a list containing all management datasets
+management_data <- list(
+  "Girona" = girona_management,
+  "Barcelona" = barcelona_management,
+  "Tarragona" = tarragona_management
+)
+
+# Save the combined management data as a list
+save(management_data, file = "data/all_management_data.RData")
+
+cat("\nManagement data processing complete.\n")
+cat("Individual datasets saved as:\n")
+cat("- data/girona_management_clean.RData\n")
+cat("- data/barcelona_management_clean.RData\n")
+cat("- data/tarragona_management_clean.RData\n")
+cat("Combined datasets saved as a list in: data/all_management_data.RData\n")
+cat("Access the combined data using: management_data$Girona, management_data$Barcelona, etc.\n")
+
+
