@@ -218,11 +218,6 @@ girona_management <- process_management("girona_management")
 barcelona_management <- process_management("barcelona_management")
 tarragona_management <- process_management("tarragona_management")
 
-# Save each processed management dataset
-save(girona_management, file = "data/girona_management_clean.RData")
-save(barcelona_management, file = "data/barcelona_management_clean.RData")
-save(tarragona_management, file = "data/tarragona_management_clean.RData")
-
 # Create a list containing all management datasets
 management_data <- list(
   "Girona" = girona_management,
