@@ -50,7 +50,7 @@ library(dplyr)
 #| echo: false
 #| eval: true
 # Load the main data sheet
-main_data <- read_excel("../data/db_species_20250214.xlsx", sheet = "original_data")
+main_data <- read_excel("data/db_species_20250214.xlsx", sheet = "original_data")
 main_data <- main_data %>% select(where(~ !all(is.na(.))))
 
 # Clean column names using the janitor package
@@ -119,7 +119,7 @@ ordered_cols <- c("plot", "id_beach", "beach", "id_transect", "id_plot", "transe
 main_data <- main_data %>% select(all_of(ordered_cols), everything())
 
 # Save the processed main data
-save(main_data, file = "../data/processed_data_clean.RData")
+save(main_data, file = "data/processed_data_clean.RData")
 ```
 
 The reordering placed identifier columns first, followed by the species columns, making the data structure more intuitive for subsequent analysis.
@@ -137,7 +137,7 @@ process_land_cover <- function(sheet_name) {
   cat("Processing sheet:", sheet_name, "\n")
   
   # Read the sheet
-  land_cover_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
+  land_cover_data <- read_excel("data/db_species_20250214.xlsx", sheet = sheet_name)
   
   # Clean column names
   land_cover_data <- land_cover_data %>% janitor::clean_names()
@@ -191,7 +191,7 @@ land_cover_data <- list(
 )
 
 # Save the combined land cover data
-save(land_cover_data, file = "../data/all_land_cover_data.RData")
+save(land_cover_data, file = "data/all_land_cover_data.RData")
 ```
 
 This processing function:
@@ -215,7 +215,7 @@ process_management <- function(sheet_name) {
   cat("Processing sheet:", sheet_name, "\n")
   
   # Read the sheet
-  management_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
+  management_data <- read_excel("data/db_species_20250214.xlsx", sheet = sheet_name)
   
   # Clean column names
   management_data <- management_data %>% janitor::clean_names()
@@ -296,7 +296,7 @@ management_data <- list(
 )
 
 # Save the combined management data
-save(management_data, file = "../data/all_management_data.RData")
+save(management_data, file = "data/all_management_data.RData")
 ```
 
 This processing function:
@@ -723,8 +723,8 @@ cat("Starting data validation...\n\n")
 
 # Load main_data
 cat("Loading main_data...\n")
-if (file.exists("../data/processed_data_clean.RData")) {
-  load("../data/processed_data_clean.RData")
+if (file.exists("data/processed_data_clean.RData")) {
+  load("data/processed_data_clean.RData")
   validate_main_data(main_data)
 } else {
   cat("ERROR: File 'data/processed_data_clean.RData' not found!\n\n")
@@ -732,8 +732,8 @@ if (file.exists("../data/processed_data_clean.RData")) {
 
 # Load land_cover_data
 cat("Loading land_cover_data...\n")
-if (file.exists("../data/all_land_cover_data.RData")) {
-  load("../data/all_land_cover_data.RData")
+if (file.exists("data/all_land_cover_data.RData")) {
+  load("data/all_land_cover_data.RData")
   validate_land_cover_data(land_cover_data)
 } else {
   cat("ERROR: File 'data/all_land_cover_data.RData' not found!\n\n")
@@ -741,8 +741,8 @@ if (file.exists("../data/all_land_cover_data.RData")) {
 
 # Load management_data (placeholder for future implementation)
 cat("Loading management_data...\n")
-if (file.exists("../data/all_management_data.RData")) {
-  load("../data/all_management_data.RData")
+if (file.exists("data/all_management_data.RData")) {
+  load("data/all_management_data.RData")
   validate_management_data(management_data)
 } else {
   cat("ERROR: File 'data/all_management_data.RData' not found!\n\n")

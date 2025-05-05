@@ -15,7 +15,7 @@ load("data/processed_data_clean.RData")
 
 # Select only the columns needed: first column (plot), columns from 2 to the one before eunis, and id_beach
 main_data <- main_data %>%
-  select(plot, 2:(which(names(main_data) == "eunis") - 1), id_beach)
+  select(plot, id_beach, 8:ncol(main_data))
 
 # Create a named list to store the regional data
 beaches_by_region <- list()
@@ -36,3 +36,4 @@ cat("Tarragona:", nrow(beaches_by_region[["Tarragona"]]), "observations\n")
 # Or with $ notation:
 # beaches_by_region$Girona
 save(beaches_by_region, file = "data/all_observations_split.RData")
+
