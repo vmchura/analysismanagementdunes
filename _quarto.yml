@@ -33,9 +33,6 @@ thesis:
   degree-name: Màster en Ciència de Dades
   university: Universitat de Girona
   faculty: Escola Politècnica Superior
-  abbreviations: "Frontmatter/abbreviations.tex"
-  symbols: "Frontmatter/symbols.tex"
-  dedication: "Frontmatter/dedication.tex"
   logo: images/logo.png
   logo-height: "3cm"
 
