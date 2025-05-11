@@ -1,144 +1,33 @@
 # Preliminars {#sec-preliminars}
 
-En aquest capítol es presenten els conceptes bàsics, la terminologia i els fonaments teòrics i metodològics necessaris per comprendre les anàlisis i resultats d'aquest treball. S'inclou informació sobre el domini d'estudi, les definicions clau, les assumpcions fonamentals i les tècniques analítiques utilitzades.
-
 ## Domini: Ecosistemes Dunars Costaners
 
 ### Definició i Característiques
 
-Els ecosistemes dunars costaners són formacions geomorfològiques dinàmiques situades a la interfície entre els ambients terrestres i marins. Es formen per l'acumulació de sorra transportada pel vent des de la platja cap a l'interior, creant elevacions de diferents alçades i morfologies.
-
-Les característiques principals d'aquests ecosistemes inclouen:
-
-- Substrat inestable compost principalment per sorra
-- Gradients marcats de condicions ambientals (salinitat, humitat, nutrients)
-- Vegetació especialitzada amb adaptacions particulars
-- Alta dinàmica natural amb processos constants d'erosió i acumulació
-- Estructura típica en forma de bandes paral·leles a la línia de costa
-
 ### Zonació Característica 
 
-Els sistemes dunars presenten una zonació típica, amb diferents comunitats vegetals disposades en bandes paral·leles a la línia de costa:
-
-1. **Dunes embrionàries**: Primeres acumulacions de sorra a la part alta de la platja, amb espècies pioneres com *Cakile maritima* i *Salsola kali*.
-
-2. **Dunes primàries**: Elevacions més prominents dominades per gramínies com *Ammophila arenaria* (borró), especialitzades en fixar la sorra.
-
-3. **Dunes secundàries**: Zones més estabilitzades amb major diversitat florística i presència d'espècies com *Crucianella maritima* i *Pancratium maritimum*.
-
-4. **Rereduna**: Àrees més interiors i protegides amb vegetació arbustiva i, ocasionalment, arbòria.
-
 ### Valor Ecològic i Amenaçes
-
-Els ecosistemes dunars tenen un alt valor ecològic per múltiples raons:
-
-- Constitueixen hàbitats únics per a espècies especialitzades
-- Actuen com a barreres naturals de protecció costanera
-- Contribueixen al manteniment d'aqüífers costaners
-- Aporten serveis ecosistèmics de regulació, proveïment i culturals
-
-Tot i el seu valor, aquests ecosistemes estan sotmesos a diverses amenaces:
-
-- Urbanització costanera i desenvolupament turístic
-- Freqüentació i ús recreatiu no controlat
-- Neteja mecànica de platges
-- Introducció d'espècies exòtiques invasores
-- Canvi climàtic i augment del nivell del mar
-
-A Catalunya, s'estima que més del 60% de la superfície original de sistemes dunars s'ha perdut durant el darrer segle, i els fragments que romanen es troben en diversos estats de degradació.
 
 ## Notació i Terminologia
 
 ### Terminologia Ecològica
 
-Per a una correcta interpretació del text, cal tenir en compte la següent terminologia especialitzada:
-
-- **Riquesa d'espècies**: Nombre total d'espècies vegetals presents en una unitat de mostreig.
-- **Abundància relativa**: Proporció que representa cada espècie respecte al total d'individus o cobertura.
-- **Diversitat**: Mesura que combina la riquesa d'espècies i l'equitativitat de la seva distribució.
-- **Comunitat vegetal**: Conjunt d'espècies vegetals que coexisteixen en un espai determinat.
-- **Zonació**: Distribució de comunitats vegetals en bandes paral·leles a la línia de costa.
-- **Espècies psammòfiles**: Plantes especialitzades en viure en substrats arenosos.
-- **Espècies ruderals**: Plantes adaptades a ambients pertorbats per acció humana.
-
 ### Notació Estadística
-
-Al llarg del text s'utilitza la següent notació estadística:
-
-- *n*: Mida mostral (nombre d'observacions)
-- $\bar{x}$: Mitjana aritmètica
-- *s*: Desviació estàndard
-- *H'*: Índex de diversitat de Shannon-Wiener
-- *D*: Índex de diversitat de Simpson
-- *R²*: Coeficient de determinació
-- *p*: Nivell de significació estadística
-- ρ: Coeficient de correlació de Spearman
-- χ²: Estadístic chi-quadrat
 
 ## Fonaments Metodològics
 
 ### Mètodes Estadístics
 
-Aquest treball utilitza diversos mètodes estadístics per analitzar les dades recollides:
-
 #### Anàlisi Multivariant
-
-Les tècniques d'anàlisi multivariant permeten explorar patrons complexos en conjunts de dades amb múltiples variables:
-
-- **Anàlisi de Components Principals (PCA)**: Tècnica de reducció de dimensionalitat que transforma variables correlacionades en components no correlacionats.
-
-- **Anàlisi de Correspondències (CA)**: Tècnica aplicada a taules de contingència que permet visualitzar associacions entre files i columnes.
-
-- **Anàlisi de Redundància (RDA)**: Combina la regressió múltiple amb el PCA per relacionar un conjunt de variables resposta amb variables explicatives.
 
 #### Mètodes de Classificació
 
-Per identificar grups naturals en les dades s'han utilitzat tècniques de classificació:
-
-- **Anàlisi de Clústers Jeràrquica**: Mètode que agrupa observacions similars en una estructura jeràrquica.
-
-- **K-means**: Algoritme de partició que assigna cada observació al clúster amb la mitjana més propera.
-
 #### Models Estadístics
-
-Per explorar relacions entre variables s'han utilitzat diverses tècniques de modelatge:
-
-- **Models Lineals Generalitzats (GLM)**: Extensions del model lineal que permeten modelar variables resposta amb distribucions no normals.
-
-- **Models Additius Generalitzats (GAM)**: Extensions dels GLM que permeten relacions no lineals entre la variable resposta i les predictores.
 
 ### Índexs de Diversitat
 
-Per quantificar i comparar la diversitat entre diferents localitats i condicions, s'han utilitzat els següents índexs:
-
 #### Índex de Shannon-Wiener (H')
-
-Mesura la diversitat considerant tant el nombre d'espècies com la seva abundància relativa:
-
-$$H' = -\sum_{i=1}^{S} p_i \ln(p_i)$$
-
-On *S* és el nombre total d'espècies i *p<sub>i</sub>* és la proporció d'individus de l'espècie *i*.
 
 #### Índex de Simpson (D)
 
-Mesura la probabilitat que dos individus seleccionats a l'atzar pertanyin a diferents espècies:
-
-$$D = 1 - \sum_{i=1}^{S} p_i^2$$
-
-On *S* és el nombre total d'espècies i *p<sub>i</sub>* és la proporció d'individus de l'espècie *i*.
-
 ## Assumpcions del Treball
-
-Aquest estudi es basa en les següents assumpcions:
-
-1. **Representativitat espai-temporal**: Les localitats estudiades i el període de mostreig són representatius de la varietat de condicions presents a la costa catalana.
-
-2. **Efecte mesurable de la gestió**: Les pràctiques de gestió implementades tenen efectes quantificables sobre els patrons de vegetació dunar.
-
-3. **Gradients ambientals estables**: Els gradients ambientals es mantenen relativament estables al llarg del temps a escala local.
-
-4. **Resposta de la vegetació**: La composició i estructura de la vegetació responen de manera detectable als factors ambientals i a les pràctiques de gestió.
-
-5. **Independència de les observacions**: Les observacions realitzades en diferents localitats són estadísticament independents entre si.
-
-Aquestes assumpcions són necessàries per a la validesa dels mètodes analítics aplicats i la interpretació dels resultats obtinguts. Les limitacions derivades d'aquestes assumpcions es discuteixen en el capítol de conclusions.

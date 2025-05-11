@@ -13,7 +13,6 @@ book:
     - index.qmd
     - Chapters/Chapter1.qmd
     - Chapters/Chapter2.qmd
-    - Chapters/Resum.qmd
     - Chapters/Introduccio.qmd
     - Chapters/Literatura.qmd
     - Chapters/Preliminars.qmd

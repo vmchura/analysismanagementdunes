@@ -1,204 +1,37 @@
 # Contribució Metodològica {#sec-contribucio}
 
-Aquest capítol presenta les principals contribucions metodològiques d'aquest treball, descrivint els mètodes proposats per a l'anàlisi dels ecosistemes dunars costaners de Catalunya. S'expliquen les innovacions i adaptacions metodològiques desenvolupades per abordar els reptes específics d'aquest estudi.
-
 ## Exploració i Validació de Dades
-
-La primera contribució metodològica d'aquest treball consisteix en el desenvolupament d'un procediment robust d'exploració i validació de dades ecològiques heterogènies. Aquest procediment ha permès integrar informació provinent de diverses fonts i formats en un conjunt de dades coherent i fiable.
 
 ### Recopilació i Estructuració de Dades
 
-Per al present estudi, s'ha recopilat i estructurat un conjunt de dades complex que combina:
-
-1. Dades de presència i abundància d'espècies vegetals
-2. Informació sobre cobertura del sòl en diferents radis
-3. Dades sobre pràctiques de gestió i protecció
-
-Aquesta informació estava originalment dispersa en múltiples fulls d'un llibre d'Excel, amb inconsistències en el format i l'estructura. El procés desenvolupat ha permès:
-
-- Identificar i corregir inconsistències en la nomenclatura i el format
-- Estandarditzar les unitats i escales de mesura
-- Integrar dades georreferenciades amb informació ecològica i de gestió
-- Crear una estructura de dades jeràrquica que reflecteix la naturalesa niuada del disseny de mostreig
-
 ### Validació de la Qualitat de les Dades
-
-S'ha desenvolupat un procediment sistemàtic de validació de la qualitat de les dades que inclou:
-
-1. **Verificació de l'estructura i dimensions**: Comprovació que les dimensions dels conjunts de dades corresponen al disseny de mostreig.
-
-2. **Validació de formats**: Verificació que els identificadors i variables segueixen els formats previstos.
-
-3. **Validació de coherència interna**: Comprovació de relacions lògiques entre variables (p. ex., que els identificadors compostos coincideixen amb la concatenació dels seus components).
-
-4. **Validació de rangs de valors**: Verificació que les variables numèriques es troben dins dels rangs esperats.
-
-Aquest procés de validació s'ha implementat en forma de funcions reutilitzables que permeten aplicar els mateixos controls a futurs conjunts de dades similars.
 
 ### Indicadors de Deficiències de Dades
 
-Una contribució innovadora d'aquest treball és el desenvolupament d'indicadors específics per quantificar diversos tipus de deficiències en les dades:
-
-1. **Índex de Compleció (IC)**: Quantifica la proporció de dades disponibles respecte al total teòric:
-
-   $$IC = \frac{\text{Nombre de valors observats}}{\text{Nombre total de valors possibles}}$$
-
-2. **Índex de Consistència (ICS)**: Mesura la proporció de valors que compleixen les regles de validació:
-
-   $$ICS = \frac{\text{Nombre de valors vàlids}}{\text{Nombre total de valors observats}}$$
-
-3. **Índex d'Integritat Espacial (IIE)**: Avalua la coherència de la informació espacial:
-
-   $$IIE = \frac{\text{Nombre de registres amb coordenades vàlides}}{\text{Nombre total de registres}}$$
-
-Aquests indicadors proporcionen una mesura objectiva de la qualitat de les dades i permeten identificar àrees que requereixen atenció especial durant l'anàlisi.
-
 ## Divisió per Províncies i Anàlisi Comparativa
-
-Una segona contribució metodològica significativa és el desenvolupament d'un marc per a l'anàlisi comparativa entre regions biogeogràfiques, basat en la divisió de les dades per províncies. Aquest enfocament permet identificar patrons espacials i diferències regionals en la composició i estructura de les comunitats vegetals.
 
 ### Criteris de Divisió Regional
 
-La divisió del conjunt de dades s'ha realitzat seguint criteris geoadministratius (límits provincials) que coincideixen aproximadament amb diferències biogeogràfiques significatives:
-
-- **Girona**: Costa Brava, caracteritzada per costes rocoses alternades amb petites cales
-- **Barcelona**: Costa Central, altament urbanitzada i modificada
-- **Tarragona**: Costa Daurada i Delta de l'Ebre, amb platges més extenses i sistemes dunars més desenvolupats
-
-Aquesta divisió permet explorar com les diferències en factors com el clima, la geomorfologia i els patrons d'urbanització afecten els ecosistemes dunars.
-
 ### Mètodes d'Anàlisi Comparativa
-
-Per a l'anàlisi comparativa entre regions s'han desenvolupat els següents mètodes:
-
-1. **Perfils Regionals de Vegetació**: Representacions sintètiques de la composició i estructura de la vegetació en cada regió, basades en la freqüència i abundància relativa d'espècies indicadores.
-
-2. **Índex de Dissimilitud Regional (IDR)**: Mesura quantitativa de les diferències en composició florística entre regions:
-
-   $$IDR_{A,B} = 1 - \frac{C_{A,B}}{S_A + S_B - C_{A,B}}$$
-
-   On $S_A$ i $S_B$ són el nombre d'espècies a les regions A i B, respectivament, i $C_{A,B}$ és el nombre d'espècies comunes.
-
-3. **Anàlisi de Variància Multivariant (PERMANOVA)**: Permet avaluar estadísticament les diferències en composició de comunitats entre regions, considerant múltiples variables simultàniament.
-
-Aquesta aproximació metodològica facilita la identificació de patrons regionals i la formulació d'hipòtesis sobre els factors que els determinen.
 
 ## Integració de Dades Ambientals i de Gestió
 
-La tercera contribució metodològica principal és el desenvolupament d'un marc per a la integració de dades ambientals i de gestió en l'anàlisi de patrons de vegetació. Aquest enfocament permet explorar les relacions entre les característiques de l'entorn, les pràctiques de gestió i la biodiversitat dunar.
-
 ### Anàlisi de Correspondències Canòniques (CCA)
-
-S'ha adaptat i aplicat l'Anàlisi de Correspondències Canòniques per relacionar la variació en la composició de les comunitats vegetals amb factors ambientals i de gestió. Aquest mètode permet:
-
-1. Identificar quins factors ambientals i de gestió expliquen major proporció de la variació en la composició d'espècies
-
-2. Visualitzar les relacions entre espècies, llocs de mostreig i variables ambientals/de gestió en un espai multidimensional
-
-3. Avaluar la significació estadística de les relacions observades
-
-La innovació metodològica consisteix en la inclusió simultània de variables ambientals (cobertura del sòl a diferents radis) i variables de gestió (pràctiques de conservació) en un mateix marc analític.
 
 ### Índex d'Efectivitat de Gestió (IEG)
 
-S'ha desenvolupat un índex compost per avaluar l'efectivitat de les pràctiques de gestió en relació amb la conservació de la biodiversitat dunar:
-
-$$IEG = \sum_{i=1}^{n} w_i \cdot G_i \cdot B_i$$
-
-On:
-- $G_i$ és la intensitat de la pràctica de gestió $i$ (escala 0-5)
-- $B_i$ és l'indicador de biodiversitat associat a la pràctica $i$ (riquesa d'espècies, diversitat, etc.)
-- $w_i$ és el pes assignat a la pràctica $i$ basat en la seva importància relativa
-
-Aquest índex proporciona una mesura objectiva de l'èxit de les diferents estratègies de gestió i permet comparar la seva efectivitat entre regions i contextos.
-
 ### Models Predictius de Biodiversitat
-
-Una altra contribució metodològica significativa és el desenvolupament de models predictius que relacionen indicadors de biodiversitat amb variables ambientals i de gestió. S'han implementat diversos tipus de models:
-
-1. **Models Lineals Generalitzats (GLM)**: Per relacions lineals entre variables explicatives i indicadors de biodiversitat.
-
-2. **Models Additius Generalitzats (GAM)**: Per capturar relacions no lineals complexes entre variables.
-
-3. **Random Forests**: Per identificar les variables més importants i les interaccions entre elles.
-
-Aquests models permeten:
-- Predir el impacte potencial de canvis en les pràctiques de gestió
-- Identificar llindars crítics en factors ambientals
-- Prioritzar accions de conservació segons el seu impacte esperat
 
 ## Innovacions en Visualització de Dades Ecològiques
 
-La quarta contribució metodològica consisteix en el desenvolupament de tècniques innovadores per a la visualització de dades ecològiques complexes, facilitant la interpretació i comunicació dels resultats.
-
 ### Mapes de Calor Multivariants
-
-S'han desenvolupat mapes de calor multivariants que permeten visualitzar simultàniament:
-- La distribució d'espècies al llarg del gradient costa-interior
-- Les diferències entre regions
-- L'efecte de diferents pràctiques de gestió
-
-Aquesta representació facilita la identificació de patrons i relacions que serien difícils de percebre en visualitzacions tradicionals.
 
 ### Diagrames d'Ordenació Augmentats
 
-S'han creat diagrames d'ordenació augmentats que combinen:
-- Resultats d'anàlisis multivariants (PCA, CCA)
-- Superposició de variables ambientals i de gestió
-- Agrupació de punts per regions o categories de gestió
-- Representació de la incertesa mitjançant el·lipses de confiança
-
-Aquestes visualitzacions permeten explorar i comunicar eficaçment les relacions complexes entre múltiples variables.
-
 ### Perfils Ecològics Interactius
-
-S'han desenvolupat representacions visuals interactives que mostren:
-- La distribució d'espècies al llarg de gradients ambientals
-- Els canvis en la composició de comunitats sota diferents règims de gestió
-- La variació temporal i espacial en indicadors de biodiversitat
-
-Aquestes visualitzacions faciliten l'exploració de les dades i la comunicació dels resultats a gestors i responsables de la presa de decisions.
 
 ## Reproduïbilitat i Escalabilitat dels Mètodes
 
-Una contribució metodològica final, però no menys important, és el disseny dels mètodes amb un èmfasi en la reproduïbilitat i l'escalabilitat. Això s'ha aconseguit mitjançant:
-
-1. **Codi Modular**: Desenvolupament de funcions i scripts modulars que poden ser reutilitzats i adaptats per a altres estudis similars.
-
-2. **Documentació Exhaustiva**: Documentació detallada de tots els passos metodològics, decisions i paràmetres utilitzats.
-
-3. **Control de Versions**: Implementació de control de versions per a tot el codi i la documentació.
-
-4. **Automatització de Processos**: Creació de fluxos de treball automatitzats per a l'adquisició, processament i anàlisi de dades.
-
-Aquesta aproximació no només garanteix la validesa i reproduïbilitat dels resultats actuals, sinó que també facilita l'aplicació dels mètodes desenvolupats a nous conjunts de dades o àrees d'estudi.
-
 ## Limitacions i Consideracions Metodològiques
 
-És important reconèixer les limitacions de les metodologies propostes:
-
-1. **Dependència de la qualitat de les dades d'origen**: Els mètodes desenvolupats només poden proporcionar resultats fiables si les dades d'entrada són de qualitat adequada.
-
-2. **Assumpcions estadístiques**: Els models i anàlisis implementats es basen en certes assumpcions estadístiques que poden no complir-se completament en tots els casos.
-
-3. **Generalització a altres contextos**: Tot i que els mètodes s'han dissenyat per ser generalitzables, la seva aplicabilitat a altres regions o tipus d'ecosistemes requerirà adaptacions específiques.
-
-4. **Resolució espacial i temporal**: Les anàlisis estan limitades per la resolució espacial i temporal de les dades disponibles.
-
-Aquestes limitacions s'han considerat en el disseny metodològic i s'han implementat estratègies per mitigar el seu impacte, com ara la validació creuada dels models i l'anàlisi de sensibilitat a les assumpcions.
-
 ## Resum de les Contribucions Metodològiques
-
-En resum, les principals contribucions metodològiques d'aquest treball són:
-
-1. Un procediment robust per a l'exploració i validació de dades ecològiques heterogènies.
-
-2. Un marc per a l'anàlisi comparativa entre regions biogeogràfiques basat en la divisió de dades per províncies.
-
-3. Mètodes per a la integració de dades ambientals i de gestió en l'anàlisi de patrons de vegetació.
-
-4. Tècniques innovadores per a la visualització de dades ecològiques complexes.
-
-5. Un disseny metodològic que prioritza la reproduïbilitat i l'escalabilitat.
-
-Aquestes contribucions no només han permès abordar els objectius específics d'aquest estudi, sinó que també proporcionen eines i aproximacions metodològiques que poden ser valuoses per a futures investigacions en ecologia dunar i altres camps relacionats.

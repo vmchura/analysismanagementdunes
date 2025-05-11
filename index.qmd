@@ -1,4 +1,4 @@
-# Prefacio {.unnumbered}
+# Resúmen {.unnumbered}
 
 Este documento presenta el Trabajo Final de Máster (TFM) titulado "Análisis y Gestión de la Vegetación Dunar en la Costa Catalana" dentro del programa de Máster en Ciencia de Datos de la Universidad de Girona.
 
@@ -6,7 +6,6 @@ El trabajo aplica metodologías de la ciencia de datos al estudio de los ecosist
 
 Este documento sigue la estructura recomendada por la Universidad de Girona para los Trabajos Finales de Máster, organizándose en los siguientes capítulos:
 
-- **Resumen**: Presenta una síntesis del trabajo, incluyendo contexto, objetivos, metodología y principales resultados.
 - **Introducción**: Contextualiza el trabajo, presenta su relevancia y define los objetivos y preguntas de investigación.
 - **Literatura Relacionada y Estado del Arte**: Revisa los trabajos y conocimientos previos relevantes para el estudio.
 - **Preliminares**: Establece los conceptos básicos, la terminología y los fundamentos teóricos necesarios.

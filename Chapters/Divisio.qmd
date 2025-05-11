@@ -1,55 +1,13 @@
 # Divisió per Províncies {#sec-divisio}
 
-Aquest capítol detalla el procés de divisió del conjunt de dades per les tres zones biogeogràfiques (Girona, Barcelona i Tarragona) per a l'anàlisi separada. Mitjançant la divisió de les dades, podem entendre millor les diferències regionals en els patrons de vegetació dunar i les pràctiques de gestió.
-
 ## Preparació del Conjunt de Dades
-
-El treball de divisió per províncies que es presenta en aquest capítol utilitza el contingut complet del Capítol 2 original del projecte (Data Splitting by Province). El procés de divisió de dades es basa en les dades processades del capítol anterior.
 
 ### Resum del Procés de Divisió
 
-El procés de divisió per províncies ha seguit aquests passos clau:
-
-1. Càrrega de les dades processades del capítol anterior
-2. Selecció de les columnes necessàries per a l'anàlisi regional
-3. Divisió del conjunt de dades en tres regions segons els identificadors de platja
-4. Validació de la divisió regional per garantir que no s'ha perdut informació
-
 ### Principals Resultats de la Divisió
-
-La divisió del conjunt de dades per províncies ha revelat una distribució desigual d'observacions entre les tres regions estudiades:
-
-- **Girona**: 190 observacions (19 platges úniques)
-- **Barcelona**: 16 observacions (4 platges úniques)
-- **Tarragona**: 72 observacions (16 platges úniques)
-
-Aquesta distribució reflecteix tant la disponibilitat de dades com les diferències en l'extensió dels sistemes dunars a cada província.
 
 ## Objectius i Resultats
 
-L'objectiu principal d'aquesta fase del treball ha estat crear subconjunts de dades per a cada província per facilitar l'anàlisi comparativa regional. Els resultats obtinguts d'aquest procés inclouen:
-
-1. Tres conjunts de dades regionals amb estructura coherent
-2. Validació de la integritat dels conjunts de dades regionals
-3. Caracterització de les propietats bàsiques de cada conjunt regional
-
-Aquests resultats han establert la base per a les anàlisis comparatives entre regions, permetent identificar patrons i diferències en la biodiversitat dunar a escala regional.
-
 ## Implicacions per a l'Anàlisi
 
-La distribució desigual d'observacions entre regions planteja reptes metodològics per a l'anàlisi comparativa. En particular:
-
-- La petita mida de mostra per a la província de Barcelona (16 observacions) pot limitar la potència estadística de les comparacions.
-- L'elevat nombre d'observacions per a Girona (190) en comparació amb les altres regions pot introduir biaixos en les anàlisis globals.
-
-Per abordar aquests reptes, en les anàlisis posteriors s'han implementat tècniques de normalització i estratificació, així com mètodes estadístics robustos a diferències en la mida mostral.
-
 ## Detall Complet del Procés
-
-El detall complet del procés de divisió per províncies es pot trobar al Capítol 2 original del projecte, que inclou:
-
-- El codi R utilitzat per a la divisió de les dades
-- Els resultats detallats de les validacions realitzades
-- Les visualitzacions de la distribució regional de les dades
-
-Per a una comprensió completa de la metodologia i els resultats d'aquesta fase, es recomana consultar el Capítol 2 complet, que proporciona una visió exhaustiva del procés de divisió regional de les dades.

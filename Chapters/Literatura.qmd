@@ -1,130 +1,33 @@
 # Literatura Relacionada i Estat de l'Art {#sec-literatura}
 
-En aquest capítol es presenta una revisió detallada de la literatura científica relacionada amb l'estudi dels ecosistemes dunars costaners. Aquesta revisió proporciona context per al nostre estudi i estableix les bases conceptuals i metodològiques sobre les quals es fonamenta el present treball.
-
 ## Estudis Ecològics de Sistemes Dunars
 
 ### Estructura i Dinàmica de la Vegetació Dunar
 
-La literatura científica ha documentat extensament l'estructura i la dinàmica de les comunitats vegetals dunars a diversos contextos geogràfics. Els estudis clàssics han establert models de zonació de la vegetació dunar, identificant patrons característics de distribució d'espècies des de la platja alta fins a les dunes estabilitzades.
-
-En l'àmbit mediterrani, diverses investigacions han caracteritzat les particularitats florístiques i ecològiques dels sistemes dunars, destacant l'alt grau d'especialització de les espècies i els gradients ambientals que determinen la seva distribució.
-
 ### Factors Ambientals i Distribució d'Espècies
-
-Nombrosos estudis han analitzat els factors ambientals que influeixen en la distribució i abundància d'espècies als sistemes dunars. Entre aquests factors s'han identificat:
-
-- Gradients de salinitat i humitat
-- Moviment de la sorra i estabilitat del substrat
-- Disponibilitat de nutrients
-- Exposició a factors climàtics (vent, temperatura, precipitació)
-
-Les investigacions han demostrat que aquests factors operen a diferents escales espacials i temporals, creant un complex mosaic de microhàbitats que determina la composició florística de cada zona dunar.
 
 ## Estudis d'Impacte Antropogènic en Sistemes Dunars
 
 ### Efectes de l'Urbanització i el Turisme
 
-La literatura científica ha documentat àmpliament els impactes de l'urbanització costanera i l'activitat turística sobre els ecosistemes dunars. Els principals efectes identificats inclouen:
-
-- Fragmentació i pèrdua directa d'hàbitat
-- Alteració dels processos de formació i dinàmica dunar
-- Canvis en la composició florística per la introducció d'espècies exòtiques
-- Compactació del sòl i reducció de la capacitat de regeneració natural
-
-Les investigacions en àrees mediterrànies han proporcionat evidència sobre la magnitud d'aquests impactes en contextos similars al català.
-
 ### Impactes de les Pràctiques de Gestió de Platges
-
-Diversos estudis han avaluat els efectes de les pràctiques habituals de gestió de platges sobre els sistemes dunars adjacents. S'ha demostrat que activitats com:
-
-- La neteja mecànica de platges
-- L'eliminació de posidònia i altres restes naturals
-- La instal·lació de serveis i infraestructures temporals
-
-poden tenir impactes significatius sobre la integritat i funcionalitat de les dunes, especialment quan aquestes pràctiques no consideren els valors ecològics d'aquests ecosistemes.
 
 ## Estratègies de Gestió i Conservació
 
 ### Tècniques de Restauració i Rehabilitació
 
-La literatura científica ha documentat diverses tècniques de restauració i rehabilitació de sistemes dunars degradats. Els estudis han avaluat l'eficàcia de mesures com:
-
-- La instal·lació de captadors de sorra i barreres de protecció
-- La revegetació amb espècies natives
-- La creació de passarel·les i control d'accessos
-- La sensibilització i educació ambiental
-
-Les investigacions han mostrat resultats variables en funció de les condicions locals, destacant la importància d'adaptar les estratègies al context específic de cada sistema dunar.
-
 ### Avaluació de l'Eficàcia de Mesures de Gestió
-
-Diferents estudis han desenvolupat metodologies per avaluar quantitativament l'eficàcia de les mesures de gestió implementades en sistemes dunars. Aquestes avaluacions han incorporat indicadors de:
-
-- Integritat física de les formacions dunars
-- Diversitat i abundància d'espècies característiques
-- Resiliència davant pertorbacions naturals i antròpiques
-- Funcionalitat ecosistèmica (protecció costanera, regulació hidrològica, etc.)
-
-Aquesta línia de recerca proporciona bases metodològiques valuoses per al nostre estudi sobre l'eficàcia de les estratègies de gestió implementades a la costa catalana.
 
 ## Mètodes d'Anàlisi en Ecologia Dunar
 
 ### Aproximacions Metodològiques
 
-La literatura científica mostra una evolució en les metodologies utilitzades per a l'estudi dels ecosistemes dunars, des d'aproximacions purament descriptives fins a tècniques quantitatives avançades. Els estudis contemporanis han integrat:
-
-- Anàlisis multivariants de patrons de vegetació
-- Models estadístics que relacionen factors ambientals amb distribució d'espècies
-- Tècniques de teledetecció i anàlisi espacial
-- Aproximacions experimentals per avaluar relacions causals
-
-Aquestes metodologies proporcionen un marc robust per al disseny del nostre estudi i l'anàlisi de les dades recollides.
-
 ### Indicadors de Qualitat i Estat de Conservació
-
-Diversos investigadors han proposat sistemes d'indicadors per avaluar la qualitat ecològica i l'estat de conservació dels sistemes dunars. Aquests sistemes integren variables relacionades amb:
-
-- Estructura geomorfològica
-- Composició i estructura de la vegetació
-- Presència d'espècies indicadores (tant positives com negatives)
-- Pressió antròpica i nivell de pertorbació
-
-Aquesta línia de recerca ofereix eines conceptuals valuoses per a la interpretació dels nostres resultats en termes de qualitat ecològica i prioritats de conservació.
 
 ## Context Català i Mediterrani
 
 ### Particularitats dels Sistemes Dunars Mediterranis
 
-La literatura específica sobre sistemes dunars mediterranis ha destacat les particularitats d'aquests ecosistemes en comparació amb els d'altres regions biogeogràfiques. Entre aquestes particularitats s'inclouen:
-
-- Alta riquesa florística i presència d'endemismes
-- Adaptacions específiques a condicions de sequera estival
-- Fragilitat davant pertorbacions a causa del seu caràcter relictual
-- Pressió històrica d'ús humà que ha modelat la seva configuració actual
-
-Aquests treballs proporcionen context important per a la interpretació dels nostres resultats en el marc regional mediterrani.
-
 ### Estudis Previs a Catalunya
 
-Malgrat la importància ecològica i paisatgística dels sistemes dunars catalans, els estudis específics sobre aquests ecosistemes són relativament escassos en comparació amb altres regions mediterrànies. Els treballs existents s'han centrat principalment en:
-
-- Inventaris florístics i caracterització de comunitats vegetals
-- Cartografia i evolució històrica dels sistemes dunars
-- Diagnòstic general de l'estat de conservació
-
-Aquest context bibliogràfic subratlla la necessitat d'estudis integrals com el present, que combinin l'anàlisi de patrons ecològics amb l'avaluació de les pràctiques de gestió a escala regional.
-
 ## Aportació d'Aquest Treball a l'Estat de l'Art
-
-A partir de la revisió de la literatura científica, podem identificar diverses llacunes en el coneixement actual que el present treball pretén abordar:
-
-1. **Escala geogràfica integral**: La majoria d'estudis previs s'han centrat en localitats específiques, mentre que aquest treball adopta una perspectiva regional que abasta tota la costa catalana.
-
-2. **Enfocament multifactorial**: Aquest estudi integra l'anàlisi de factors ambientals, patrons de vegetació i pràctiques de gestió, superant les aproximacions parcials predominants a la literatura.
-
-3. **Avaluació quantitativa**: A diferència de moltes avaluacions qualitatives o descriptives, aquest treball desenvolupa una metodologia d'anàlisi quantitativa que permet avaluar objectivament l'eficàcia de les mesures de gestió.
-
-4. **Enfocament pragmàtic**: L'orientació a la generació de recomanacions pràctiques per a la gestió constitueix una contribució significativa en un àmbit on sovint manquen directrius operatives basades en evidència científica.
-
-Aquest posicionament en relació amb l'estat de l'art subratlla la rellevància i originalitat del present estudi, així com la seva potencial contribució tant al coneixement científic com a la gestió pràctica dels ecosistemes dunars catalans.
