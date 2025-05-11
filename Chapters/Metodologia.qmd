@@ -1,0 +1,208 @@
+# Planificació i Metodologia {#sec-metodologia}
+
+Aquest capítol descriu la planificació del projecte, la metodologia seguida i els recursos utilitzats per al desenvolupament del treball. Es presenta tant la planificació inicial com les adaptacions realitzades durant l'execució, així com una estimació dels costos associats.
+
+## Metodologia de Desenvolupament
+
+### Enfocament Metodològic
+
+Per a la realització d'aquest treball s'ha adoptat una metodologia mixta que combina elements de:
+
+1. **Metodologia CRISP-DM** (Cross-Industry Standard Process for Data Mining) adaptada al context de la ciència de dades en ecologia:
+   - Comprensió del domini
+   - Comprensió de les dades
+   - Preparació de les dades
+   - Modelització
+   - Avaluació
+   - Implementació de resultats
+
+2. **Desenvolupament Iteratiu i Incremental**:
+   - Cicles curts de desenvolupament
+   - Avaluació contínua dels resultats
+   - Refinament progressiu dels mètodes i les anàlisis
+
+Aquest enfocament ha permès adaptar-se als reptes i descobriments que han sorgit durant el procés, mantenint al mateix temps un marc estructurat per a la gestió del projecte.
+
+## Fases del Projecte
+
+### Fase 1: Definició i Planificació
+
+**Durada**: 1 mes (Setembre 2023)
+
+**Objectius**:
+- Definir l'abast i els objectius del projecte
+- Identificar les fonts de dades necessàries
+- Establir el cronograma i els recursos necessaris
+- Revisar la literatura científica rellevant
+
+**Activitats**:
+- Reunions amb el tutor del treball
+- Recerca bibliogràfica preliminar
+- Elaboració d'un pla de treball detallat
+- Identificació de col·laboradors i fonts de dades
+
+### Fase 2: Adquisició i Exploració de Dades
+
+**Durada**: 2 mesos (Octubre - Novembre 2023)
+
+**Objectius**:
+- Recopilar les dades necessàries per a l'estudi
+- Explorar la qualitat i estructura de les dades
+- Identificar limitacions i problemes potencials
+- Dissenyar procediments de validació
+
+**Activitats**:
+- Contacte amb entitats i investigadors per obtenir dades
+- Digitalització de registres en paper
+- Anàlisi exploratori preliminar
+- Documentació d'incidències i necessitats de preprocessament
+
+### Fase 3: Preparació i Validació de Dades
+
+**Durada**: 2 mesos (Desembre 2023 - Gener 2024)
+
+**Objectius**:
+- Netejar i estructurar les dades per a l'anàlisi
+- Implementar transformacions necessàries
+- Validar la integritat i consistència de les dades
+- Crear conjunts de dades analítics
+
+**Activitats**:
+- Desenvolupament de scripts de neteja i transformació
+- Implementació de controls de qualitat
+- Documentació dels processos de tractament
+- Creació d'estructures de dades optimitzades
+
+### Fase 4: Anàlisi i Modelització
+
+**Durada**: 3 mesos (Febrer - Abril 2024)
+
+**Objectius**:
+- Implementar les anàlisis estadístiques planificades
+- Desenvolupar models per a les relacions d'interès
+- Visualitzar resultats preliminars
+- Refinar els mètodes segons resultats inicials
+
+**Activitats**:
+- Implementació d'anàlisis multivariants
+- Desenvolupament de models estadístics
+- Creació de visualitzacions interpretables
+- Sessions de revisió amb el tutor
+
+### Fase 5: Interpretació i Documentació
+
+**Durada**: 2 mesos (Maig - Juny 2024)
+
+**Objectius**:
+- Interpretar els resultats en el context del domini
+- Formular conclusions basades en evidència
+- Documentar completament el procés i resultats
+- Redactar el treball final
+
+**Activitats**:
+- Anàlisi crítica dels resultats obtinguts
+- Comparació amb la literatura existent
+- Redacció del document final
+- Preparació de materials de presentació
+
+## Eines i Tecnologies Utilitzades
+
+### Llenguatges i Entorns de Programació
+
+- **R**: Llenguatge principal per a l'anàlisi estadística i la visualització
+- **Python**: Utilitzat per a tasques específiques de processament i integració
+- **RStudio**: Entorn de desenvolupament integrat per a R
+- **Jupyter Notebooks**: Per a anàlisis exploratoris i documentació interactiva
+
+### Biblioteques i Paquets
+
+- **tidyverse**: Conjunt de paquets per a la manipulació i visualització de dades
+- **vegan**: Per a anàlisis de comunitats ecològiques
+- **sf**: Per a manipulació de dades espacials
+- **rmarkdown/quarto**: Per a la generació de documents reproduïbles
+- **ggplot2**: Per a la creació de visualitzacions estàtiques
+
+### Eines de Gestió i Col·laboració
+
+- **Git/GitHub**: Per al control de versions i la col·laboració
+- **Trello**: Per a la gestió de tasques i seguiment del progrés
+- **OneDrive**: Per a l'emmagatzematge i compartició de dades
+
+## Planificació Temporal
+
+### Cronograma Inicial vs. Real
+
+La planificació inicial contemplava un desenvolupament seqüencial de les fases, però durant l'execució del projecte s'han produït diverses adaptacions:
+
+| Fase | Planificació Inicial | Execució Real | Desviació |
+|------|----------------------|---------------|-----------|
+| 1. Definició i Planificació | Set 2023 | Set 2023 | Cap |
+| 2. Adquisició i Exploració | Oct-Nov 2023 | Oct-Des 2023 | +1 mes |
+| 3. Preparació i Validació | Des 2023-Gen 2024 | Gen-Mar 2024 | +1 mes |
+| 4. Anàlisi i Modelització | Feb-Abr 2024 | Mar-May 2024 | +1 mes |
+| 5. Interpretació i Documentació | Mai-Jun 2024 | May-Jun 2024 | Cap |
+
+Les principals causes de les desviacions han estat:
+
+1. **Complexitat en l'adquisició de dades**: La recopilació de dades de diferents fonts ha requerit més temps del previst, especialment per a la digitalització de registres en paper.
+
+2. **Reptes en la integració de dades**: La heterogeneïtat de les fonts ha complicat el procés de neteja i estructuració.
+
+3. **Refinament iteratiu dels models**: Els resultats inicials han motivat exploracions addicionals no previstes en la planificació original.
+
+Tot i aquestes desviacions, s'ha mantingut la data de finalització prevista mitjançant l'ajust de recursos i la priorització d'activitats.
+
+### Diagrama de Gantt
+
+```
+Set 2023  |====| Fase 1: Definició i Planificació
+Oct-Des 2023  |=========| Fase 2: Adquisició i Exploració
+Gen-Mar 2024     |=========| Fase 3: Preparació i Validació
+Mar-May 2024          |=========| Fase 4: Anàlisi i Modelització
+May-Jun 2024                |======| Fase 5: Interpretació i Documentació
+```
+
+## Recursos i Pressupost
+
+### Recursos Humans
+
+| Rol | Dedicació (hores) | Cost Hora (€) | Cost Total (€) |
+|-----|-------------------|---------------|----------------|
+| Investigador principal (estudiant) | 960 | 12 | 11.520 |
+| Director del TFM | 40 | 50 | 2.000 |
+| Assessor estadístic | 10 | 40 | 400 |
+| **Total Recursos Humans** | | | **13.920** |
+
+### Recursos Materials i Programari
+
+| Concepte | Cost (€) |
+|----------|----------|
+| Equipament informàtic (amortització) | 300 |
+| Llicències de programari | 200 |
+| Desplaçaments per a reunions i treball de camp | 150 |
+| Serveis d'emmagatzematge i computació | 100 |
+| **Total Recursos Materials** | **750** |
+
+### Cost Total Estimat
+
+| Concepte | Cost (€) |
+|----------|----------|
+| Recursos Humans | 13.920 |
+| Recursos Materials i Programari | 750 |
+| **TOTAL** | **14.670** |
+
+Aquest pressupost és una estimació teòrica del cost que tindria aquest projecte en un entorn professional. En el context acadèmic, molts d'aquests recursos han estat proporcionats per la universitat o assumits com a part de la formació.
+
+## Consideracions Ètiques i Legals
+
+En el desenvolupament d'aquest projecte s'han tingut en compte les següents consideracions ètiques i legals:
+
+1. **Accés i ús de dades**: Totes les dades utilitzades s'han obtingut amb els permisos corresponents i respectant els acords de confidencialitat quan ha estat necessari.
+
+2. **Propietat intel·lectual**: S'han respectat els drets d'autor en totes les fonts consultades, citant adequadament les referències.
+
+3. **Sostenibilitat ambiental**: El treball de camp s'ha realitzat minimitzant l'impacte sobre els ecosistemes estudiats.
+
+4. **Transparència i reproduïbilitat**: Els mètodes i resultats s'han documentat de manera que permetin la reproduïbilitat de l'estudi.
+
+Aquestes consideracions han format part integral del procés de desenvolupament del projecte, garantint que la recerca s'ha dut a terme de manera ètica i responsable.

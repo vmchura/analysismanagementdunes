@@ -1,23 +1,30 @@
-# Preface {.unnumbered}
+# Prefaci {.unnumbered}
 
-This document presents a comprehensive analysis of dune vegetation management across Catalonia's coastline. The research focuses on three primary regions: Girona, Barcelona, and Tarragona, examining the relationships between species diversity, land cover patterns, and management practices.
+Aquest document presenta el Treball Final de Màster (TFM) titulat "Anàlisi i Gestió de la Vegetació Dunar a la Costa Catalana" dins del programa de Màster en Ciència de Dades Aplicada de la Universitat de Girona.
 
-## Project Overview
+El treball aplica metodologies de la ciència de dades a l'estudi dels ecosistemes dunars costaners de Catalunya, amb l'objectiu d'analitzar les relacions entre la biodiversitat vegetal, els factors ambientals i les pràctiques de gestió. A través d'aquest enfocament multidisciplinari, es pretén generar coneixement científic que pugui informar estratègies més efectives per a la conservació d'aquests valuosos i amenaçats ecosistemes.
 
-Coastal dune systems play a critical role in shoreline protection and serve as unique habitats for specialized flora and fauna. In the Mediterranean region, these ecosystems face increasing pressure from urbanization, tourism, and climate change. This doctoral thesis aims to provide insights into effective management strategies for preserving biodiversity in these valuable ecosystems.
+Aquest document segueix l'estructura recomanada per la Universitat de Girona per als Treballs Finals de Màster, organitzant-se en els següents capítols:
 
-## Structure of the Thesis
+- **Resum**: Presenta una síntesi del treball, incloent context, objectius, metodologia i principals resultats.
+- **Introducció**: Contextualitza el treball, presenta la seva rellevància i defineix els objectius i preguntes de recerca.
+- **Literatura Relacionada i Estat de l'Art**: Revisa els treballs i coneixements previs rellevants per a l'estudi.
+- **Preliminars**: Estableix els conceptes bàsics, la terminologia i els fonaments teòrics necessaris.
+- **Planificació i Metodologia**: Descriu la planificació del projecte, la metodologia emprada i els recursos utilitzats.
+- **Exploració i Validació de Dades**: Detalla el procés inicial d'exploració i validació de les dades.
+- **Divisió per Províncies**: Explica el procés de divisió de les dades per regions geogràfiques.
+- **Contribució Metodològica**: Presenta les principals aportacions metodològiques del treball.
+- **Resultats**: Exposa els resultats obtinguts a partir de les anàlisis realitzades.
+- **Conclusions**: Sintetitza les principals conclusions, limitacions i línies futures de recerca.
 
-This document is structured as follows:
+La realització d'aquest treball ha estat possible gràcies al suport de diverses persones i institucions, a les quals vull expressar el meu agraïment:
 
-- **Chapter 1**: Describes the data exploration and validation process, establishing the foundation for subsequent analyses.
-- **Chapter 2**: Details the division of data by geographic regions (Girona, Barcelona, and Tarragona) to facilitate regional comparative analyses.
-- **Additional chapters**: Will explore vegetation patterns, management impacts, and conservation recommendations.
+En primer lloc, al Dr. Ashok Kunil, director d'aquest TFM, per la seva orientació, suport i disponibilitat al llarg de tot el procés. Els seus valuosos consells i coneixements han estat fonamentals per a la realització d'aquest treball.
 
-## Methodology
+A la Universitat de Girona i, en particular, al Departament d'Informàtica, Matemàtica Aplicada i Estadística, per proporcionar els recursos i l'entorn acadèmic necessaris per desenvolupar aquesta recerca.
 
-The research employs quantitative methods to analyze field data collected from beach dune systems across Catalonia. R statistical software with the tidyverse ecosystem was used for data cleaning, analysis, and visualization. The research combines ecological survey data, land cover analysis, and management practice evaluations to develop comprehensive insights.
+A les entitats i investigadors que han proporcionat dades i informació per a aquest estudi, especialment al Departament d'Acció Climàtica, Alimentació i Agenda Rural de la Generalitat de Catalunya.
 
-## Acknowledgments
+Finalment, vull agrair el suport incondicional de la meva família i amics, que m'han acompanyat i encoratjat durant aquesta etapa formativa.
 
-I would like to express my gratitude to Dr. Ashok Kunil for his guidance throughout this research project, as well as the University of Ottawa's Department of Mathematics for supporting this interdisciplinary work.
+Aquest treball representa no només la culminació del programa de màster, sinó també una contribució al coneixement científic i a la conservació dels ecosistemes dunars del litoral català, un patrimoni natural d'alt valor que cal preservar per a les generacions futures.

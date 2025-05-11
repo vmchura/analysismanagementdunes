@@ -3,8 +3,8 @@ project:
   output-dir: .
 
 book:
-  title: A doctoral thesis title
-  date: December 15, 2023
+  title: Anàlisi i Gestió de la Vegetació Dunar a la Costa Catalana
+  date: June 15, 2024
   author:
     name: Victor Miguel Chura Quispe
   downloads: [pdf]
@@ -12,6 +12,16 @@ book:
     - index.qmd
     - Chapters/Chapter1.qmd
     - Chapters/Chapter2.qmd
+    - Chapters/Resum.qmd
+    - Chapters/Introduccio.qmd
+    - Chapters/Literatura.qmd
+    - Chapters/Preliminars.qmd
+    - Chapters/Metodologia.qmd
+    - Chapters/Exploracio.qmd
+    - Chapters/Divisio.qmd
+    - Chapters/Contribucio.qmd
+    - Chapters/Resultats.qmd
+    - Chapters/Conclusions.qmd
     - references.qmd
   appendices:
     - Appendices/AppendixA.qmd
@@ -25,11 +35,11 @@ thesis:
   supervisor: 
     name: Dr. Ashok Kunil
     url: https://quarto.org/
-  degree-name: Doctor of Philosophy
-  university: University of Ottawa
-  department: Department of Mathematics
-  group: Informatics Program
-  faculty: Applied Math Group
+  degree-name: Màster en Ciència de Dades Aplicada
+  university: Universitat de Girona
+  department: Departament d'Informàtica, Matemàtica Aplicada i Estadística
+  group: Programa de Màster en Ciència de Dades Aplicada
+  faculty: Escola Politècnica Superior
   abbreviations: "Frontmatter/abbreviations.tex"
   symbols: "Frontmatter/symbols.tex"
   dedication: "Frontmatter/dedication.tex"
@@ -50,4 +60,3 @@ format:
     urlcolor: red
     toclinkcolor: black
     toc-depth: 2
-

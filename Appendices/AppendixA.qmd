@@ -1,15 +1,218 @@
-# Frequently Asked Questions {#sec-appA}
+# Codi Font {#sec-appendix-code}
 
-## How do I change the colors of links?
+Aquest apèndix conté el codi font principal desenvolupat durant aquest treball per a l'anàlisi de les dades. El codi està organitzat per seccions corresponents a les diferents fases de l'anàlisi.
 
-Pass in `urlcolor: ` in yaml. Or set these in the include-in-header file.
+## Codi d'Exploració i Validació de Dades
 
-\noindent If you want to completely hide the links, you can use:
+Aquest codi implementa les funcions de validació de dades descrites al Capítol 1:
 
-{\small\verb!\hypersetup{allcolors=.}!}, or even better: 
+```r
+# Funció per validar les dades principals
+validate_main_data <- function(data) {
+  cat("===== Validant main_data =====\n\n")
 
-{\small\verb!\hypersetup{hidelinks}!}.
+  # Comprovació de dimensions
+  expected_rows <- 278
+  expected_cols <- 147 + 7  # Columnes d'espècies + columnes d'identificadors
 
-\noindent If you want to have obvious links in the PDF but not the printed text, use:
+  cat("Comprovació de dimensions:\n")
+  cat("  Esperat: ", expected_cols, " columnes per ", expected_rows, " files\n", sep = "")
+  cat("  Actual:   ", ncol(data), " columnes per ", nrow(data), " files\n", sep = "")
 
-{\small\verb!\hypersetup{colorlinks=false}!}.
+  if (nrow(data) != expected_rows) {
+    cat("  ALERTA: El nombre de files no coincideix amb el valor esperat!\n")
+  }
+
+  if (ncol(data) < expected_cols - 5 || ncol(data) > expected_cols + 5) {
+    cat("  ALERTA: El nombre de columnes és significativament diferent del valor esperat!\n")
+  }
+
+  # Comprovació de presència i ordre de columnes
+  expected_first_cols <- c("plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis")
+
+  cat("\nComprovació de presència de columnes:\n")
+  for (col in expected_first_cols) {
+    if (col %in% names(data)) {
+      cat("  Columna '", col, "' present a la posició ", which(names(data) == col), "\n", sep = "")
+    } else {
+      cat("  ALERTA: Columna '", col, "' absent!\n", sep = "")
+    }
+  }
+
+  # Resta del codi de validació...
+  
+  cat("\nValidació de dades principals completada.\n")
+  cat("=============================================\n\n")
+}
+```
+
+## Codi de Divisió per Províncies
+
+Aquest codi implementa la divisió del conjunt de dades per províncies, com s'explica al Capítol 2:
+
+```r
+# Crear una llista per emmagatzemar les dades regionals
+beaches_by_region <- list()
+
+# Dividir dades per regió segons els rangs d'id_beach
+beaches_by_region[["Girona"]] <- main_data_selected %>% filter(id_beach >= 1 & id_beach <= 19)
+beaches_by_region[["Barcelona"]] <- main_data_selected %>% filter(id_beach >= 20 & id_beach <= 23)
+beaches_by_region[["Tarragona"]] <- main_data_selected %>% filter(id_beach >= 24)
+
+# Verificar que la suma iguali la mida del conjunt de dades original
+total_observations <- sum(sapply(beaches_by_region, nrow))
+cat("\nTotal d'observacions a totes les regions:", total_observations, "\n")
+cat("Observacions del conjunt de dades original:", nrow(main_data_selected), "\n")
+
+# Comprovar si totes les observacions han estat assignades a una regió
+if(total_observations == nrow(main_data_selected)) {
+  cat("Validació exitosa: Totes les observacions han estat assignades a una regió.\n")
+} else {
+  cat("Validació fallida: La suma d'observacions regionals no coincideix amb el conjunt de dades original.\n")
+}
+```
+
+## Codi d'Anàlisi Multivariant
+
+Aquest codi implementa les anàlisis multivariants per explorar patrons en la composició d'espècies:
+
+```r
+# Carregar les biblioteques necessàries
+library(vegan)
+library(ggplot2)
+library(tidyverse)
+
+# Preparar les dades per NMDS
+species_matrix <- beaches_by_region %>%
+  bind_rows(.id = "Region") %>%
+  select(-plot, -id_beach) %>%
+  column_to_rownames("Region")
+
+# Realitzar NMDS
+nmds_result <- metaMDS(species_matrix, distance = "bray", k = 2, trymax = 100)
+
+# Crear dataframe per a la visualització
+nmds_plot_data <- data.frame(
+  Region = rownames(species_matrix),
+  NMDS1 = nmds_result$points[,1],
+  NMDS2 = nmds_result$points[,2]
+)
+
+# Crear gràfic NMDS
+ggplot(nmds_plot_data, aes(x = NMDS1, y = NMDS2, color = Region)) +
+  geom_point(size = 3) +
+  stat_ellipse(aes(group = Region), level = 0.95) +
+  theme_minimal() +
+  labs(
+    title = "Ordenació NMDS de les comunitats vegetals per regió",
+    x = "NMDS1",
+    y = "NMDS2"
+  )
+```
+
+## Codi de Modelització Predictiva
+
+Aquest codi implementa models predictius per relacionar la biodiversitat amb factors ambientals i de gestió:
+
+```r
+# Carregar les biblioteques necessàries
+library(randomForest)
+library(caret)
+
+# Preparar dades per a la modelització
+model_data <- data.frame(
+  RiquesaEspecies = calculated_richness,
+  Region = factor(region_vector),
+  CaminsGestionats = management_variables$managed_paths,
+  TanquesCorda = management_variables$rope_fences,
+  NetejaMecanica = management_variables$mechanical_cleaning,
+  ServeisEstacionals = management_variables$seasonal_services,
+  ServeisFixes = management_variables$fixed_services,
+  ProteccioSistema = management_variables$system_protection,
+  GrauProteccioIUCN = management_variables$iucn_protection,
+  PercentatgeUrba50m = landcover_variables$urban_50m,
+  PercentatgeVegetacioNatural50m = landcover_variables$natural_vegetation_50m
+)
+
+# Dividir en conjunts d'entrenament i prova
+set.seed(123)
+trainIndex <- createDataPartition(model_data$RiquesaEspecies, p = 0.8, list = FALSE)
+training <- model_data[trainIndex,]
+testing <- model_data[-trainIndex,]
+
+# Entrenar model Random Forest
+rf_model <- randomForest(
+  RiquesaEspecies ~ .,
+  data = training,
+  ntree = 500,
+  importance = TRUE
+)
+
+# Avaluar el model
+predictions <- predict(rf_model, testing)
+rmse <- sqrt(mean((predictions - testing$RiquesaEspecies)^2))
+r_squared <- 1 - sum((testing$RiquesaEspecies - predictions)^2) / 
+                 sum((testing$RiquesaEspecies - mean(testing$RiquesaEspecies))^2)
+
+cat("RMSE:", rmse, "\n")
+cat("R²:", r_squared, "\n")
+
+# Calcular i visualitzar la importància de les variables
+var_importance <- importance(rf_model)
+var_importance_df <- data.frame(
+  Variable = rownames(var_importance),
+  Importance = var_importance[, "%IncMSE"]
+)
+var_importance_df <- var_importance_df %>%
+  arrange(desc(Importance)) %>%
+  mutate(
+    ImportanceRelative = Importance / sum(Importance) * 100,
+    Variable = factor(Variable, levels = Variable)
+  )
+
+ggplot(var_importance_df, aes(x = reorder(Variable, ImportanceRelative), y = ImportanceRelative)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title = "Importància relativa de les variables en el model Random Forest",
+    x = "Variable",
+    y = "Importància relativa (%)"
+  )
+```
+
+## Codi per a la Visualització de Resultats
+
+Aquest codi implementa les visualitzacions utilitzades en el capítol de resultats:
+
+```r
+# Visualització de riquesa d'espècies per regió
+ggplot(region_richness_data, aes(x = Region, y = RiquesaEspecies, fill = Region)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(
+    title = "Riquesa d'espècies per regió",
+    x = "Regió",
+    y = "Nombre d'espècies"
+  ) +
+  scale_fill_brewer(palette = "Set2")
+
+# Visualització de l'efecte de les pràctiques de gestió
+ggplot(management_effect_data, aes(x = PracticaGestio, y = EfecteRiquesa, fill = Region)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_errorbar(
+    aes(ymin = EfecteRiquesa - ErrorEstandard, ymax = EfecteRiquesa + ErrorEstandard),
+    position = position_dodge(0.9),
+    width = 0.25
+  ) +
+  theme_minimal() +
+  labs(
+    title = "Efecte de les pràctiques de gestió sobre la riquesa d'espècies per regió",
+    x = "Pràctica de gestió",
+    y = "Efecte sobre la riquesa d'espècies"
+  ) +
+  scale_fill_brewer(palette = "Set2") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Aquest codi està disponible al repositori del projecte per facilitar la reproductibilitat dels resultats. Per a més detalls sobre la implementació o per accedir al codi complet, es pot consultar el repositori a l'URL: https://github.com/username/dunes-analysis

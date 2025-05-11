@@ -1,0 +1,85 @@
+# Introducció {#sec-introduccio}
+
+## Context del Treball
+
+Els sistemes dunars costaners constitueixen ecosistemes únics que es troben a la interfície entre els ambients marins i terrestres. Aquestes formacions naturals no només serveixen com a barrera física que protegeix la costa de l'erosió i les inundacions, sinó que també alberguen comunitats biològiques especialitzades adaptades a condicions ambientals extremes com l'alta salinitat, la inestabilitat del substrat i l'exposició intensa al vent i al sol.
+
+## Rellevància del Tema
+
+La gestió i conservació dels sistemes dunars costaners és particularment rellevant per diverses raons:
+
+1. **Biodiversitat única**: Les dunes alberguen espècies vegetals i animals altament especialitzades que sovint no es troben en cap altre hàbitat.
+
+2. **Protecció costanera**: Actuen com a barreres naturals contra temporals marítims i l'augment del nivell del mar.
+
+3. **Pressió antròpica**: L'urbanització costanera, el turisme massiu i altres activitats humanes exerceixen una pressió creixent sobre aquests ecosistemes fràgils.
+
+4. **Canvi climàtic**: L'augment del nivell del mar i la major freqüència de fenòmens meteorològics extrems amenacen directament la integritat d'aquests sistemes.
+
+## Qüestions de Recerca i Problemàtica
+
+Aquest treball aborda les següents qüestions de recerca:
+
+1. Quins patrons de distribució presenta la vegetació dunar al llarg de la costa catalana?
+2. Com es relacionen aquests patrons amb factors ambientals i amb les pràctiques de gestió implementades?
+3. Quines pràctiques de gestió resulten més efectives per a la conservació de la biodiversitat en aquests ecosistemes?
+
+Les principals dificultats tècniques que aborda aquest treball inclouen:
+
+- La integració i normalització de dades heterogènies provinents de diverses fonts
+- L'anàlisi espacial a diferents escales (local, regional)
+- La identificació de relacions causals entre factors de gestió i patrons de biodiversitat
+
+## Revisió de Literatura Fonamental
+
+Els treballs previs en aquest àmbit poden categoritzar-se en diversos grups:
+
+### Estudis ecològics sobre vegetació dunar
+
+Diversos autors han caracteritzat les comunitats vegetals dunars mediterrànies, establint les bases per a la comprensió de la seva estructura i funcionament.
+
+### Anàlisis d'impactes antròpics
+
+Diferents estudis han analitzat els efectes de diverses activitats humanes sobre els ecosistemes dunars, proporcionant marcs conceptuals per avaluar aquests impactes.
+
+### Estudis sobre gestió i restauració
+
+Diversos investigadors han avaluat l'eficàcia de diverses estratègies de gestió i tècniques de restauració en sistemes dunars degradats.
+
+## Diferenciació del Present Treball
+
+Aquest treball es diferencia dels precedents en diversos aspectes:
+
+1. **Enfocament geogràfic**: Se centra específicament en el context català, que ha rebut menys atenció que altres regions mediterrànies.
+
+2. **Integració multifactorial**: Analitza simultàniament factors ambientals, patrons de vegetació i pràctiques de gestió.
+
+3. **Metodologia quantitativa**: Empra tècniques avançades d'anàlisi de dades per identificar patrons i relacions.
+
+4. **Orientació aplicada**: Busca generar recomanacions pràctiques per a la gestió basades en evidència empírica.
+
+## Contribucions Principals
+
+Les contribucions més significatives d'aquest treball són:
+
+1. **Recopilació i tractament de dades**: Construcció d'un conjunt de dades integrat sobre vegetació dunar, factors ambientals i pràctiques de gestió a la costa catalana.
+
+2. **Desenvolupament metodològic**: Aplicació i adaptació de tècniques estadístiques per a l'anàlisi de patrons de biodiversitat en relació amb factors de gestió.
+
+3. **Identificació de patrons espacials**: Caracterització de la distribució de comunitats vegetals i la seva variació geogràfica.
+
+4. **Avaluació d'estratègies de gestió**: Análisi quantitativa de l'eficàcia de diverses pràctiques de gestió per a la conservació de la biodiversitat dunar.
+
+## Resultats Principals
+
+Els resultats preliminars suggereixen:
+
+1. Existeixen diferències significatives en la composició i estructura de la vegetació dunar entre les tres províncies estudiades (Girona, Barcelona i Tarragona).
+
+2. Les pràctiques de gestió com la instal·lació de passarel·les, la delimitació amb cordes i la neteja manual mostren una associació positiva amb la riquesa d'espècies i la integritat estructural de les dunes.
+
+3. La pressió turística, mesurada a través de diversos indicadors, correlaciona negativament amb la diversitat vegetal, especialment en espècies més sensibles.
+
+4. Els patrons de cobertura del sòl en el radi de 50-100 metres de les dunes tenen una influència significativa en la seva composició florística.
+
+Aquests resultats proporcionen una base per desenvolupar recomanacions específiques per a la gestió sostenible d'aquests ecosistemes valuosos.

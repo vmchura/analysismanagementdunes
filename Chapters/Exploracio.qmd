@@ -1,0 +1,53 @@
+# Exploració i Validació de Dades {#sec-exploracio}
+
+Aquest capítol detalla el procés inicial d'exploració i validació de dades per al projecte d'anàlisi de la vegetació dunar. El conjunt de dades consisteix en un llibre d'Excel principal (`db_species_20250214.xlsx`) que conté diversos fulls amb informació sobre:
+
+1. Presència/abundància d'espècies en diferents parcel·les de mostreig (full `original_data`)
+2. Percentatges de cobertura del sòl a radis de 50m i 100m des dels punts de mostreig (fulls específics per província)
+3. Pràctiques de gestió i estats de protecció per a les zones de platja (fulls específics per província)
+
+Les dades estan estructurades per regió geogràfica (províncies de Girona, Barcelona i Tarragona) i contenen informació sobre diferents platges, transsectes i parcel·les dins de cada regió.
+
+## Passos del Processament de Dades
+
+El treball d'exploració i validació de dades que es presenta en aquest capítol utilitza el contingut complet del Capítol 1 original del projecte (Data Exploration and Validation). Tot el processament s'ha implementat en R utilitzant l'ecosistema de paquets tidyverse, amb especial èmfasi en la neteja i transformació de dades.
+
+### Resum del Procés d'Exploració
+
+El procés d'exploració i validació de dades ha seguit aquests passos clau:
+
+1. Càrrega i neteja del conjunt de dades principal
+2. Processament de les dades de cobertura del sòl per a cada província
+3. Processament de les dades de gestió per a cada província
+4. Validació dels arxius de dades processats
+
+### Principals Resultats de la Validació
+
+La validació ha revelat diversos aspectes importants sobre la qualitat de les dades:
+
+- La comprovació de les dimensions del conjunt de dades ha confirmat que el nombre de files i columnes correspon al disseny de mostreig.
+- La validació dels formats dels identificadors ha mostrat una alta consistència en les dades.
+- La verificació de la coherència entre identificadors compostos i els seus components ha mostrat resultats positius.
+- S'ha confirmat que les variables d'abundància d'espècies es troben majoritàriament dins del rang esperat (0-5), amb només dues columnes amb valors fora de rang que han estat corregides.
+
+S'ha validat també que els percentatges de diferents tipus de cobertura del sòl sumen aproximadament 100% per a cada localitat, tant per al radi de 50m com per al de 100m. Les dades de gestió s'han confirmat dins del rang esperat (0-5) i sense inconsistències significatives en els valors registrats.
+
+## Objectius i Resultats
+
+L'objectiu principal d'aquesta fase del treball ha estat garantir la qualitat i coherència de les dades abans de procedir amb anàlisis més complexes. Els resultats obtinguts d'aquest procés inclouen:
+
+1. Un conjunt de dades netejat i estructurat amb formats coherents
+2. Identificació i correcció d'inconsistències en els valors de les dades
+3. Creació de conjunts de dades analítics per a les fases posteriors del projecte
+
+Aquests resultats han establert una base sòlida per a les anàlisis posteriors, garantint que les conclusions derivades es fonamentin en dades de qualitat contrastada.
+
+## Detall Complet del Procés
+
+El detall complet del procés d'exploració i validació de dades es pot trobar al Capítol 1 original del projecte, que inclou:
+
+- El codi R utilitzat per al processament de les dades
+- Els resultats detallats de les validacions realitzades
+- Les transformacions aplicades a les dades
+
+Per a una comprensió completa de la metodologia i els resultats d'aquesta fase, es recomana consultar el Capítol 1 complet, que proporciona una visió exhaustiva del procés d'exploració i validació de dades.
