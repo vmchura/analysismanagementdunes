@@ -1,0 +1,23 @@
+# Preface {.unnumbered}
+
+This document presents a comprehensive analysis of dune vegetation management across Catalonia's coastline. The research focuses on three primary regions: Girona, Barcelona, and Tarragona, examining the relationships between species diversity, land cover patterns, and management practices.
+
+## Project Overview
+
+Coastal dune systems play a critical role in shoreline protection and serve as unique habitats for specialized flora and fauna. In the Mediterranean region, these ecosystems face increasing pressure from urbanization, tourism, and climate change. This doctoral thesis aims to provide insights into effective management strategies for preserving biodiversity in these valuable ecosystems.
+
+## Structure of the Thesis
+
+This document is structured as follows:
+
+- **Chapter 1**: Describes the data exploration and validation process, establishing the foundation for subsequent analyses.
+- **Chapter 2**: Details the division of data by geographic regions (Girona, Barcelona, and Tarragona) to facilitate regional comparative analyses.
+- **Additional chapters**: Will explore vegetation patterns, management impacts, and conservation recommendations.
+
+## Methodology
+
+The research employs quantitative methods to analyze field data collected from beach dune systems across Catalonia. R statistical software with the tidyverse ecosystem was used for data cleaning, analysis, and visualization. The research combines ecological survey data, land cover analysis, and management practice evaluations to develop comprehensive insights.
+
+## Acknowledgments
+
+I would like to express my gratitude to Dr. Ashok Kunil for his guidance throughout this research project, as well as the University of Ottawa's Department of Mathematics for supporting this interdisciplinary work.
