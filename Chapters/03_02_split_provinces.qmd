@@ -78,6 +78,7 @@ beaches_by_region[["Tarragona"]] <- main_data_selected %>% filter(id_beach >= 24
 ```
 
 The beach ID ranges for each region are:
+
 - **Girona**: Beach IDs 1-19
 - **Barcelona**: Beach IDs 20-23
 - **Tarragona**: Beach IDs 24 and above
@@ -188,13 +189,12 @@ cat("Regional datasets saved to 'data/all_observations_split.RData'\n")
 
 This chapter has:
 
-1. Loaded the processed data from Chapter 1
+1. Loaded the processed data from section [@sec-data-exploration-validation]
 2. Selected the necessary columns for regional analysis
 3. Split the dataset into three regions (Girona, Barcelona, and Tarragona)
 4. Validated the regional split to ensure no data was lost
-5. Analyzed key characteristics of each regional dataset
-6. Visualized the distribution of observations across regions
-7. Saved the regional datasets for subsequent analyses
+5. Visualized the distribution of observations across regions
+6. Saved the regional datasets for subsequent analyses
 
 In the following chapters, we will use these regional datasets to explore regional variations in dune vegetation patterns and their relationships with environmental factors and management practices.
 
