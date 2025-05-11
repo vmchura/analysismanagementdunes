@@ -1,30 +1,26 @@
-# Prefaci {.unnumbered}
+# Prefacio {.unnumbered}
 
-Aquest document presenta el Treball Final de Màster (TFM) titulat "Anàlisi i Gestió de la Vegetació Dunar a la Costa Catalana" dins del programa de Màster en Ciència de Dades Aplicada de la Universitat de Girona.
+Este documento presenta el Trabajo Final de Máster (TFM) titulado "Análisis y Gestión de la Vegetación Dunar en la Costa Catalana" dentro del programa de Máster en Ciencia de Datos de la Universidad de Girona.
 
-El treball aplica metodologies de la ciència de dades a l'estudi dels ecosistemes dunars costaners de Catalunya, amb l'objectiu d'analitzar les relacions entre la biodiversitat vegetal, els factors ambientals i les pràctiques de gestió. A través d'aquest enfocament multidisciplinari, es pretén generar coneixement científic que pugui informar estratègies més efectives per a la conservació d'aquests valuosos i amenaçats ecosistemes.
+El trabajo aplica metodologías de la ciencia de datos al estudio de los ecosistemas dunares costeros de Cataluña, con el objetivo de analizar las relaciones entre la biodiversidad vegetal, los factores ambientales y las prácticas de gestión.
 
-Aquest document segueix l'estructura recomanada per la Universitat de Girona per als Treballs Finals de Màster, organitzant-se en els següents capítols:
+Este documento sigue la estructura recomendada por la Universidad de Girona para los Trabajos Finales de Máster, organizándose en los siguientes capítulos:
 
-- **Resum**: Presenta una síntesi del treball, incloent context, objectius, metodologia i principals resultats.
-- **Introducció**: Contextualitza el treball, presenta la seva rellevància i defineix els objectius i preguntes de recerca.
-- **Literatura Relacionada i Estat de l'Art**: Revisa els treballs i coneixements previs rellevants per a l'estudi.
-- **Preliminars**: Estableix els conceptes bàsics, la terminologia i els fonaments teòrics necessaris.
-- **Planificació i Metodologia**: Descriu la planificació del projecte, la metodologia emprada i els recursos utilitzats.
-- **Exploració i Validació de Dades**: Detalla el procés inicial d'exploració i validació de les dades.
-- **Divisió per Províncies**: Explica el procés de divisió de les dades per regions geogràfiques.
-- **Contribució Metodològica**: Presenta les principals aportacions metodològiques del treball.
-- **Resultats**: Exposa els resultats obtinguts a partir de les anàlisis realitzades.
-- **Conclusions**: Sintetitza les principals conclusions, limitacions i línies futures de recerca.
+- **Resumen**: Presenta una síntesis del trabajo, incluyendo contexto, objetivos, metodología y principales resultados.
+- **Introducción**: Contextualiza el trabajo, presenta su relevancia y define los objetivos y preguntas de investigación.
+- **Literatura Relacionada y Estado del Arte**: Revisa los trabajos y conocimientos previos relevantes para el estudio.
+- **Preliminares**: Establece los conceptos básicos, la terminología y los fundamentos teóricos necesarios.
+- **Planificación y Metodología**: Describe la planificación del proyecto, la metodología empleada y los recursos utilizados.
+- **Exploración y Validación de Datos**: Detalla el proceso inicial de exploración y validación de los datos.
+- **División por Provincias**: Explica el proceso de división de los datos por regiones geográficas.
+- **Contribución Metodológica**: Presenta las principales aportaciones metodológicas del trabajo.
+- **Resultados**: Expone los resultados obtenidos a partir de los análisis realizados.
+- **Conclusiones**: Sintetiza las principales conclusiones, limitaciones y líneas futuras de investigación.
 
-La realització d'aquest treball ha estat possible gràcies al suport de diverses persones i institucions, a les quals vull expressar el meu agraïment:
+La realización de este trabajo ha sido posible gracias al apoyo de diversas personas e instituciones, a las cuales quiero expresar mi agradecimiento:
 
-En primer lloc, al Dr. Ashok Kunil, director d'aquest TFM, per la seva orientació, suport i disponibilitat al llarg de tot el procés. Els seus valuosos consells i coneixements han estat fonamentals per a la realització d'aquest treball.
+En primer lugar, al Dr. Javier Palarea Albaladejo, tutor de este TFM, por su orientación, apoyo y disponibilidad a lo largo de todo el proceso. Sus valiosos consejos y conocimientos han sido fundamentales para la realización de este trabajo.
 
-A la Universitat de Girona i, en particular, al Departament d'Informàtica, Matemàtica Aplicada i Estadística, per proporcionar els recursos i l'entorn acadèmic necessaris per desenvolupar aquesta recerca.
+A las entidades e investigadores que han proporcionado datos e información para este estudio, especialmente a Claudia.
 
-A les entitats i investigadors que han proporcionat dades i informació per a aquest estudi, especialment al Departament d'Acció Climàtica, Alimentació i Agenda Rural de la Generalitat de Catalunya.
-
-Finalment, vull agrair el suport incondicional de la meva família i amics, que m'han acompanyat i encoratjat durant aquesta etapa formativa.
-
-Aquest treball representa no només la culminació del programa de màster, sinó també una contribució al coneixement científic i a la conservació dels ecosistemes dunars del litoral català, un patrimoni natural d'alt valor que cal preservar per a les generacions futures.
+Este trabajo representa no solo la culminación del programa de máster, sino también una contribución al conocimiento científico y a la conservación de los ecosistemas dunares del litoral catalán, un patrimonio natural de alto valor que debe preservarse para las generaciones futuras.

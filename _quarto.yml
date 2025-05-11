@@ -3,8 +3,9 @@ project:
   output-dir: .
 
 book:
-  title: Anàlisi i Gestió de la Vegetació Dunar a la Costa Catalana
-  date: June 15, 2024
+  title: Análisis de la Relación entre la Gestión de Playas, la Cobertura del Suelo y la Diversidad Vegetal en Dunas Costeras de Catalunya
+  output-file: "tfm_victor_chura"
+  date: May, 2025
   author:
     name: Victor Miguel Chura Quispe
   downloads: [pdf]
@@ -26,19 +27,16 @@ book:
   appendices:
     - Appendices/AppendixA.qmd
 
-  site-url: https://nmfs-opensci.github.io/quarto-thesis/
   repo-url: https://github.com/nmfs-opensci/quarto-thesis
   repo-actions: [edit, source, issue]
   search: true
 
 thesis:
   supervisor: 
-    name: Dr. Ashok Kunil
-    url: https://quarto.org/
-  degree-name: Màster en Ciència de Dades Aplicada
+    name: Dr. Javier Palarea Albaladejo
+    url: https://www.udg.edu/ca/directori/pagina-personal?ID=180023
+  degree-name: Màster en Ciència de Dades
   university: Universitat de Girona
-  department: Departament d'Informàtica, Matemàtica Aplicada i Estadística
-  group: Programa de Màster en Ciència de Dades Aplicada
   faculty: Escola Politècnica Superior
   abbreviations: "Frontmatter/abbreviations.tex"
   symbols: "Frontmatter/symbols.tex"
