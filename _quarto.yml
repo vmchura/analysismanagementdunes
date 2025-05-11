@@ -13,15 +13,13 @@ book:
     - index.qmd
     - Chapters/Chapter1.qmd
     - Chapters/Chapter2.qmd
-    - Chapters/Introduccio.qmd
-    - Chapters/Literatura.qmd
-    - Chapters/Preliminars.qmd
-    - Chapters/Metodologia.qmd
-    - Chapters/Exploracio.qmd
-    - Chapters/Divisio.qmd
-    - Chapters/Contribucio.qmd
-    - Chapters/Resultats.qmd
-    - Chapters/Conclusions.qmd
+    - Chapters/01_Introduccio.qmd
+    - Chapters/02_Literatura.qmd
+    - Chapters/03_Preliminars.qmd
+    - Chapters/04_Metodologia.qmd
+    - Chapters/05_Contribucio.qmd
+    - Chapters/06_Resultats.qmd
+    - Chapters/07_Conclusions.qmd
     - references.qmd
   appendices:
     - Appendices/AppendixA.qmd
