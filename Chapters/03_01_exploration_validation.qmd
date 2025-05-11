@@ -1,6 +1,6 @@
-# Data Exploration and Validation {#sec-Chapter1}
+## Data Exploration and Validation {#sec-Chapter1}
 
-## Dataset Overview
+### Dataset Overview
 
 This chapter details the initial data exploration and validation process for the dune vegetation analysis project. The dataset consists of a primary Excel workbook (`db_species_20250214.xlsx`) containing several sheets with information about:
 
@@ -10,7 +10,7 @@ This chapter details the initial data exploration and validation process for the
 
 The data is structured by geographic region (Girona, Barcelona, and Tarragona provinces) and contains information about different beaches, transects, and plots within each region.
 
-## Data Processing Steps
+### Data Processing Steps
 
 The data processing workflow follows these key steps:
 
@@ -21,7 +21,7 @@ The data processing workflow follows these key steps:
 
 All processing was implemented in R using the tidyverse ecosystem of packages, with special emphasis on data cleaning and transformation.
 
-### Loading the Main Dataset
+#### Loading the Main Dataset
 
 The main dataset containing species observations was loaded from the `original_data` sheet of the Excel workbook. This process involved:
 
@@ -30,7 +30,7 @@ The main dataset containing species observations was loaded from the `original_d
 #| echo: false
 #| eval: true
 #| output: false
-# Load required packages
+## Load required packages
 library(tidyverse)
 library(readxl)
 library(conflicted)
@@ -44,17 +44,17 @@ library(dplyr)
 #| echo: false
 #| eval: true
 #| output: false
-# Load the main data sheet
+## Load the main data sheet
 main_data <- read_excel("../data/db_species_20250214.xlsx", sheet = "original_data")
 main_data <- main_data %>% select(where(~ !all(is.na(.))))
 
-# Clean column names using the janitor package
+## Clean column names using the janitor package
 main_data <- main_data %>% janitor::clean_names()
 ```
 
 This initial loading process removed completely empty columns and standardized column names using the `clean_names()` function, which converts column names to lowercase, replaces spaces with underscores, and removes special characters.
 
-### Numeric Column Conversion
+#### Numeric Column Conversion
 
 The species abundance data needed to be converted to numeric format for analysis. The script identified the relevant columns and performed the conversion:
 
@@ -62,7 +62,7 @@ The species abundance data needed to be converted to numeric format for analysis
 #| label: numeric-conversion
 #| echo: false
 #| eval: true
-# Find the index of the EUNIS column
+## Find the index of the EUNIS column
 eunis_col_index <- which(grepl("eunis", names(main_data), ignore.case = TRUE))
 if(length(eunis_col_index) == 0) {
   cat("Warning: Could not find 'EUNIS' column. Will parse all columns from second onwards.\n")
@@ -71,7 +71,7 @@ if(length(eunis_col_index) == 0) {
   eunis_col_index <- min(eunis_col_index)  # Take the first match if multiple
 }
 
-# Parse columns from second to EUNIS as numeric
+## Parse columns from second to EUNIS as numeric
 for(i in 2:min(ncol(main_data), eunis_col_index - 1)) {
   col_name <- names(main_data)[i]
   # Store the original values to check for parsing issues
@@ -96,7 +96,7 @@ for(i in 2:min(ncol(main_data), eunis_col_index - 1)) {
 
 This conversion process included validation checks to identify any values that could not be properly converted to numeric format, ensuring data quality through the transformation.
 
-### Column Reordering
+#### Column Reordering
 
 To ensure consistency in data structure, the columns were reordered to follow a specific pattern:
 
@@ -104,22 +104,22 @@ To ensure consistency in data structure, the columns were reordered to follow a 
 #| label: column-reorder
 #| echo: false
 #| eval: true
-# Identify all desired columns
+## Identify all desired columns
 species_cols <- setdiff(names(main_data),
                       c("plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis"))
 
-# Create the desired column order
+## Create the desired column order
 ordered_cols <- c("plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis", species_cols)
-# Reorder columns (only those that exist)
+## Reorder columns (only those that exist)
 main_data <- main_data %>% select(all_of(ordered_cols), everything())
 
-# Save the processed main data
+## Save the processed main data
 save(main_data, file = "../data/processed_data_clean.RData")
 ```
 
 The reordering placed identifier columns first, followed by the species columns, making the data structure more intuitive for subsequent analysis.
 
-### Processing Land Cover Data
+#### Processing Land Cover Data
 
 For each province (Girona, Barcelona, and Tarragona), the land cover data was processed using a dedicated function:
 
@@ -127,7 +127,7 @@ For each province (Girona, Barcelona, and Tarragona), the land cover data was pr
 #| label: land-cover-processing
 #| echo: false
 #| eval: true
-# Function to process land cover sheets
+## Function to process land cover sheets
 process_land_cover <- function(sheet_name) {
   cat("Processing sheet:", sheet_name, "\n")
 
@@ -173,19 +173,19 @@ process_land_cover <- function(sheet_name) {
   return(filtered_data)
 }
 
-# Process each land cover sheet
+## Process each land cover sheet
 girona_land_cover <- process_land_cover("girona_land cover")
 barcelona_land_cover <- process_land_cover("barcelona_land cover")
 tarragona_land_cover <- process_land_cover("tarragona_land cover")
 
-# Create a list containing all land cover datasets
+## Create a list containing all land cover datasets
 land_cover_data <- list(
   "Girona" = girona_land_cover,
   "Barcelona" = barcelona_land_cover,
   "Tarragona" = tarragona_land_cover
 )
 
-# Save the combined land cover data
+## Save the combined land cover data
 save(land_cover_data, file = "../data/all_land_cover_data.RData")
 ```
 
@@ -197,7 +197,7 @@ This processing function:
 4. Converts all measurements to numeric format
 5. Returns a standardized data frame for each province
 
-### Processing Management Data
+#### Processing Management Data
 
 The management data followed a similar processing pattern, but with special handling for categorical variables:
 
@@ -205,7 +205,7 @@ The management data followed a similar processing pattern, but with special hand
 #| label: management-data-processing
 #| echo: false
 #| eval: true
-# Function to process management sheets
+## Function to process management sheets
 process_management <- function(sheet_name) {
   cat("Processing sheet:", sheet_name, "\n")
 
@@ -278,19 +278,19 @@ process_management <- function(sheet_name) {
   }
 }
 
-# Process each management sheet
+## Process each management sheet
 girona_management <- process_management("girona_management")
 barcelona_management <- process_management("barcelona_management")
 tarragona_management <- process_management("tarragona_management")
 
-# Create a list containing all management datasets
+## Create a list containing all management datasets
 management_data <- list(
   "Girona" = girona_management,
   "Barcelona" = barcelona_management,
   "Tarragona" = tarragona_management
 )
 
-# Save the combined management data
+## Save the combined management data
 save(management_data, file = "../data/all_management_data.RData")
 ```
 
@@ -301,7 +301,7 @@ This processing function:
 3. Intelligently converts categorical variables to factors
 4. Returns a standardized data frame for each province
 
-## Data Validation
+### Data Validation
 
 After the initial data processing, a validation script was executed to ensure data quality and integrity. The validation process included:
 
@@ -310,7 +310,7 @@ After the initial data processing, a validation script was executed to ensure da
 3. Validating value ranges and formats
 4. Cross-checking relationships between identifier fields
 
-### Main Data Validation
+#### Main Data Validation
 
 The main data validation included these key checks:
 
@@ -474,7 +474,7 @@ validate_main_data <- function(data) {
 }
 ```
 
-### Land Cover Data Validation
+#### Land Cover Data Validation
 
 Validation for the land cover data focused on:
 
@@ -614,7 +614,7 @@ validate_land_cover_data <- function(data) {
 
 The key validation for the land cover data was ensuring that the percentages for different land cover types at each distance (50m and 100m) summed to approximately 100%.
 
-### Management Data Validation
+#### Management Data Validation
 
 The management data validation focused on:
 
@@ -705,7 +705,7 @@ validate_management_data <- function(data) {
 
 The most important validation for management data was ensuring that the management rating columns contained only integer values between 0 and 5.
 
-## Executing the Validation
+### Executing the Validation
 
 After creating the validation functions, they need to be executed on the processed data files. This is done by loading each of the saved RData files and passing them to the appropriate validation function:
 
@@ -713,10 +713,10 @@ After creating the validation functions, they need to be executed on the process
 #| label: execute-validation
 #| echo: true
 #| eval: true
-# Load the required libraries
+## Load the required libraries
 cat("Starting data validation...\n\n")
 
-# Load main_data
+## Load main_data
 cat("Loading main_data...\n")
 if (file.exists("../data/processed_data_clean.RData")) {
   load("../data/processed_data_clean.RData")
@@ -725,7 +725,7 @@ if (file.exists("../data/processed_data_clean.RData")) {
   cat("ERROR: File 'data/processed_data_clean.RData' not found!\n\n")
 }
 
-# Load land_cover_data
+## Load land_cover_data
 cat("Loading land_cover_data...\n")
 if (file.exists("../data/all_land_cover_data.RData")) {
   load("../data/all_land_cover_data.RData")
@@ -734,7 +734,7 @@ if (file.exists("../data/all_land_cover_data.RData")) {
   cat("ERROR: File 'data/all_land_cover_data.RData' not found!\n\n")
 }
 
-# Load management_data (placeholder for future implementation)
+## Load management_data (placeholder for future implementation)
 cat("Loading management_data...\n")
 if (file.exists("../data/all_management_data.RData")) {
   load("../data/all_management_data.RData")
@@ -756,7 +756,7 @@ This execution block:
 
 The validation process provides a comprehensive report on the quality and consistency of the processed data, identifying any issues that need to be addressed before proceeding with further analysis.
 
-## Summary
+### Summary
 
 The data exploration and validation process established a solid foundation for further analysis by:
 

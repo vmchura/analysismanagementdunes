@@ -2,7 +2,5 @@
 
 ## Domini: Ecosistemes Dunars Costaners
 
-## Data Exploration and Validation {#sec-data-exploration}
-
-{{< include Chapters/03_01_data_exploration_and_validation.qmd >}}
-{{< include Chapters/03_02_split_provinces.qmd >}}
+{{< include 03_01_exploration_validation.qmd >}}
+{{< include 03_02_split_provinces.qmd >}}

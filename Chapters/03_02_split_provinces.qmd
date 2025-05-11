@@ -1,10 +1,10 @@
-# Data Splitting by Province {#sec-Chapter2}
+## Data Splitting by Province {#sec-Chapter2}
 
-## Regional Division 
+### Regional Division 
 
 This chapter details the process of dividing the dataset by the three biogeographical zones (Girona, Barcelona, and Tarragona) for separate analysis. By splitting the data, we can better understand regional differences in dune vegetation patterns and management practices.
 
-## Dataset Preparation
+### Dataset Preparation
 
 The data splitting process builds upon the processed data from Chapter 1. We use the main dataset with species observations to create the regional subsets.
 
@@ -12,15 +12,15 @@ The data splitting process builds upon the processed data from Chapter 1. We use
 #| label: load-packages-chapter2
 #| echo: false
 #| eval: true
-# Load required packages
+## Load required packages
 library(tidyverse)
 
-# Set conflicts resolution preference
+## Set conflicts resolution preference
 conflicted::conflict_prefer("filter", "dplyr")
 conflicted::conflict_prefer("select", "dplyr")
 ```
 
-### Loading the Processed Data
+#### Loading the Processed Data
 
 First, we load the saved processed data from the previous chapter:
 
@@ -28,14 +28,14 @@ First, we load the saved processed data from the previous chapter:
 #| label: load-data-chapter2
 #| echo: true
 #| eval: true
-# Load the saved data
+## Load the saved data
 load("../data/processed_data_clean.RData")
 
-# Display the structure to confirm successful loading
+## Display the structure to confirm successful loading
 str(main_data, max.level = 1)
 ```
 
-### Selecting Necessary Columns
+#### Selecting Necessary Columns
 
 Before splitting the data by region, we select only the necessary columns for our analysis:
 
@@ -43,8 +43,8 @@ Before splitting the data by region, we select only the necessary columns for ou
 #| label: select-columns-chapter2
 #| echo: true
 #| eval: true
-# Select only the columns needed: first column (plot), 
-# columns from 2 to the one before eunis, and id_beach
+## Select only the columns needed: first column (plot), 
+## columns from 2 to the one before eunis, and id_beach
 main_data_selected <- main_data %>%
   select(plot, id_beach, 8:ncol(main_data))
 
@@ -55,7 +55,7 @@ This selection process preserves:
 2. The beach identifier (`id_beach`), which will be used for the regional split
 3. All columns for the species
 
-## Regional Split Implementation
+### Regional Split Implementation
 
 The dataset is split into three regions based on the `id_beach` ranges, following the known geographical distribution of beaches:
 
@@ -63,10 +63,10 @@ The dataset is split into three regions based on the `id_beach` ranges, followin
 #| label: split-by-region
 #| echo: true
 #| eval: true
-# Create a named list to store the regional data
+## Create a named list to store the regional data
 beaches_by_region <- list()
 
-# Split data by region according to id_beach ranges
+## Split data by region according to id_beach ranges
 beaches_by_region[["Girona"]] <- main_data_selected %>% filter(id_beach >= 1 & id_beach <= 19)
 beaches_by_region[["Barcelona"]] <- main_data_selected %>% filter(id_beach >= 20 & id_beach <= 23)
 beaches_by_region[["Tarragona"]] <- main_data_selected %>% filter(id_beach >= 24)
@@ -77,7 +77,7 @@ The beach ID ranges for each region are:
 - **Barcelona**: Beach IDs 20-23
 - **Tarragona**: Beach IDs 24 and above
 
-### Validation of Regional Splits
+#### Validation of Regional Splits
 
 To ensure the split was performed correctly, we check the number of observations in each regional dataset:
 
@@ -85,18 +85,18 @@ To ensure the split was performed correctly, we check the number of observations
 #| label: validate-split
 #| echo: true
 #| eval: true
-# Check the structure and sizes
+## Check the structure and sizes
 cat("Number of observations by region:\n")
 cat("Girona:", nrow(beaches_by_region[["Girona"]]), "observations\n")
 cat("Barcelona:", nrow(beaches_by_region[["Barcelona"]]), "observations\n")
 cat("Tarragona:", nrow(beaches_by_region[["Tarragona"]]), "observations\n")
 
-# Verify that the sum equals the original dataset size
+## Verify that the sum equals the original dataset size
 total_observations <- sum(sapply(beaches_by_region, nrow))
 cat("\nTotal observations across all regions:", total_observations, "\n")
 cat("Original dataset observations:", nrow(main_data_selected), "\n")
 
-# Check if all observations were assigned to a region
+## Check if all observations were assigned to a region
 if(total_observations == nrow(main_data_selected)) {
   cat("Validation successful: All observations have been assigned to a region.\n")
 } else {
@@ -106,7 +106,7 @@ if(total_observations == nrow(main_data_selected)) {
 
 This validation step confirms that all observations from the original dataset have been correctly assigned to one of the three regions, with no data loss or duplication.
 
-## Data Characteristics by Region
+### Data Characteristics by Region
 
 To understand the distribution of data across regions, we analyze key characteristics of each regional dataset:
 
@@ -114,7 +114,7 @@ To understand the distribution of data across regions, we analyze key characteri
 #| label: regional-characteristics
 #| echo: true
 #| eval: true
-# Function to summarize region characteristics
+## Function to summarize region characteristics
 summarize_region <- function(region_name, region_data) {
   unique_beaches <- length(unique(region_data$id_beach))
   unique_plots <- length(unique(region_data$plot))
@@ -125,13 +125,13 @@ summarize_region <- function(region_name, region_data) {
   cat("- Observations:", nrow(region_data), "\n\n")
 }
 
-# Apply the summary function to each region
+## Apply the summary function to each region
 for(region_name in names(beaches_by_region)) {
   summarize_region(region_name, beaches_by_region[[region_name]])
 }
 ```
 
-## Data Visualization
+### Data Visualization
 
 To visualize the distribution of data across regions, we can create a bar chart showing the number of observations per region:
 
@@ -141,13 +141,13 @@ To visualize the distribution of data across regions, we can create a bar chart 
 #| echo: true
 #| eval: true
 
-# Create a data frame for plotting
+## Create a data frame for plotting
 region_counts <- data.frame(
   Region = names(beaches_by_region),
   Observations = sapply(beaches_by_region, nrow)
 )
 
-# Create the plot
+## Create the plot
 ggplot(region_counts, aes(x = Region, y = Observations, fill = Region)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = Observations), vjust = -0.5) +
@@ -162,7 +162,7 @@ ggplot(region_counts, aes(x = Region, y = Observations, fill = Region)) +
 
 This visualization highlights the regional distribution of our data, which is important to consider when interpreting subsequent analyses.
 
-## Saving the Regional Datasets
+### Saving the Regional Datasets
 
 Finally, we save the regional datasets for future use:
 
@@ -170,12 +170,12 @@ Finally, we save the regional datasets for future use:
 #| label: save-regional-data
 #| echo: true
 #| eval: true
-# Save the regional data to an RData file
+## Save the regional data to an RData file
 save(beaches_by_region, file = "../data/all_observations_split.RData")
 cat("Regional datasets saved to 'data/all_observations_split.RData'\n")
 ```
 
-## Summary
+### Summary
 
 This chapter has:
 
