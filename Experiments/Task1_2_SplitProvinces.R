@@ -11,7 +11,7 @@ conflicted::conflict_prefer("filter", "dplyr")
 conflicted::conflict_prefer("select", "dplyr")
 
 # First, load the saved data
-load("data/processed_data_clean.RData")
+load("../data/processed_data_clean.RData")
 
 # Select only the columns needed: first column (plot), columns from 2 to the one before eunis, and id_beach
 main_data <- main_data %>%
@@ -35,5 +35,5 @@ cat("Tarragona:", nrow(beaches_by_region[["Tarragona"]]), "observations\n")
 # beaches_by_region[["Girona"]]
 # Or with $ notation:
 # beaches_by_region$Girona
-save(beaches_by_region, file = "data/all_observations_split.RData")
+save(beaches_by_region, file = "../data/all_observations_split.RData")
 

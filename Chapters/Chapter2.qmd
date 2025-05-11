@@ -171,7 +171,7 @@ Finally, we save the regional datasets for future use:
 #| echo: true
 #| eval: true
 # Save the regional data to an RData file
-save(beaches_by_region, file = "data/all_observations_split.RData")
+save(beaches_by_region, file = "../data/all_observations_split.RData")
 cat("Regional datasets saved to 'data/all_observations_split.RData'\n")
 ```
 

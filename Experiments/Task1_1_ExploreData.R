@@ -5,7 +5,7 @@ use("ggplot2")
 use("janitor") # For clean_names function
 use("dplyr")
 # Load the main data sheet
-main_data <- read_excel("data/db_species_20250214.xlsx", sheet = "original_data")
+main_data <- read_excel("../data/db_species_20250214.xlsx", sheet = "original_data")
 main_data <- main_data %>% select(where(~ !all(is.na(.))))
 
 # Clean column names - replace spaces and special characters with underscores
@@ -63,7 +63,7 @@ cat("\nColumn order after reordering:\n")
 print(head(names(main_data), 10))  # Print first 10 column names to verify order
 
 # Save the processed main data with ordered columns
-save(main_data, file = "data/processed_data_clean.RData")
+save(main_data, file = "../data/processed_data_clean.RData")
 
 # Load and process the land cover sheets
 cat("\n==== Processing land cover sheets ====\n\n")
@@ -73,7 +73,7 @@ process_land_cover <- function(sheet_name) {
   cat("Processing sheet:", sheet_name, "\n")
   
   # Read the sheet - we'll read as numeric to get the raw Excel date values
-  land_cover_data <- read_excel("data/db_species_20250214.xlsx", sheet = sheet_name)
+  land_cover_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
   
   # Clean column names
   land_cover_data <- land_cover_data %>% janitor::clean_names()
@@ -131,7 +131,7 @@ land_cover_data <- list(
 )
 
 # Save the combined land cover data as a list
-save(land_cover_data, file = "data/all_land_cover_data.RData")
+save(land_cover_data, file = "../data/all_land_cover_data.RData")
 
 cat("\nLand cover data processing complete.\n")
 cat("Combined datasets saved as a list in: data/all_land_cover_data.RData\n")
@@ -145,7 +145,7 @@ process_management <- function(sheet_name) {
   cat("Processing sheet:", sheet_name, "\n")
   
   # Read the sheet
-  management_data <- read_excel("data/db_species_20250214.xlsx", sheet = sheet_name)
+  management_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
   
   # Clean column names
   management_data <- management_data %>% janitor::clean_names()
@@ -239,7 +239,7 @@ management_data <- list(
 )
 
 # Save the combined management data as a list
-save(management_data, file = "data/all_management_data.RData")
+save(management_data, file = "../data/all_management_data.RData")
 
 cat("\nManagement data processing complete.\n")
 cat("Combined datasets saved as a list in: data/all_management_data.RData\n")

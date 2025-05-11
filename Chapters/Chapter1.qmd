@@ -36,6 +36,7 @@ The main dataset containing species observations was loaded from the `original_d
 #| label: load-packages
 #| echo: false
 #| eval: true
+#| output: false
 # Load required packages
 library(tidyverse)
 library(readxl)
@@ -49,8 +50,9 @@ library(dplyr)
 #| label: load-data
 #| echo: false
 #| eval: true
+#| output: false
 # Load the main data sheet
-main_data <- read_excel("data/db_species_20250214.xlsx", sheet = "original_data")
+main_data <- read_excel("../data/db_species_20250214.xlsx", sheet = "original_data")
 main_data <- main_data %>% select(where(~ !all(is.na(.))))
 
 # Clean column names using the janitor package
@@ -81,15 +83,15 @@ for(i in 2:min(ncol(main_data), eunis_col_index - 1)) {
   col_name <- names(main_data)[i]
   # Store the original values to check for parsing issues
   original_values <- main_data[[i]]
-  
+
   # Try to convert to numeric
   main_data[[i]] <- as.numeric(as.character(main_data[[i]]))
-  
+
   # Check if we lost any non-NA values
   if(sum(!is.na(original_values)) > sum(!is.na(main_data[[i]]))) {
     warning_msg <- paste("Warning: Some values in column", col_name, "could not be parsed as numeric")
     cat(warning_msg, "\n")
-    
+
     # Report the problematic values
     problematic <- original_values[!is.na(original_values) & is.na(main_data[[i]])]
     if(length(problematic) > 0) {
@@ -119,7 +121,7 @@ ordered_cols <- c("plot", "id_beach", "beach", "id_transect", "id_plot", "transe
 main_data <- main_data %>% select(all_of(ordered_cols), everything())
 
 # Save the processed main data
-save(main_data, file = "data/processed_data_clean.RData")
+save(main_data, file = "../data/processed_data_clean.RData")
 ```
 
 The reordering placed identifier columns first, followed by the species columns, making the data structure more intuitive for subsequent analysis.
@@ -135,46 +137,46 @@ For each province (Girona, Barcelona, and Tarragona), the land cover data was pr
 # Function to process land cover sheets
 process_land_cover <- function(sheet_name) {
   cat("Processing sheet:", sheet_name, "\n")
-  
+
   # Read the sheet
-  land_cover_data <- read_excel("data/db_species_20250214.xlsx", sheet = sheet_name)
-  
+  land_cover_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
+
   # Clean column names
   land_cover_data <- land_cover_data %>% janitor::clean_names()
-  
+
   # Select id_beach/id_plot column
   id_col <- grep("^id_beach$|^id_plot$", names(land_cover_data), value = TRUE)[1]
   if(is.na(id_col)) {
     id_col <- grep("id.*beach|beach.*id|id.*plot|plot.*id", names(land_cover_data), value = TRUE)[1]
   }
-  
+
   # Get 50m and 100m columns
   cols_50m <- grep("^(x)?50m_", names(land_cover_data), value = TRUE)
   cols_100m <- grep("^(x)?100m_", names(land_cover_data), value = TRUE)
-  
+
   if(length(cols_50m) == 0) {
     cols_50m <- grep("50.*m|50m|50 m", names(land_cover_data), value = TRUE)
   }
-  
+
   if(length(cols_100m) == 0) {
     cols_100m <- grep("100.*m|100m|100 m", names(land_cover_data), value = TRUE)
   }
-  
+
   # Select columns
   distance_cols <- c(cols_50m, cols_100m)
   selected_cols <- c(id_col, distance_cols)
-  
+
   # Filter data
   filtered_data <- land_cover_data %>% select(all_of(selected_cols)) %>% distinct()
-  
+
   # Convert columns to numeric if needed
   for(col in distance_cols) {
     filtered_data[[col]] <- as.numeric(filtered_data[[col]])
   }
-  
+
   # Convert ID column to integer
   filtered_data[[id_col]] <- as.integer(filtered_data[[id_col]])
-  
+
   return(filtered_data)
 }
 
@@ -191,7 +193,7 @@ land_cover_data <- list(
 )
 
 # Save the combined land cover data
-save(land_cover_data, file = "data/all_land_cover_data.RData")
+save(land_cover_data, file = "../data/all_land_cover_data.RData")
 ```
 
 This processing function:
@@ -213,30 +215,30 @@ The management data followed a similar processing pattern, but with special hand
 # Function to process management sheets
 process_management <- function(sheet_name) {
   cat("Processing sheet:", sheet_name, "\n")
-  
+
   # Read the sheet
-  management_data <- read_excel("data/db_species_20250214.xlsx", sheet = sheet_name)
-  
+  management_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
+
   # Clean column names
   management_data <- management_data %>% janitor::clean_names()
-  
+
   # Standardize key column names based on what is expected
   expected_cols <- c(
-    "id_plot", "id_beach", "beach", 
+    "id_plot", "id_beach", "beach",
     "managed_paths", "rope_fences", "mechanical_cleaning",
     "surface_area_occupied_by_seasonal_services_and_amenities_on_or_less_than_5_m_from_the_dunes",
     "surface_area_of_parking_or_other_fixed_services_on_or_less_than_5_m_from_the_dunes",
     "protection_of_the_system_and_the_immediate_environment",
     "degree_of_protection_according_to_the_iucn_classification"
   )
-  
+
   # Find matching columns
   actual_cols <- vector("character", length(expected_cols))
   for (i in seq_along(expected_cols)) {
     pattern <- expected_cols[i]
     simple_pattern <- gsub("_", ".*", pattern)
     matches <- grep(simple_pattern, names(management_data), ignore.case = TRUE, value = TRUE)
-    
+
     if (length(matches) > 0) {
       actual_cols[i] <- matches[1]
     } else {
@@ -244,30 +246,30 @@ process_management <- function(sheet_name) {
       actual_cols[i] <- NA
     }
   }
-  
+
   # Remove NA values
   actual_cols <- actual_cols[!is.na(actual_cols)]
-  
+
   if (length(actual_cols) > 0) {
     # Subset the original data
     filtered_data <- management_data %>% select(all_of(actual_cols))
-    
+
     # Detect ID columns
     id_plot_col <- grep("id.*plot|plot.*id", names(filtered_data), ignore.case = TRUE, value = TRUE)[1]
     id_beach_col <- grep("id.*beach|beach.*id", names(filtered_data), ignore.case = TRUE, value = TRUE)[1]
-    
+
     # Ensure ID columns are integers
     if (!is.na(id_plot_col)) {
       filtered_data[[id_plot_col]] <- as.integer(filtered_data[[id_plot_col]])
     }
-    
+
     if (!is.na(id_beach_col)) {
       filtered_data[[id_beach_col]] <- as.integer(filtered_data[[id_beach_col]])
     }
-    
+
     # Convert appropriate columns to factors if they have categorical values
     for (col in names(filtered_data)) {
-      if (is.character(filtered_data[[col]]) && 
+      if (is.character(filtered_data[[col]]) &&
           !grepl("^id|^beach$", col, ignore.case = TRUE)) {
         unique_vals <- unique(na.omit(filtered_data[[col]]))
         if (length(unique_vals) < 10) {  # Assume categorical if fewer than 10 unique values
@@ -275,7 +277,7 @@ process_management <- function(sheet_name) {
         }
       }
     }
-    
+
     return(filtered_data)
   } else {
     warning("No usable columns found in the management sheet")
@@ -296,7 +298,7 @@ management_data <- list(
 )
 
 # Save the combined management data
-save(management_data, file = "data/all_management_data.RData")
+save(management_data, file = "../data/all_management_data.RData")
 ```
 
 This processing function:
@@ -325,11 +327,11 @@ The main data validation included these key checks:
 #| eval: true
 validate_main_data <- function(data) {
   cat("===== Validating main_data =====\n\n")
-  
+
   # Check dimensions
   expected_rows <- 278
   expected_cols <- 147 + 7  # Species columns + identifier columns
-  
+
   cat("Dimensions check:\n")
   cat("  Expected: ", expected_cols, " columns by ", expected_rows, " rows\n", sep = "")
   cat("  Actual:   ", ncol(data), " columns by ", nrow(data), " rows\n", sep = "")
@@ -723,8 +725,8 @@ cat("Starting data validation...\n\n")
 
 # Load main_data
 cat("Loading main_data...\n")
-if (file.exists("data/processed_data_clean.RData")) {
-  load("data/processed_data_clean.RData")
+if (file.exists("../data/processed_data_clean.RData")) {
+  load("../data/processed_data_clean.RData")
   validate_main_data(main_data)
 } else {
   cat("ERROR: File 'data/processed_data_clean.RData' not found!\n\n")
@@ -732,8 +734,8 @@ if (file.exists("data/processed_data_clean.RData")) {
 
 # Load land_cover_data
 cat("Loading land_cover_data...\n")
-if (file.exists("data/all_land_cover_data.RData")) {
-  load("data/all_land_cover_data.RData")
+if (file.exists("../data/all_land_cover_data.RData")) {
+  load("../data/all_land_cover_data.RData")
   validate_land_cover_data(land_cover_data)
 } else {
   cat("ERROR: File 'data/all_land_cover_data.RData' not found!\n\n")
@@ -741,8 +743,8 @@ if (file.exists("data/all_land_cover_data.RData")) {
 
 # Load management_data (placeholder for future implementation)
 cat("Loading management_data...\n")
-if (file.exists("data/all_management_data.RData")) {
-  load("data/all_management_data.RData")
+if (file.exists("../data/all_management_data.RData")) {
+  load("../data/all_management_data.RData")
   validate_management_data(management_data)
 } else {
   cat("ERROR: File 'data/all_management_data.RData' not found!\n\n")

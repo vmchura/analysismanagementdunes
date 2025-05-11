@@ -393,8 +393,8 @@ cat("Starting data validation...\n\n")
 
 # Load main_data
 cat("Loading main_data...\n")
-if (file.exists("data/processed_data_clean.RData")) {
-  load("data/processed_data_clean.RData")
+if (file.exists("../data/processed_data_clean.RData")) {
+  load("../data/processed_data_clean.RData")
   validate_main_data(main_data)
 } else {
   cat("ERROR: File 'data/processed_data_clean.RData' not found!\n\n")
@@ -402,8 +402,8 @@ if (file.exists("data/processed_data_clean.RData")) {
 
 # Load land_cover_data
 cat("Loading land_cover_data...\n")
-if (file.exists("data/all_land_cover_data.RData")) {
-  load("data/all_land_cover_data.RData")
+if (file.exists("../data/all_land_cover_data.RData")) {
+  load("../data/all_land_cover_data.RData")
   validate_land_cover_data(land_cover_data)
 } else {
   cat("ERROR: File 'data/all_land_cover_data.RData' not found!\n\n")
@@ -411,8 +411,8 @@ if (file.exists("data/all_land_cover_data.RData")) {
 
 # Load management_data (placeholder for future implementation)
 cat("Loading management_data...\n")
-if (file.exists("data/all_management_data.RData")) {
-  load("data/all_management_data.RData")
+if (file.exists("../data/all_management_data.RData")) {
+  load("../data/all_management_data.RData")
   validate_management_data(management_data)
 } else {
   cat("ERROR: File 'data/all_management_data.RData' not found!\n\n")

@@ -1,2 +1,0 @@
-{{< include Chapters/Chapter1.qmd >}}
-{{< include Chapters/Chapter2.qmd >}}
