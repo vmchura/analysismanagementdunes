@@ -113,32 +113,6 @@ if(total_observations == nrow(main_data_selected)) {
 
 This validation step confirms that all observations from the original dataset have been correctly assigned to one of the three regions, with no data loss or duplication.
 
-### Data Characteristics by Region
-
-To understand the distribution of data across regions, we analyze key characteristics of each regional dataset:
-
-```{r}
-#| label: regional-characteristics
-#| echo: false
-#| eval: true
-#| output: false
-## Function to summarize region characteristics
-summarize_region <- function(region_name, region_data) {
-  unique_beaches <- length(unique(region_data$id_beach))
-  unique_plots <- length(unique(region_data$plot))
-  
-  cat(region_name, "characteristics:\n")
-  cat("- Unique beaches:", unique_beaches, "\n")
-  cat("- Unique plots:", unique_plots, "\n")
-  cat("- Observations:", nrow(region_data), "\n\n")
-}
-
-## Apply the summary function to each region
-for(region_name in names(beaches_by_region)) {
-  summarize_region(region_name, beaches_by_region[[region_name]])
-}
-```
-
 ### Data Visualization
 
 To visualize the distribution of data across regions, we can create a bar chart showing the number of observations per region:
@@ -156,6 +130,9 @@ region_counts <- data.frame(
   Observations = sapply(beaches_by_region, nrow)
 )
 
+## Set the specific order of regions
+region_counts$Region <- factor(region_counts$Region, levels = c("Tarragona", "Barcelona", "Girona"))
+
 ## Create the plot
 ggplot(region_counts, aes(x = Region, y = Observations, fill = Region)) +
   geom_bar(stat = "identity") +
@@ -166,7 +143,10 @@ ggplot(region_counts, aes(x = Region, y = Observations, fill = Region)) +
     x = "Region",
     y = "Number of Observations"
   ) +
-  scale_fill_brewer(palette = "Set2")
+  scale_fill_brewer(palette = "Set2") +
+  # Add more space at the top to prevent cutting off the labels
+  coord_cartesian(clip = "off") +  # Prevent clipping of text labels
+  theme(plot.margin = margin(t = 20, r = 10, b = 10, l = 10, unit = "pt")) # Add more top margin
 ```
 
 This visualization highlights the regional distribution of our data, which is important to consider when interpreting subsequent analyses.
