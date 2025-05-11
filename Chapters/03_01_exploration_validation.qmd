@@ -715,7 +715,7 @@ The most important validation for management data was ensuring that the manageme
 
 ### Executing the Validation
 
-After creating the validation functions, they need to be executed on the processed data files. This is done by loading each of the saved RData files and passing them to the appropriate validation function:
+After creating the validation functions, they need to be executed on the processed data files. This is done by loading each of the saved RData files and passing them to the appropriate validation function.
 
 ```{r}
 #| label: execute-validation
@@ -754,6 +754,8 @@ if (file.exists("../data/all_management_data.RData")) {
 
 cat("Validation complete.\n")
 ```
+
+
 ### Summary
 
 The data exploration and validation process established a solid foundation for further analysis by:
