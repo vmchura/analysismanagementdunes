@@ -717,6 +717,36 @@ The most important validation for management data was ensuring that the manageme
 
 After creating the validation functions, they need to be executed on the processed data files. This is done by loading each of the saved RData files and passing them to the appropriate validation function.
 
+#### Validation Summary Table
+
+The following table provides a comprehensive overview of all the validations performed on the different dataframes in this project:
+
+| Dataset    | Validation Description   | Expected Format/Value                                                                                                                            | File                       |
+|------------|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|
+| Main Data  | Row count                | 278 observations                                                                                                                                 | processed_data_clean.RData |
+| Main Data  | Column presence          | Includes "plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis"                                                              | processed_data_clean.RData |
+| Main Data  | Plot format              | "D+_D+_D+" (e.g., "1_2_3")                                                                                                                       | processed_data_clean.RData |
+| Main Data  | id_beach format          | Integer values                                                                                                                                   | processed_data_clean.RData |
+| Main Data  | id_transect format       | Integer values                                                                                                                                   | processed_data_clean.RData |
+| Main Data  | id_plot format           | Integer values                                                                                                                                   | processed_data_clean.RData |
+| Main Data  | transect format          | "D+_D+" (e.g., "1_2")                                                                                                                            | processed_data_clean.RData |
+| Main Data  | Plot concatenation       | plot = id_beach_id_transect_id_plot                                                                                                              | processed_data_clean.RData |
+| Main Data  | Species abundance values | Integers between 0-5                                                                                                                             | processed_data_clean.RData |
+| Land Cover | Region presence          | Includes "Girona", "Barcelona", "Tarragona"                                                                                                      | all_land_cover_data.RData  |
+| Land Cover | Row counts               | Girona: 19, Barcelona: 4, Tarragona: 16                                                                                                          | all_land_cover_data.RData  |
+| Land Cover | Column count             | 19 columns (id_beach + 9 for 50m + 9 for 100m)                                                                                                   | all_land_cover_data.RData  |
+| Land Cover | ID column                | Contains "id_beach" column                                                                                                                       | all_land_cover_data.RData  |
+| Land Cover | Land cover types         | Contains columns for: scrubland, grassland, communication_routes, urban, forestry_bare_soil, forests, lagoon_and_salt_marshes, crops, freshwater | all_land_cover_data.RData  |
+| Land Cover | Column types             | All columns are numeric (except ID)                                                                                                              | all_land_cover_data.RData  |
+| Land Cover | 50m columns sum          | Each row sums to approximately 100%                                                                                                              | all_land_cover_data.RData  |
+| Land Cover | 100m columns sum         | Each row sums to approximately 100%                                                                                                              | all_land_cover_data.RData  |
+| Management | Region presence          | Includes "Girona", "Barcelona", "Tarragona"                                                                                                      | all_management_data.RData  |
+| Management | Row counts               | Girona: 19, Barcelona: 4, Tarragona: 16                                                                                                          | all_management_data.RData  |
+| Management | Column presence          | Contains key management columns (e.g., managed_paths, rope_fences, etc.)                                                                         | all_management_data.RData  |
+| Management | Rating format            | Management ratings are integers between 0-5                                                                                                      | all_management_data.RData  |
+
+This validation framework ensures that all datasets maintain consistent structure, formatting, and quality across all stages of analysis.
+
 ```{r}
 #| label: execute-validation
 #| echo: false
