@@ -1,33 +1,8 @@
-# Preliminars {#sec-preliminars}
+# Preliminares {#sec-preliminares}
 
 ## Domini: Ecosistemes Dunars Costaners
 
-### Definició i Característiques
+## Data Exploration and Validation {#sec-data-exploration}
 
-### Zonació Característica 
-
-### Valor Ecològic i Amenaçes
-
-## Notació i Terminologia
-
-### Terminologia Ecològica
-
-### Notació Estadística
-
-## Fonaments Metodològics
-
-### Mètodes Estadístics
-
-#### Anàlisi Multivariant
-
-#### Mètodes de Classificació
-
-#### Models Estadístics
-
-### Índexs de Diversitat
-
-#### Índex de Shannon-Wiener (H')
-
-#### Índex de Simpson (D)
-
-## Assumpcions del Treball
+{{< include Chapters/03_01_data_exploration_and_validation.qmd >}}
+{{< include Chapters/03_02_split_provinces.qmd >}}

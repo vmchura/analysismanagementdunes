@@ -11,8 +11,6 @@ book:
   downloads: [pdf]
   chapters:
     - index.qmd
-    - Chapters/03_01_exploration_validation.qmd
-    - Chapters/03_02_split_provinces.qmd
     - Chapters/01_Introduccio.qmd
     - Chapters/02_Literatura.qmd
     - Chapters/03_Preliminars.qmd
