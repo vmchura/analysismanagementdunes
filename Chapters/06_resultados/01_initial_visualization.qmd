@@ -21,17 +21,39 @@ load("../../data/all_land_cover_data.RData")
 # --- Vegetation Pattern Analysis ---
 
 # Function to calculate average abundance for each species in a region
+# Converting Braun-Blanquet values to their maximum percentage coverage
 calculate_avg_abundance <- function(region_data) {
   # Get species columns - exclude "plot" and "id_beach"
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
-
-  # Calculate mean for each species
-  region_data %>%
+  
+  # Create a new dataframe to store the percentage values
+  percentage_data <- region_data
+  
+  # Process each species column individually to avoid the vectorized operation issues
+  for (col in species_cols) {
+    percentage_data[[col]] <- sapply(region_data[[col]], function(value) {
+      if (is.na(value)) return(0)
+      
+      # Convert based on Braun-Blanquet scale
+      if (value == 0) return(0)
+      else if (value == 0.1) return(5)
+      else if (value == 0.5) return(5)
+      else if (value == 1) return(5)
+      else if (value == 2) return(25)
+      else if (value == 3) return(50)
+      else if (value == 4) return(75)
+      else if (value == 5) return(100)
+      else return(as.numeric(value))
+    })
+  }
+  
+  # Calculate mean percentage for each species
+  percentage_data %>%
     summarise(across(all_of(species_cols), mean, na.rm = TRUE)) %>%
     pivot_longer(cols = everything(),
                  names_to = "species",
-                 values_to = "mean_abundance") %>%
-    arrange(desc(mean_abundance))
+                 values_to = "mean_percentage") %>%
+    arrange(desc(mean_percentage))
 }
 
 # Calculate average abundance for each region
@@ -72,19 +94,28 @@ plot_data <- bind_rows(
 # Order regions according to our standard order
 plot_data <- order_provinces(plot_data, column_name = "region")
 
+
+# Order regions according to our standard order
+plot_data <- order_provinces(plot_data, column_name = "region")
+
 # Create a bar plot of top species by region
-ggplot(plot_data, aes(x = reorder(species, mean_abundance), y = mean_abundance, fill = region)) +
+p <- ggplot(plot_data, aes(x = reorder(species, mean_percentage), y = mean_percentage, fill = region)) +
+  # Add species bars
   geom_bar(stat = "identity", position = "dodge") +
   coord_flip() +
   theme_minimal() +
-  labs(title = "Mean Abundance of Top Plant Species by Region",
+  labs(title = "Mean Coverage of Top Plant Species by Region",
        x = "Species",
-       y = "Mean Abundance (Braun-Blanquet Scale)",
+       y = "Mean Coverage (%)",
        fill = "Region") +
   theme(legend.position = "top",
         axis.text.y = element_text(size = 8)) +
   # Use our custom province colors
   scale_fill_manual(values = PROVINCE_COLORS)
+
+# Apply the percentage scale from our global config
+p <- apply_percentage_scale(p)
+p
 
 # Save the plot
 ggsave("../../figures/top_species_by_region.png", width = 12, height = 8)
