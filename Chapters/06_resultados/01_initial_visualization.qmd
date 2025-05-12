@@ -176,3 +176,83 @@ ggplot(all_richness, aes(x = region, y = richness, fill = region)) +
 ggsave("../../figures/species_richness_by_region.png", width = 8, height = 6)
 
 ```
+
+## Land cover richness
+
+```{r}
+#| label: fig-land-cover
+#| fig-cap: "LandCover"
+#| echo: false
+#| eval: true
+#| output: true
+# Function to reshape land cover data for plotting
+prepare_land_cover <- function(region_data) {
+  region_data %>%
+    pivot_longer(
+      cols = -id_beach,
+      names_to = "cover_type",
+      values_to = "percentage"
+    ) %>%
+    # Extract the distance (50m or 100m) from the column name
+    mutate(
+      distance = ifelse(grepl("^x50m", cover_type), "50m", "100m"),
+      # Clean up the cover type name by removing the distance prefix
+      cover_type = gsub("^x(50|100)m_(.+)_percent$", "\\2", cover_type)
+    )
+}
+
+# Prepare land cover data for all regions
+girona_land <- prepare_land_cover(land_cover_data$Girona) %>%
+  mutate(region = "Girona")
+barcelona_land <- prepare_land_cover(land_cover_data$Barcelona) %>%
+  mutate(region = "Barcelona")
+tarragona_land <- prepare_land_cover(land_cover_data$Tarragona) %>%
+  mutate(region = "Tarragona")
+
+# Combine all land cover data
+all_land_cover <- bind_rows(girona_land, barcelona_land, tarragona_land)
+
+# Calculate average land cover percentages for each region and distance
+avg_land_cover <- all_land_cover %>%
+  group_by(region, distance, cover_type) %>%
+  summarise(
+    mean_percentage = mean(percentage, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  # Filter out cover types with very low percentages for clarity
+  filter(mean_percentage > 1)
+
+# Plot land cover composition at 50m by region
+ggplot(avg_land_cover %>% filter(distance == "50m"),
+       aes(x = region, y = mean_percentage, fill = cover_type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  theme_minimal() +
+  labs(
+    title = "Average Land Cover Composition at 50m by Region",
+    x = "Region",
+    y = "Percentage (%)",
+    fill = "Land Cover Type"
+  ) +
+  scale_fill_brewer(palette = "Set3") +
+  theme(legend.position = "right")
+
+# Save the plot
+ggsave("../../figures/land_cover_50m_by_region.png", width = 10, height = 6)
+
+# Plot land cover composition at 100m by region
+ggplot(avg_land_cover %>% filter(distance == "100m"),
+       aes(x = region, y = mean_percentage, fill = cover_type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  theme_minimal() +
+  labs(
+    title = "Average Land Cover Composition at 100m by Region",
+    x = "Region",
+    y = "Percentage (%)",
+    fill = "Land Cover Type"
+  ) +
+  scale_fill_brewer(palette = "Set3") +
+  theme(legend.position = "right")
+
+# Save the plot
+ggsave("../../figures/land_cover_100m_by_region.png", width = 10, height = 6)
+```
