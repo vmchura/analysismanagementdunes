@@ -8,3 +8,5 @@ previous_report/*
 .quarto/
 *.pdf
 /.quarto/
+libs/
+*.html

@@ -19,6 +19,9 @@ library(tidyverse)
 ## Set conflicts resolution preference
 conflicted::conflict_prefer("filter", "dplyr")
 conflicted::conflict_prefer("select", "dplyr")
+
+## Load global configuration for consistent colors and ordering
+source("../R/global_config.R")
 ```
 
 #### Loading the Processed Data
@@ -130,10 +133,10 @@ region_counts <- data.frame(
   Observations = sapply(beaches_by_region, nrow)
 )
 
-## Set the specific order of regions
-region_counts$Region <- factor(region_counts$Region, levels = c("Tarragona", "Barcelona", "Girona"))
+## Set the specific order of regions using the global configuration
+region_counts <- order_provinces(region_counts)
 
-## Create the plot
+## Create the plot with consistent colors from global configuration
 ggplot(region_counts, aes(x = Region, y = Observations, fill = Region)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = Observations), vjust = -0.5) +
@@ -143,7 +146,8 @@ ggplot(region_counts, aes(x = Region, y = Observations, fill = Region)) +
     x = "Region",
     y = "Number of Observations"
   ) +
-  scale_fill_brewer(palette = "Set2") +
+  # Use the consistent color palette from global_config.R
+  scale_fill_manual(values = PROVINCE_COLORS) +
   # Add more space at the top to prevent cutting off the labels
   coord_cartesian(clip = "off") +  # Prevent clipping of text labels
   theme(plot.margin = margin(t = 20, r = 10, b = 10, l = 10, unit = "pt")) # Add more top margin

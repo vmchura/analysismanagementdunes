@@ -1,4 +1,6 @@
-Se muestran las 10 p
+## Most Abundant Plant Species Analysis
+
+This section visualizes the most abundant plant species across the three regions (Tarragona, Barcelona, and Girona). The chart displays the mean abundance of top plant species based on the Braun-Blanquet scale.
 ```{r}
 #| fig-cap: "Distribution of observations across the three regions"
 #| echo: false
@@ -8,6 +10,9 @@ Se muestran las 10 p
 library(tidyverse)
 library(ggplot2)
 library(gridExtra) # for arranging multiple plots
+
+# Load global configuration
+source("../../R/global_config.R")
 
 # Load data
 load("../../data/all_observations_split.RData")
@@ -64,6 +69,9 @@ plot_data <- bind_rows(
 #| echo: false
 #| eval: true
 #| output: true
+# Order regions according to our standard order
+plot_data <- order_provinces(plot_data, column_name = "region")
+
 # Create a bar plot of top species by region
 ggplot(plot_data, aes(x = reorder(species, mean_abundance), y = mean_abundance, fill = region)) +
   geom_bar(stat = "identity", position = "dodge") +
@@ -75,7 +83,8 @@ ggplot(plot_data, aes(x = reorder(species, mean_abundance), y = mean_abundance, 
        fill = "Region") +
   theme(legend.position = "top",
         axis.text.y = element_text(size = 8)) +
-  scale_fill_brewer(palette = "Set1")
+  # Use our custom province colors
+  scale_fill_manual(values = PROVINCE_COLORS)
 
 # Save the plot
 ggsave("../../figures/top_species_by_region.png", width = 12, height = 8)
