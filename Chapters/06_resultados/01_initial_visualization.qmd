@@ -1,0 +1,83 @@
+Se muestran las 10 p
+```{r}
+#| fig-cap: "Distribution of observations across the three regions"
+#| echo: false
+#| eval: true
+#| output: false
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(gridExtra) # for arranging multiple plots
+
+# Load data
+load("../../data/all_observations_split.RData")
+load("../../data/all_land_cover_data.RData")
+
+# --- Vegetation Pattern Analysis ---
+
+# Function to calculate average abundance for each species in a region
+calculate_avg_abundance <- function(region_data) {
+  # Get species columns - exclude "plot" and "id_beach"
+  species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
+
+  # Calculate mean for each species
+  region_data %>%
+    summarise(across(all_of(species_cols), mean, na.rm = TRUE)) %>%
+    pivot_longer(cols = everything(),
+                 names_to = "species",
+                 values_to = "mean_abundance") %>%
+    arrange(desc(mean_abundance))
+}
+
+# Calculate average abundance for each region
+girona_abundance <- calculate_avg_abundance(beaches_by_region$Girona)
+barcelona_abundance <- calculate_avg_abundance(beaches_by_region$Barcelona)
+tarragona_abundance <- calculate_avg_abundance(beaches_by_region$Tarragona)
+
+# Get top 10 most abundant species in each region
+top_girona <- girona_abundance %>% slice_head(n = 3)
+top_barcelona <- barcelona_abundance %>% slice_head(n = 3)
+top_tarragona <- tarragona_abundance %>% slice_head(n = 3)
+
+# Get the union of top species from all regions
+top_species <- unique(c(top_girona$species,
+                         top_barcelona$species,
+                         top_tarragona$species))
+
+# Function to prepare data for plotting
+prepare_plot_data <- function(abundance_data, region_name, top_species_list) {
+  abundance_data %>%
+    filter(species %in% top_species_list) %>%
+    mutate(region = region_name)
+}
+
+# Combine data from all regions
+plot_data <- bind_rows(
+  prepare_plot_data(girona_abundance, "Girona", top_species),
+  prepare_plot_data(barcelona_abundance, "Barcelona", top_species),
+  prepare_plot_data(tarragona_abundance, "Tarragona", top_species)
+)
+```
+```{r}
+#| label: fig-regional-distribution
+#| fig-cap: "Distribution of observations across the three regions"
+#| echo: false
+#| eval: true
+#| output: true
+# Create a bar plot of top species by region
+ggplot(plot_data, aes(x = reorder(species, mean_abundance), y = mean_abundance, fill = region)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  coord_flip() +
+  theme_minimal() +
+  labs(title = "Mean Abundance of Top Plant Species by Region",
+       x = "Species",
+       y = "Mean Abundance (Braun-Blanquet Scale)",
+       fill = "Region") +
+  theme(legend.position = "top",
+        axis.text.y = element_text(size = 8)) +
+  scale_fill_brewer(palette = "Set1")
+
+# Save the plot
+ggsave("../../figures/top_species_by_region.png", width = 12, height = 8)
+
+```

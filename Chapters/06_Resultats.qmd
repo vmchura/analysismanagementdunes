@@ -1,24 +1,8 @@
-# Resultats {#sec-resultats}
-
-## Exploració i Validació de Dades
-
-### Estadístiques Descriptives del Conjunt de Dades
-
-### Resultats de la Validació
-
-### Dades de Cobertura del Sòl
-
-### Dades de Gestió
-
-## Anàlisi Regional: Divisió per Províncies
-
-### Estadístiques per Regió
-
-### Característiques Regionals
-
-### Visualització de la Distribució Regional
+# Resultados {#sec-resultats}
 
 ## Anàlisi de Patrons de Vegetació
+
+{{< include 06_resultados/01_initial_visualization.qmd >}}
 
 ### Riquesa i Diversitat d'Espècies
 
