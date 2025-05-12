@@ -122,6 +122,8 @@ ggsave("../../figures/top_species_by_region.png", width = 12, height = 8)
 
 ```
 
+## Plant species richness by coastal region
+
 ```{r}
 #| label: fig-species-richness
 #| fig-cap: "Beach-level species richness distribution across the three coastal regions, showing biodiversity variations between beaches in Tarragona, Barcelona, and Girona"
@@ -163,8 +165,7 @@ all_richness <- order_provinces(all_richness, column_name = "region")
 ggplot(all_richness, aes(x = region, y = richness, fill = region)) +
   geom_boxplot() +
   theme_minimal() +
-  labs(title = "Beach-Level Species Richness by Region",
-       subtitle = "Number of unique plant species found per beach",
+  labs(title = "Beach-level species richness across coastal regions",
        x = "Region",
        y = "Number of Species Present per Beach") +
   theme(legend.position = "none") +
