@@ -10,6 +10,7 @@ This section visualizes the most abundant plant species across the three regions
 library(tidyverse)
 library(ggplot2)
 library(gridExtra) # for arranging multiple plots
+library(RColorBrewer) # for color palettes
 
 # Load global configuration
 source("../../R/global_config.R")
@@ -177,11 +178,11 @@ ggsave("../../figures/species_richness_by_region.png", width = 8, height = 6)
 
 ```
 
-## Land cover richness
+## Land cover composition
 
 ```{r}
-#| label: fig-land-cover
-#| fig-cap: "LandCover"
+#| label: fig-land-cover-50m
+#| fig-cap: "Distribution of land cover types within 50m of beaches across the three coastal regions, showing the environmental context of the dune vegetation "
 #| echo: false
 #| eval: true
 #| output: true
@@ -212,15 +213,23 @@ tarragona_land <- prepare_land_cover(land_cover_data$Tarragona) %>%
 # Combine all land cover data
 all_land_cover <- bind_rows(girona_land, barcelona_land, tarragona_land)
 
+# Order regions according to our standard order
+all_land_cover <- order_provinces(all_land_cover, column_name = "region")
+
 # Calculate average land cover percentages for each region and distance
 avg_land_cover <- all_land_cover %>%
   group_by(region, distance, cover_type) %>%
   summarise(
     mean_percentage = mean(percentage, na.rm = TRUE),
     .groups = "drop"
-  ) %>%
-  # Filter out cover types with very low percentages for clarity
-  filter(mean_percentage > 1)
+  )
+
+# Ensure regions maintain the consistent order
+avg_land_cover <- order_provinces(avg_land_cover, column_name = "region")
+
+# Define a consistent color palette for land cover types
+land_cover_colors <- colorRampPalette(brewer.pal(8, "Set3"))(length(unique(avg_land_cover$cover_type)))
+names(land_cover_colors) <- unique(avg_land_cover$cover_type)
 
 # Plot land cover composition at 50m by region
 ggplot(avg_land_cover %>% filter(distance == "50m"),
@@ -228,29 +237,36 @@ ggplot(avg_land_cover %>% filter(distance == "50m"),
   geom_bar(stat = "identity", position = "stack") +
   theme_minimal() +
   labs(
-    title = "Average Land Cover Composition at 50m by Region",
+    title = "Land cover composition within 50m of beaches",
     x = "Region",
     y = "Percentage (%)",
     fill = "Land Cover Type"
   ) +
-  scale_fill_brewer(palette = "Set3") +
+  scale_fill_manual(values = land_cover_colors) +
   theme(legend.position = "right")
 
 # Save the plot
 ggsave("../../figures/land_cover_50m_by_region.png", width = 10, height = 6)
+```
 
+```{r}
+#| label: fig-land-cover-100m
+#| fig-cap: "Distribution of land cover types within 100m of beaches across the three coastal regions, showing the broader environmental context of the dune ecosystems"
+#| echo: false
+#| eval: true
+#| output: true
 # Plot land cover composition at 100m by region
 ggplot(avg_land_cover %>% filter(distance == "100m"),
        aes(x = region, y = mean_percentage, fill = cover_type)) +
   geom_bar(stat = "identity", position = "stack") +
   theme_minimal() +
   labs(
-    title = "Average Land Cover Composition at 100m by Region",
+    title = "Land cover composition within 100m of beaches",
     x = "Region",
     y = "Percentage (%)",
     fill = "Land Cover Type"
   ) +
-  scale_fill_brewer(palette = "Set3") +
+  scale_fill_manual(values = land_cover_colors) +
   theme(legend.position = "right")
 
 # Save the plot
