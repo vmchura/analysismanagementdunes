@@ -274,7 +274,9 @@ ggsave("../../figures/land_cover_100m_by_region.png", width = 10, height = 6)
 ```
 
 ```{r}
-
+#| echo: false
+#| eval: true
+#| output: false
 # --- Relationship between land cover and species richness ---
 
 # Join land cover data with species richness data for both 50m and 100m
