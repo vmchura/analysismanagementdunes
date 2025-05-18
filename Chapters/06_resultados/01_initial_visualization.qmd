@@ -272,3 +272,82 @@ ggplot(avg_land_cover %>% filter(distance == "100m"),
 # Save the plot
 ggsave("../../figures/land_cover_100m_by_region.png", width = 10, height = 6)
 ```
+
+```{r}
+
+# --- Relationship between land cover and species richness ---
+
+# Join land cover data with species richness data for both 50m and 100m
+richness_land_cover_50m <- all_richness %>%
+  left_join(
+    all_land_cover %>%
+      filter(distance == "50m") %>%
+      select(id_beach, region, cover_type, percentage),
+    by = c("id_beach", "region")
+  ) %>%
+  mutate(distance = "50m")
+
+richness_land_cover_100m <- all_richness %>%
+  left_join(
+    all_land_cover %>%
+      filter(distance == "100m") %>%
+      select(id_beach, region, cover_type, percentage),
+    by = c("id_beach", "region")
+  ) %>%
+  mutate(distance = "100m")
+
+# Combine both datasets
+richness_land_cover_combined <- bind_rows(richness_land_cover_50m, richness_land_cover_100m)
+
+# Select the most relevant land cover types for analysis
+relevant_cover_types <- c("urban", "forests", "scrubland", "crops", "grassland")
+
+richness_vs_land <- richness_land_cover_combined %>%
+  filter(cover_type %in% relevant_cover_types)
+
+# Ensure regions maintain the consistent order
+richness_vs_land <- order_provinces(richness_vs_land, column_name = "region")
+
+# Reorder the factor levels for cover_type to control the column order
+richness_vs_land$cover_type <- factor(richness_vs_land$cover_type, 
+                                     levels = relevant_cover_types)
+```
+
+```{r}
+#| label: fig-richness-vs-landcover
+#| fig-cap: "Relationship between species richness and different land cover types at 50m and 100m distances, comparing how the surrounding environment at different scales impacts dune biodiversity"
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 15
+#| fig-height: 8
+
+# Create scatter plots for richness vs. land cover with both distances
+ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
+  geom_point(alpha = 0.7, size = 2) +
+  geom_smooth(method = "lm", se = TRUE, linetype = "dashed") +
+  # Use facet_grid to create rows for distances and columns for cover types
+  facet_grid(distance ~ cover_type) +
+  theme_minimal() +
+  labs(
+    title = "Species Richness vs. Land Cover Types at Different Distances",
+    x = "Land Cover Percentage (%)",
+    y = "Number of Species Present",
+    color = "Region"
+  ) +
+  # Use our custom province colors
+  scale_color_manual(values = PROVINCE_COLORS) +
+  # Set x-axis limits to 0-100 for all facets
+  scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, 25)) +
+  theme(
+    legend.position = "top",
+    strip.background = element_rect(fill = "gray90"),
+    strip.text = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 0),
+    panel.spacing = unit(1, "lines"),
+    panel.border = element_rect(color = "gray80", fill = NA)
+  )
+
+# Save the plot
+ggsave("../../figures/richness_vs_land_cover_combined.png", width = 15, height = 8)
+```
