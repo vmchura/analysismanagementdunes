@@ -1,5 +1,14 @@
 ## Most Abundant Plant Species Analysis
 
+```{r setup, include=FALSE}
+# Global knitr options - controls all code chunks
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+```
+
 This section visualizes the most abundant plant species across the three regions (Tarragona, Barcelona, and Girona). The chart displays the mean abundance of top plant species based on the Braun-Blanquet scale.
 ```{r}
 #| fig-cap: "Distribution of observations across the three regions"
@@ -321,13 +330,16 @@ richness_vs_land$cover_type <- factor(richness_vs_land$cover_type,
 #| echo: false
 #| eval: true
 #| output: true
+#| message: false
+#| warning: false
 #| fig-width: 15
 #| fig-height: 8
 
 # Create scatter plots for richness vs. land cover with both distances
+# Specify formula explicitly to avoid auto-message
 ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
   geom_point(alpha = 0.7, size = 2) +
-  geom_smooth(method = "lm", se = TRUE, linetype = "dashed") +
+  geom_smooth(method = "lm", formula = y ~ x, se = TRUE, linetype = "dashed") +
   # Use facet_grid to create rows for distances and columns for cover types
   facet_grid(distance ~ cover_type) +
   theme_minimal() +
