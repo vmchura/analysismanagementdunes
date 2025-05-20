@@ -26,6 +26,7 @@ load("../data/all_land_cover_data.RData")
 #| echo: false
 #| eval: true
 #| output: true
+#| fig-pos: "H"
 # --- Species Richness Analysis ---
 
 # Calculate species richness (number of species present) for each beach

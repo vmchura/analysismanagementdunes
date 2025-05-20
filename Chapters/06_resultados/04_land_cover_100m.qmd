@@ -71,6 +71,7 @@ names(land_cover_colors) <- unique(avg_land_cover$cover_type)
 #| echo: false
 #| eval: true
 #| output: true
+#| fig-pos: "H"
 # Plot land cover composition at 100m by region
 ggplot(avg_land_cover %>% filter(distance == "100m"),
        aes(x = region, y = mean_percentage, fill = cover_type)) +

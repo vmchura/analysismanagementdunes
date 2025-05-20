@@ -99,6 +99,7 @@ plot_data <- bind_rows(
 #| echo: false
 #| eval: true
 #| output: true
+#| fig-pos: "H"
 # Order regions according to our standard order
 plot_data <- order_provinces(plot_data, column_name = "region")
 

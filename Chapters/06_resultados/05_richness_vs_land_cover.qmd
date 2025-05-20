@@ -123,6 +123,7 @@ richness_vs_land$cover_type <- factor(richness_vs_land$cover_type,
 #| warning: false
 #| fig-width: 15
 #| fig-height: 8
+#| fig-pos: "H"
 
 # Create scatter plots for richness vs. land cover with both distances
 # Specify formula explicitly to avoid auto-message

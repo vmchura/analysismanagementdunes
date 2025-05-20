@@ -1,40 +1,55 @@
 # Resultados {#sec-resultats}
 
-## Anàlisi de Patrons de Vegetació
+## Anàlisi de Patrons de Vegetació {#sec-patrons-vegetacio}
 
-### Espècies Més Abundants
+### Espècies Més Abundants {#sec-especies-abundants}
+
+::: {#sec-especies-abundants-content}
 {{< include 06_resultados/01_abundant_species.qmd >}}
+:::
 
-### Riquesa i Diversitat d'Espècies
+### Riquesa i Diversitat d'Espècies {#sec-riquesa-diversitat}
+
+::: {#sec-riquesa-diversitat-content}
 {{< include 06_resultados/02_species_richness.qmd >}}
+:::
 
-### Impacte de la Cobertura del Sòl a 50m
+### Impacte de la Cobertura del Sòl a 50m {#sec-impacte-50m}
+
+::: {#sec-impacte-50m-content}
 {{< include 06_resultados/03_land_cover_50m.qmd >}}
+:::
 
-### Impacte de la Cobertura del Sòl a 100m
+### Impacte de la Cobertura del Sòl a 100m {#sec-impacte-100m}
+
+::: {#sec-impacte-100m-content}
 {{< include 06_resultados/04_land_cover_100m.qmd >}}
+:::
 
-### Relació Entre Riquesa d'Espècies i Cobertura del Sòl
+### Relació Entre Riquesa d'Espècies i Cobertura del Sòl {#sec-relacio-riquesa-cobertura}
+
+::: {#sec-relacio-riquesa-cobertura-content}
 {{< include 06_resultados/05_richness_vs_land_cover.qmd >}}
+:::
 
-### Anàlisi de Redundància (RDA)
+### Anàlisi de Redundància (RDA) {#sec-analisi-rda}
 
-## Efectes de les Pràctiques de Gestió
+## Efectes de les Pràctiques de Gestió {#sec-efectes-gestio}
 
-### Impacte Individual de les Pràctiques de Gestió
+### Impacte Individual de les Pràctiques de Gestió {#sec-impacte-individual}
 
-### Model Predictiu de Riquesa d'Espècies
+### Model Predictiu de Riquesa d'Espècies {#sec-model-predictiu}
 
-### Visualització de l'Efecte de Gestió per Regió
+### Visualització de l'Efecte de Gestió per Regió {#sec-visualitzacio-efecte}
 
-## Índex d'Efectivitat de Gestió (IEG)
+## Índex d'Efectivitat de Gestió (IEG) {#sec-index-efectivitat}
 
-## Modelització Predictiva de la Biodiversitat
+## Modelització Predictiva de la Biodiversitat {#sec-modelitzacio-predictiva}
 
-### Model Random Forest
+### Model Random Forest {#sec-model-random-forest}
 
-### Mapa de Predicció de Biodiversitat
+### Mapa de Predicció de Biodiversitat {#sec-mapa-prediccio}
 
-### Escenaris de Gestió
+### Escenaris de Gestió {#sec-escenaris-gestio}
 
-## Resum dels Resultats
+## Resum dels Resultats {#sec-resum-resultats}
