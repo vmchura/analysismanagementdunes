@@ -2,19 +2,20 @@
 
 ## Anàlisi de Patrons de Vegetació
 
-{{< include 06_resultados/01_initial_visualization.qmd >}}
+### Espècies Més Abundants
+{{< include 06_resultados/01_abundant_species.qmd >}}
 
 ### Riquesa i Diversitat d'Espècies
-
-### Composició de Comunitats Vegetals
-
-### Espècies Indicadores per Regió
-
-## Relació entre Cobertura del Sòl i Biodiversitat
+{{< include 06_resultados/02_species_richness.qmd >}}
 
 ### Impacte de la Cobertura del Sòl a 50m
+{{< include 06_resultados/03_land_cover_50m.qmd >}}
 
 ### Impacte de la Cobertura del Sòl a 100m
+{{< include 06_resultados/04_land_cover_100m.qmd >}}
+
+### Relació Entre Riquesa d'Espècies i Cobertura del Sòl
+{{< include 06_resultados/05_richness_vs_land_cover.qmd >}}
 
 ### Anàlisi de Redundància (RDA)
 

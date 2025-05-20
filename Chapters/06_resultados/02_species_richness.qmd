@@ -1,0 +1,74 @@
+```{r 06_02_setup, include=FALSE}
+# Global knitr options - controls all code chunks
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(gridExtra) # for arranging multiple plots
+library(RColorBrewer) # for color palettes
+
+# Load global configuration
+source("../R/global_config.R")
+
+# Load data
+load("../data/all_observations_split.RData")
+load("../data/all_land_cover_data.RData")
+```
+
+```{r}
+#| label: fig-species-richness
+#| fig-cap: "Beach-level species richness distribution across the three coastal regions, showing biodiversity variations between beaches in Tarragona, Barcelona, and Girona"
+#| echo: false
+#| eval: true
+#| output: true
+# --- Species Richness Analysis ---
+
+# Calculate species richness (number of species present) for each beach
+calculate_beach_richness <- function(region_data) {
+  # Get species columns - exclude "plot" and "id_beach"
+  species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
+
+  # Group by beach and calculate presence of each species across the entire beach
+  region_data %>%
+    group_by(id_beach) %>%
+    summarise(across(all_of(species_cols), ~ max(., na.rm = TRUE) > 0)) %>%
+    # Replace -Inf with FALSE (happens when all values were NA and we used max with na.rm=TRUE)
+    mutate(across(all_of(species_cols), ~ ifelse(is.infinite(.), FALSE, .))) %>%
+    # Calculate richness as sum of species present
+    mutate(richness = rowSums(across(all_of(species_cols))))
+}
+
+# Calculate richness for each region at the beach level
+girona_richness <- calculate_beach_richness(beaches_by_region$Girona) %>%
+  mutate(region = "Girona")
+barcelona_richness <- calculate_beach_richness(beaches_by_region$Barcelona) %>%
+  mutate(region = "Barcelona")
+tarragona_richness <- calculate_beach_richness(beaches_by_region$Tarragona) %>%
+  mutate(region = "Tarragona")
+
+# Combine richness data
+all_richness <- bind_rows(girona_richness, barcelona_richness, tarragona_richness)
+
+# Order regions according to our standard order
+all_richness <- order_provinces(all_richness, column_name = "region")
+
+# Create box plot of species richness by region
+ggplot(all_richness, aes(x = region, y = richness, fill = region)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Beach-level species richness across coastal regions",
+       x = "Region",
+       y = "Number of Species Present per Beach") +
+  theme(legend.position = "none") +
+  # Use our custom province colors
+  scale_fill_manual(values = PROVINCE_COLORS)
+
+# Save the plot
+ggsave("../figures/species_richness_by_region.png", width = 8, height = 6)
+
+```

@@ -1,0 +1,90 @@
+```{r 06_04_setup, include=FALSE}
+# Global knitr options - controls all code chunks
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(gridExtra) # for arranging multiple plots
+library(RColorBrewer) # for color palettes
+
+# Load global configuration
+source("../R/global_config.R")
+
+# Load data
+load("../data/all_observations_split.RData")
+load("../data/all_land_cover_data.RData")
+
+# Function to reshape land cover data for plotting
+prepare_land_cover <- function(region_data) {
+  region_data %>%
+    pivot_longer(
+      cols = -id_beach,
+      names_to = "cover_type",
+      values_to = "percentage"
+    ) %>%
+    # Extract the distance (50m or 100m) from the column name
+    mutate(
+      distance = ifelse(grepl("^x50m", cover_type), "50m", "100m"),
+      # Clean up the cover type name by removing the distance prefix
+      cover_type = gsub("^x(50|100)m_(.+)_percent$", "\\2", cover_type)
+    )
+}
+
+# Prepare land cover data for all regions
+girona_land <- prepare_land_cover(land_cover_data$Girona) %>%
+  mutate(region = "Girona")
+barcelona_land <- prepare_land_cover(land_cover_data$Barcelona) %>%
+  mutate(region = "Barcelona")
+tarragona_land <- prepare_land_cover(land_cover_data$Tarragona) %>%
+  mutate(region = "Tarragona")
+
+# Combine all land cover data
+all_land_cover <- bind_rows(girona_land, barcelona_land, tarragona_land)
+
+# Order regions according to our standard order
+all_land_cover <- order_provinces(all_land_cover, column_name = "region")
+
+# Calculate average land cover percentages for each region and distance
+avg_land_cover <- all_land_cover %>%
+  group_by(region, distance, cover_type) %>%
+  summarise(
+    mean_percentage = mean(percentage, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+# Ensure regions maintain the consistent order
+avg_land_cover <- order_provinces(avg_land_cover, column_name = "region")
+
+# Define a consistent color palette for land cover types
+land_cover_colors <- colorRampPalette(brewer.pal(8, "Set3"))(length(unique(avg_land_cover$cover_type)))
+names(land_cover_colors) <- unique(avg_land_cover$cover_type)
+```
+
+```{r}
+#| label: fig-land-cover-100m
+#| fig-cap: "Distribution of land cover types within 100m of beaches across the three coastal regions, showing the broader environmental context of the dune ecosystems"
+#| echo: false
+#| eval: true
+#| output: true
+# Plot land cover composition at 100m by region
+ggplot(avg_land_cover %>% filter(distance == "100m"),
+       aes(x = region, y = mean_percentage, fill = cover_type)) +
+  geom_bar(stat = "identity", position = "stack") +
+  theme_minimal() +
+  labs(
+    title = "Land cover composition within 100m of beaches",
+    x = "Region",
+    y = "Percentage (%)",
+    fill = "Land Cover Type"
+  ) +
+  scale_fill_manual(values = land_cover_colors) +
+  theme(legend.position = "right")
+
+# Save the plot
+ggsave("../figures/land_cover_100m_by_region.png", width = 10, height = 6)
+```
