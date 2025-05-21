@@ -32,6 +32,12 @@
 {{< include 06_resultados/05_richness_vs_land_cover.qmd >}}
 :::
 
+### Classificació d'Hàbitats Mitjançant NMDS {#sec-classificacio-habitats}
+
+::: {#sec-classificacio-habitats-content}
+{{< include 06_resultados/06_nmds_habitat_classification.qmd >}}
+:::
+
 ### Anàlisi de Redundància (RDA) {#sec-analisi-rda}
 
 ## Efectes de les Pràctiques de Gestió {#sec-efectes-gestio}
