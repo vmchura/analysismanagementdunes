@@ -1,124 +1,124 @@
-## Data Splitting by Province {#sec-Chapter2}
+## División de Datos por Provincia {#sec-Chapter2}
 
-### Regional Division 
+### División Regional 
 
-This chapter details the process of dividing the dataset by the three biogeographical zones (Girona, Barcelona, and Tarragona) for separate analysis. By splitting the data, we can better understand regional differences in dune vegetation patterns and management practices.
+Este capítulo detalla el proceso de división del conjunto de datos por las tres zonas biogeográficas (Girona, Barcelona y Tarragona) para análisis separados. Al dividir los datos, podemos comprender mejor las diferencias regionales en los patrones de vegetación dunar y las prácticas de gestión.
 
-### Dataset Preparation
+### Preparación del Conjunto de Datos
 
-We use the main dataset with species observations to create the regional subsets.
+Utilizamos el conjunto de datos principal con observaciones de especies para crear los subconjuntos regionales.
 
 ```{r}
 #| label: load-packages-chapter2
 #| echo: false
 #| eval: true
 #| output: false
-## Load required packages
+## Cargar paquetes requeridos
 library(tidyverse)
 
-## Set conflicts resolution preference
+## Establecer preferencias para resolución de conflictos
 conflicted::conflict_prefer("filter", "dplyr")
 conflicted::conflict_prefer("select", "dplyr")
 
-## Load global configuration for consistent colors and ordering
+## Cargar configuración global para colores y ordenamiento consistentes
 source("../R/global_config.R")
 ```
 
-#### Loading the Processed Data
+#### Carga de los Datos Procesados
 
-First, we load the saved processed data from the previous section.
+Primero, cargamos los datos procesados guardados de la sección anterior.
 
 ```{r}
 #| label: load-data-chapter2
 #| echo: false
 #| eval: true
 #| output: false
-## Load the saved data
+## Cargar los datos guardados
 load("../data/processed_data_clean.RData")
 
-## Display the structure to confirm successful loading
+## Mostrar la estructura para confirmar la carga exitosa
 str(main_data, max.level = 1)
 ```
 
-#### Selecting Necessary Columns
+#### Selección de Columnas Necesarias
 
-Before splitting the data by region, we select only the necessary columns for our analysis:
+Antes de dividir los datos por región, seleccionamos solo las columnas necesarias para nuestro análisis:
 
 ```{r}
 #| label: select-columns-chapter2
 #| echo: false
 #| eval: true
 #| output: false
-## Select only the columns needed: first column (plot), 
-## columns from 2 to the one before eunis, and id_beach
+## Seleccionar solo las columnas necesarias: primera columna (plot), 
+## columnas desde la 2 hasta la anterior a eunis, y id_beach
 main_data_selected <- main_data %>%
   select(plot, id_beach, 8:ncol(main_data))
 
 ```
 
-This selection process preserves:
+Este proceso de selección preserva:
 
-1. The plot identifier (`plot`)
-2. The beach identifier (`id_beach`), which will be used for the regional split
-3. All columns for the species
+1. El identificador de parcela (`plot`)
+2. El identificador de playa (`id_beach`), que se utilizará para la división regional
+3. Todas las columnas para las especies
 
-### Regional Split Implementation
+### Implementación de la División Regional
 
-The dataset is split into three regions based on the `id_beach` ranges, following the known geographical distribution of beaches:
+El conjunto de datos se divide en tres regiones basadas en los rangos de `id_beach`, siguiendo la distribución geográfica conocida de las playas:
 
 ```{r}
 #| label: split-by-region
 #| echo: false
 #| eval: true
 #| output: false
-## Create a named list to store the regional data
+## Crear una lista con nombre para almacenar los datos regionales
 beaches_by_region <- list()
 
-## Split data by region according to id_beach ranges
+## Dividir datos por región según los rangos de id_beach
 beaches_by_region[["Girona"]] <- main_data_selected %>% filter(id_beach >= 1 & id_beach <= 19)
 beaches_by_region[["Barcelona"]] <- main_data_selected %>% filter(id_beach >= 20 & id_beach <= 23)
 beaches_by_region[["Tarragona"]] <- main_data_selected %>% filter(id_beach >= 24)
 ```
 
-The beach ID ranges for each region are:
+Los rangos de ID de playa para cada región son:
 
-- **Girona**: Beach IDs 1-19
-- **Barcelona**: Beach IDs 20-23
-- **Tarragona**: Beach IDs 24 and above
+- **Girona**: IDs de playa 1-19
+- **Barcelona**: IDs de playa 20-23
+- **Tarragona**: IDs de playa 24 y superiores
 
-#### Validation of Regional Splits
+#### Validación de las Divisiones Regionales
 
-To ensure the split was performed correctly, we check the number of observations in each regional dataset:
+Para asegurar que la división se realizó correctamente, verificamos el número de observaciones en cada conjunto de datos regional:
 
 ```{r}
 #| label: validate-split
 #| echo: false
 #| eval: true
 #| output: false
-## Check the structure and sizes
-cat("Number of observations by region:\n")
-cat("Girona:", nrow(beaches_by_region[["Girona"]]), "observations\n")
-cat("Barcelona:", nrow(beaches_by_region[["Barcelona"]]), "observations\n")
-cat("Tarragona:", nrow(beaches_by_region[["Tarragona"]]), "observations\n")
+## Comprobar la estructura y tamaños
+cat("Número de observaciones por región:\n")
+cat("Girona:", nrow(beaches_by_region[["Girona"]]), "observaciones\n")
+cat("Barcelona:", nrow(beaches_by_region[["Barcelona"]]), "observaciones\n")
+cat("Tarragona:", nrow(beaches_by_region[["Tarragona"]]), "observaciones\n")
 
-## Verify that the sum equals the original dataset size
+## Verificar que la suma iguala al tamaño del conjunto de datos original
 total_observations <- sum(sapply(beaches_by_region, nrow))
-cat("\nTotal observations across all regions:", total_observations, "\n")
-cat("Original dataset observations:", nrow(main_data_selected), "\n")
+cat("\nTotal de observaciones en todas las regiones:", total_observations, "\n")
+cat("Observaciones del conjunto de datos original:", nrow(main_data_selected), "\n")
 
-## Check if all observations were assigned to a region
+## Comprobar si todas las observaciones fueron asignadas a una región
 if(total_observations == nrow(main_data_selected)) {
-  cat("Validation successful: All observations have been assigned to a region.\n")
+  cat("Validación exitosa: Todas las observaciones han sido asignadas a una región.\n")
 } else {
-  cat("Validation failed: The sum of regional observations doesn't match the original dataset.\n")
+  cat("Validación fallida: La suma de observaciones regionales no coincide con el conjunto de datos original.\n")
 }
 ```
 
-This validation step confirms that all observations from the original dataset have been correctly assigned to one of the three regions, with no data loss or duplication.
+Este paso de validación confirma que todas las observaciones del conjunto de datos original han sido correctamente asignadas a una de las tres regiones, sin pérdida ni duplicación de datos.
 
-### Data Visualization
+### Visualización de Datos
 
-To visualize the distribution of data across regions, we can create a bar chart showing the number of observations per region:
+Para visualizar la distribución de datos a través de las regiones, podemos crear un gráfico de barras que muestre el número de observaciones por región:
 
 ```{r}
 #| label: fig-regional-distribution
@@ -127,59 +127,59 @@ To visualize the distribution of data across regions, we can create a bar chart 
 #| eval: true
 #| output: true
 
-## Create a data frame for plotting
+## Crear un data frame para la visualización
 region_counts <- data.frame(
   Region = names(beaches_by_region),
   Observations = sapply(beaches_by_region, nrow)
 )
 
-## Set the specific order of regions using the global configuration
+## Establecer el orden específico de regiones usando la configuración global
 region_counts <- order_provinces(region_counts)
 
-## Create the plot with consistent colors from global configuration
+## Crear el gráfico con colores consistentes desde la configuración global
 ggplot(region_counts, aes(x = Region, y = Observations, fill = Region)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = Observations), vjust = -0.5) +
   theme_minimal() +
   labs(
-    title = "Distribution of Observations by Region",
-    x = "Region",
-    y = "Number of Observations"
+    title = "Distribución de Observaciones por Región",
+    x = "Región",
+    y = "Número de Observaciones"
   ) +
-  # Use the consistent color palette from global_config.R
+  # Usar la paleta de colores consistente de global_config.R
   scale_fill_manual(values = PROVINCE_COLORS) +
-  # Add more space at the top to prevent cutting off the labels
-  coord_cartesian(clip = "off") +  # Prevent clipping of text labels
-  theme(plot.margin = margin(t = 20, r = 10, b = 10, l = 10, unit = "pt")) # Add more top margin
+  # Añadir más espacio en la parte superior para evitar cortar las etiquetas
+  coord_cartesian(clip = "off") +  # Evitar recorte de las etiquetas de texto
+  theme(plot.margin = margin(t = 20, r = 10, b = 10, l = 10, unit = "pt")) # Añadir más margen superior
 ```
 
-This visualization highlights the regional distribution of our data, which is important to consider when interpreting subsequent analyses.
+Esta visualización destaca la distribución regional de nuestros datos, lo cual es importante considerar al interpretar análisis posteriores.
 
-### Saving the Regional Datasets
+### Guardado de los Conjuntos de Datos Regionales
 
-Finally, we save the regional datasets for future use:
+Finalmente, guardamos los conjuntos de datos regionales para uso futuro:
 
 ```{r}
 #| label: save-regional-data
 #| echo: false
 #| eval: true
 #| output: false
-## Save the regional data to an RData file
+## Guardar los datos regionales en un archivo RData
 save(beaches_by_region, file = "../data/all_observations_split.RData")
-cat("Regional datasets saved to 'data/all_observations_split.RData'\n")
+cat("Conjuntos de datos regionales guardados en 'data/all_observations_split.RData'\n")
 ```
 
-### Summary
+### Resumen
 
-This chapter has:
+Este capítulo ha:
 
-1. Loaded the processed data from section [@sec-data-exploration-validation]
-2. Selected the necessary columns for regional analysis
-3. Split the dataset into three regions (Girona, Barcelona, and Tarragona)
-4. Validated the regional split to ensure no data was lost
-5. Visualized the distribution of observations across regions
-6. Saved the regional datasets for subsequent analyses
+1. Cargado los datos procesados de la sección [@sec-data-exploration-validation]
+2. Seleccionado las columnas necesarias para el análisis regional
+3. Dividido el conjunto de datos en tres regiones (Girona, Barcelona y Tarragona)
+4. Validado la división regional para asegurar que no se perdieran datos
+5. Visualizado la distribución de observaciones a través de las regiones
+6. Guardado los conjuntos de datos regionales para análisis posteriores
 
-In the following chapters, we will use these regional datasets to explore regional variations in dune vegetation patterns and their relationships with environmental factors and management practices.
+En los siguientes capítulos, utilizaremos estos conjuntos de datos regionales para explorar variaciones regionales en los patrones de vegetación dunar y sus relaciones con factores ambientales y prácticas de gestión.
 
 

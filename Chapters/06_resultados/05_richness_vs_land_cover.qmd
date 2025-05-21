@@ -1,42 +1,42 @@
 ```{r 06_05_setup, include=FALSE}
-# Global knitr options - controls all code chunks
+# Opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
   echo = FALSE
 )
 
-# Load necessary libraries
+# Cargar bibliotecas necesarias
 library(tidyverse)
 library(ggplot2)
-library(gridExtra) # for arranging multiple plots
-library(RColorBrewer) # for color palettes
+library(gridExtra) # para organizar múltiples gráficos
+library(RColorBrewer) # para paletas de colores
 
-# Load global configuration
+# Cargar configuración global
 source("../R/global_config.R")
 
-# Load data
+# Cargar datos
 load("../data/all_observations_split.RData")
 load("../data/all_land_cover_data.RData")
 
-# --- Species Richness and Land Cover Analysis Functions ---
+# --- Funciones de Análisis de Riqueza de Especies y Cobertura del Suelo ---
 
-# Calculate species richness (number of species present) for each beach
+# Calcular riqueza de especies (número de especies presentes) para cada playa
 calculate_beach_richness <- function(region_data) {
-  # Get species columns - exclude "plot" and "id_beach"
+  # Obtener columnas de especies - excluir "plot" y "id_beach"
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
 
-  # Group by beach and calculate presence of each species across the entire beach
+  # Agrupar por playa y calcular presencia de cada especie en toda la playa
   region_data %>%
     group_by(id_beach) %>%
     summarise(across(all_of(species_cols), ~ max(., na.rm = TRUE) > 0)) %>%
-    # Replace -Inf with FALSE (happens when all values were NA and we used max with na.rm=TRUE)
+    # Reemplazar -Inf con FALSE (ocurre cuando todos los valores eran NA y usamos max con na.rm=TRUE)
     mutate(across(all_of(species_cols), ~ ifelse(is.infinite(.), FALSE, .))) %>%
-    # Calculate richness as sum of species present
+    # Calcular riqueza como suma de especies presentes
     mutate(richness = rowSums(across(all_of(species_cols))))
 }
 
-# Function to reshape land cover data for plotting
+# Función para remodelar datos de cobertura del suelo para visualización
 prepare_land_cover <- function(region_data) {
   region_data %>%
     pivot_longer(
@@ -44,15 +44,15 @@ prepare_land_cover <- function(region_data) {
       names_to = "cover_type",
       values_to = "percentage"
     ) %>%
-    # Extract the distance (50m or 100m) from the column name
+    # Extraer la distancia (50m o 100m) del nombre de la columna
     mutate(
       distance = ifelse(grepl("^x50m", cover_type), "50m", "100m"),
-      # Clean up the cover type name by removing the distance prefix
+      # Limpiar el nombre del tipo de cobertura eliminando el prefijo de distancia
       cover_type = gsub("^x(50|100)m_(.+)_percent$", "\\2", cover_type)
     )
 }
 
-# Calculate richness for each region at the beach level
+# Calcular riqueza para cada región a nivel de playa
 girona_richness <- calculate_beach_richness(beaches_by_region$Girona) %>%
   mutate(region = "Girona")
 barcelona_richness <- calculate_beach_richness(beaches_by_region$Barcelona) %>%
@@ -60,10 +60,10 @@ barcelona_richness <- calculate_beach_richness(beaches_by_region$Barcelona) %>%
 tarragona_richness <- calculate_beach_richness(beaches_by_region$Tarragona) %>%
   mutate(region = "Tarragona")
 
-# Combine richness data
+# Combinar datos de riqueza
 all_richness <- bind_rows(girona_richness, barcelona_richness, tarragona_richness)
 
-# Prepare land cover data for all regions
+# Preparar datos de cobertura del suelo para todas las regiones
 girona_land <- prepare_land_cover(land_cover_data$Girona) %>%
   mutate(region = "Girona")
 barcelona_land <- prepare_land_cover(land_cover_data$Barcelona) %>%
@@ -71,10 +71,10 @@ barcelona_land <- prepare_land_cover(land_cover_data$Barcelona) %>%
 tarragona_land <- prepare_land_cover(land_cover_data$Tarragona) %>%
   mutate(region = "Tarragona")
 
-# Combine all land cover data
+# Combinar todos los datos de cobertura del suelo
 all_land_cover <- bind_rows(girona_land, barcelona_land, tarragona_land)
 
-# Join land cover data with species richness data for both 50m and 100m
+# Unir datos de cobertura del suelo con datos de riqueza de especies para 50m y 100m
 richness_land_cover_50m <- all_richness %>%
   left_join(
     all_land_cover %>%
@@ -93,29 +93,29 @@ richness_land_cover_100m <- all_richness %>%
   ) %>%
   mutate(distance = "100m")
 
-# Combine both datasets
+# Combinar ambos conjuntos de datos
 richness_land_cover_combined <- bind_rows(richness_land_cover_50m, richness_land_cover_100m)
 
-# Order regions according to our standard order
+# Ordenar regiones según nuestro orden estándar
 all_richness <- order_provinces(all_richness, column_name = "region")
 
-# Select the most relevant land cover types for analysis
+# Seleccionar los tipos de cobertura del suelo más relevantes para el análisis
 relevant_cover_types <- c("urban", "forests", "scrubland", "crops", "grassland")
 
 richness_vs_land <- richness_land_cover_combined %>%
   filter(cover_type %in% relevant_cover_types)
 
-# Ensure regions maintain the consistent order
+# Asegurar que las regiones mantengan el orden consistente
 richness_vs_land <- order_provinces(richness_vs_land, column_name = "region")
 
-# Reorder the factor levels for cover_type to control the column order
+# Reordenar los niveles del factor para cover_type para controlar el orden de las columnas
 richness_vs_land$cover_type <- factor(richness_vs_land$cover_type, 
                                      levels = relevant_cover_types)
 ```
 
 ```{r}
 #| label: fig-richness-vs-landcover
-#| fig-cap: "Relationship between species richness and different land cover types at 50m and 100m distances, comparing how the surrounding environment at different scales impacts dune biodiversity"
+#| fig-cap: "Relación entre la riqueza de especies y diferentes tipos de cobertura del suelo a distancias de 50m y 100m, comparando cómo el entorno circundante a diferentes escalas impacta la biodiversidad dunar"
 #| echo: false
 #| eval: true
 #| output: true
@@ -125,23 +125,23 @@ richness_vs_land$cover_type <- factor(richness_vs_land$cover_type,
 #| fig-height: 8
 #| fig-pos: "H"
 
-# Create scatter plots for richness vs. land cover with both distances
-# Specify formula explicitly to avoid auto-message
+# Crear gráficos de dispersión para riqueza vs. cobertura del suelo con ambas distancias
+# Especificar fórmula explícitamente para evitar mensaje automático
 ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
   geom_point(alpha = 0.7, size = 2) +
   geom_smooth(method = "lm", formula = y ~ x, se = TRUE, linetype = "dashed") +
-  # Use facet_grid to create rows for distances and columns for cover types
+  # Usar facet_grid para crear filas para distancias y columnas para tipos de cobertura
   facet_grid(distance ~ cover_type) +
   theme_minimal() +
   labs(
-    title = "Species Richness vs. Land Cover Types at Different Distances",
-    x = "Land Cover Percentage (%)",
-    y = "Number of Species Present",
-    color = "Region"
+    title = "Riqueza de Especies vs. Tipos de Cobertura del Suelo a Diferentes Distancias",
+    x = "Porcentaje de Cobertura del Suelo (%)",
+    y = "Número de Especies Presentes",
+    color = "Región"
   ) +
-  # Use our custom province colors
+  # Usar nuestros colores personalizados de provincias
   scale_color_manual(values = PROVINCE_COLORS) +
-  # Set x-axis limits to 0-100 for all facets
+  # Establecer límites del eje x a 0-100 para todas las facetas
   scale_x_continuous(limits = c(0, 100), breaks = seq(0, 100, 25)) +
   theme(
     legend.position = "top",
@@ -152,6 +152,6 @@ ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
     panel.border = element_rect(color = "gray80", fill = NA)
   )
 
-# Save the plot
+# Guardar el gráfico
 ggsave("../figures/richness_vs_land_cover_combined.png", width = 15, height = 8)
 ```

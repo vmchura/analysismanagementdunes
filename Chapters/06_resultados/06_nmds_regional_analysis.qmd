@@ -1,95 +1,95 @@
 ```{r 06_08_setup, include=FALSE}
-# Global knitr options - controls all code chunks
+# Opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
   echo = FALSE
 )
 
-# Load necessary libraries
+# Cargar bibliotecas necesarias
 library(tidyverse)
 library(ggplot2)
-library(vegan)     # For NMDS analysis
-library(gridExtra) # For arranging multiple plots
-library(RColorBrewer) # For color palettes
-library(patchwork)  # For combining plots
+library(vegan)     # Para análisis NMDS
+library(gridExtra) # Para organizar múltiples gráficos
+library(RColorBrewer) # Para paletas de colores
+library(patchwork)  # Para combinar gráficos
 
-# Load global configuration
+# Cargar configuración global
 source("../R/global_config.R")
 
-# Load data
+# Cargar datos
 load("../data/all_observations_split.RData")
 load("../data/all_land_cover_data.RData")
 
-# --- NMDS Analysis for Habitat Classification by Region ---
+# --- Análisis NMDS para Clasificación de Hábitats por Región ---
 
-# Function to prepare species data matrix for NMDS analysis
-# Converting Braun-Blanquet values to numeric percentage cover
+# Función para preparar matriz de datos de especies para análisis NMDS
+# Convirtiendo valores de Braun-Blanquet a porcentaje de cobertura numérico
 prepare_nmds_data <- function(region_data) {
-  # Get species columns - exclude non-species columns
+  # Obtener columnas de especies - excluir columnas que no sean de especies
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
 
-  # Create a matrix for NMDS analysis with percentage values
+  # Crear una matriz para análisis NMDS con valores porcentuales
   nmds_matrix <- region_data %>%
-    # Convert Braun-Blanquet values to percentages
+    # Convertir valores de Braun-Blanquet a porcentajes
     mutate(across(all_of(species_cols), bb_to_percentage)) %>%
-    # Select only species columns to create the species matrix
+    # Seleccionar solo columnas de especies para crear la matriz de especies
     select(all_of(species_cols))
 
-  # Convert to matrix
+  # Convertir a matriz
   as.matrix(nmds_matrix)
 }
 
-# Function to identify dominant species for each plot
+# Función para identificar especies dominantes para cada parcela
 get_dominant_species <- function(region_data) {
-  # Get species columns
+  # Obtener columnas de especies
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
 
-  # Create data frame with dominant species for each plot
+  # Crear data frame con especies dominantes para cada parcela
   region_data %>%
-    # Convert to long format
+    # Convertir a formato largo
     pivot_longer(
       cols = all_of(species_cols),
       names_to = "species",
       values_to = "bb_value"
     ) %>%
-    # Group by plot and get species with highest BB value
+    # Agrupar por parcela y obtener especies con el valor BB más alto
     group_by(plot, id_beach) %>%
     filter(bb_value == max(bb_value, na.rm = TRUE) & !is.na(bb_value) & bb_value > 0) %>%
-    # In case of ties, keep first one (or could randomize)
+    # En caso de empates, mantener el primero (o podría aleatorizar)
     slice(1) %>%
     ungroup()
 }
 
-# Function to run NMDS analysis for a single region
+# Función para ejecutar análisis NMDS para una sola región
 run_region_nmds <- function(region_data, region_name) {
-  # Prepare species matrix
+  # Preparar matriz de especies
   species_matrix <- prepare_nmds_data(region_data)
   
-  # Run NMDS analysis
-  set.seed(123) # For reproducibility
+  # Ejecutar análisis NMDS
+  set.seed(123) # Para reproducibilidad
   nmds_result <- metaMDS(
     species_matrix,
     distance = "bray",
-    k = 2,        # Number of dimensions (2 for easy visualization)
-    trymax = 100,  # Maximum number of random starts
-    autotransform = FALSE # Data already transformed to percentages
+    k = 2,        # Número de dimensiones (2 para fácil visualización)
+    trymax = 100,  # Número máximo de inicios aleatorios
+    autotransform = FALSE # Datos ya transformados a porcentajes
   )
   
-  # Create a data frame with NMDS results
+  # Crear un data frame con resultados NMDS
   nmds_data <- data.frame(
     NMDS1 = nmds_result$points[,1],
     NMDS2 = nmds_result$points[,2],
     Beach = region_data$id_beach
   )
   
-  # Apply k-means clustering to identify habitat types
-  # We'll use 4 clusters as in the main analysis
-  set.seed(456) # For reproducibility
+  # Aplicar agrupamiento k-means para identificar tipos de hábitats
+  # Usaremos 4 clústeres como en el análisis principal
+  set.seed(456) # Para reproducibilidad
   kmeans_result <- kmeans(nmds_result$points, centers = 4)
   nmds_data$Cluster <- as.factor(kmeans_result$cluster)
   
-  # Define habitat type labels based on clusters
+  # Definir etiquetas de tipo de hábitat basadas en clústeres
   habitat_labels <- c(
     "1" = "Front-dune",
     "2" = "Back-dune",
@@ -97,52 +97,52 @@ run_region_nmds <- function(region_data, region_name) {
     "4" = "Disturbed"
   )
   
-  # Map cluster numbers to habitat labels
+  # Mapear números de clúster a etiquetas de hábitat
   nmds_data$Habitat <- habitat_labels[nmds_data$Cluster]
   
-  # Extract species scores
+  # Extraer puntuaciones de especies
   species_scores <- data.frame(
     species = colnames(species_matrix),
     NMDS1 = scores(nmds_result, "species")[,1],
     NMDS2 = scores(nmds_result, "species")[,2]
   )
   
-  # Get the most important species to label in the plot (high absolute scores)
+  # Obtener las especies más importantes para etiquetar en el gráfico (puntuaciones absolutas altas)
   top_species <- species_scores %>%
     mutate(distance = sqrt(NMDS1^2 + NMDS2^2)) %>%
     arrange(desc(distance)) %>%
-    slice_head(n = 8)  # Limiting to 8 for cleaner region-specific plots
+    slice_head(n = 8)  # Limitando a 8 para gráficos específicos de región más limpios
   
-  # Create the NMDS plot
+  # Crear el gráfico NMDS
   p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
-    # Add points colored by habitat type
+    # Añadir puntos coloreados por tipo de hábitat
     geom_point(aes(shape = Habitat, color = Habitat), size = 3, alpha = 0.8) +
-    # Add convex hulls to outline each habitat cluster
+    # Añadir cascos convexos para delinear cada clúster de hábitat
     stat_ellipse(aes(group = Habitat, color = Habitat),
                  type = "norm", level = 0.8, size = 0.8) +
-    # Add top species labels
+    # Añadir etiquetas de especies principales
     geom_text(data = top_species,
               aes(x = NMDS1, y = NMDS2, label = species),
               size = 3, fontface = "italic", hjust = -0.1, vjust = -0.1) +
-    # Customize appearance
+    # Personalizar apariencia
     theme_minimal() +
     labs(
-      title = paste("NMDS Ordination of Coastal Dune Vegetation -", region_name),
+      title = paste("NMDS de Vegetación Dunar Costera -", region_name),
       subtitle = paste("Stress =", round(nmds_result$stress, 3)),
       x = "NMDS1",
       y = "NMDS2",
-      color = "Habitat Type",
-      shape = "Habitat Type"
+      color = "Tipo de Hábitat",
+      shape = "Tipo de Hábitat"
     ) +
-    # Use a consistent color palette for habitat types
+    # Usar una paleta de colores consistente para tipos de hábitat
     scale_color_brewer(palette = "Set2") +
-    # Add arrows for top species
+    # Añadir flechas para especies principales
     geom_segment(data = top_species,
                  aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2),
                  arrow = arrow(length = unit(0.2, "cm")),
                  alpha = 0.5,
                  color = "darkgrey") +
-    # Customize theme elements
+    # Personalizar elementos del tema
     theme(
       legend.position = "right",
       legend.box = "vertical",
@@ -159,12 +159,12 @@ run_region_nmds <- function(region_data, region_name) {
   ))
 }
 
-# Run NMDS analysis for each region
+# Ejecutar análisis NMDS para cada región
 tarragona_nmds <- run_region_nmds(beaches_by_region$Tarragona, "Tarragona")
 barcelona_nmds <- run_region_nmds(beaches_by_region$Barcelona, "Barcelona")
 girona_nmds <- run_region_nmds(beaches_by_region$Girona, "Girona")
 
-# Calculate habitat distribution by region
+# Calcular distribución de hábitats por región
 calculate_habitat_distribution <- function(nmds_data, region_name) {
   nmds_data$data %>%
     group_by(Habitat) %>%
@@ -179,23 +179,23 @@ tarragona_distribution <- calculate_habitat_distribution(tarragona_nmds, "Tarrag
 barcelona_distribution <- calculate_habitat_distribution(barcelona_nmds, "Barcelona")
 girona_distribution <- calculate_habitat_distribution(girona_nmds, "Girona")
 
-# Combine habitat distribution data
+# Combinar datos de distribución de hábitats
 all_habitat_distribution <- bind_rows(
   tarragona_distribution,
   barcelona_distribution,
   girona_distribution
 )
 
-# Order regions
+# Ordenar regiones
 all_habitat_distribution <- all_habitat_distribution %>%
   mutate(Region = factor(Region, levels = PROVINCE_ORDER))
 ```
 
-This section presents a detailed Non-metric Multidimensional Scaling (NMDS) analysis of coastal dune vegetation for each of the three Catalan regions: Tarragona, Barcelona, and Girona. By analyzing each region separately, we can identify region-specific habitat patterns and characteristic species assemblages.
+Esta sección presenta un análisis detallado de Escalamiento Multidimensional No-métrico (NMDS) de vegetación dunar costera para cada una de las tres regiones catalanas: Tarragona, Barcelona y Girona. Al analizar cada región por separado, podemos identificar patrones de hábitat específicos para cada región y ensamblajes característicos de especies.
 
 ```{r}
 #| label: fig-region-nmds-plots
-#| fig-cap: "NMDS ordination plots showing the classification of vegetation plots into habitat types for each region: Tarragona, Barcelona, and Girona. Points represent individual plots and are colored by identified habitat type, while arrows and text indicate influential species."
+#| fig-cap: "Gráficos de NMDS mostrando la clasificación de parcelas de vegetación en tipos de hábitats para cada región: Tarragona, Barcelona y Girona. Los puntos representan parcelas individuales y están coloreados por tipo de hábitat identificado, mientras que las flechas y texto indican especies influyentes."
 #| echo: false
 #| eval: true
 #| output: true
@@ -203,23 +203,23 @@ This section presents a detailed Non-metric Multidimensional Scaling (NMDS) anal
 #| fig-height: 16
 #| fig-pos: "H"
 
-# Combine all three plots using patchwork
+# Combinar los tres gráficos usando patchwork
 combined_plot <- tarragona_nmds$plot / barcelona_nmds$plot / girona_nmds$plot +
   plot_layout(ncol = 1, heights = c(1, 1, 1)) +
   plot_annotation(
-    title = "Region-Specific NMDS Ordination of Coastal Dune Vegetation",
+    title = "NMDS Específica por Región de Vegetación Dunar Costera",
     theme = theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 14))
   )
 
 print(combined_plot)
 
-# Save the plot
+# Guardar el gráfico
 ggsave("../figures/nmds_regional_analysis.png", combined_plot, width = 14, height = 16)
 ```
 
 ```{r}
 #| label: fig-region-habitat-distribution
-#| fig-cap: "Distribution of identified habitat types within each region, showing the percentage of plots classified into each habitat category within Tarragona, Barcelona, and Girona."
+#| fig-cap: "Distribución de tipos de hábitats identificados dentro de cada región, mostrando el porcentaje de parcelas clasificadas en cada categoría de hábitat dentro de Tarragona, Barcelona y Girona."
 #| echo: false
 #| eval: true
 #| output: true
@@ -227,7 +227,7 @@ ggsave("../figures/nmds_regional_analysis.png", combined_plot, width = 14, heigh
 #| fig-height: 8
 #| fig-pos: "H"
 
-# Create a stacked bar chart
+# Crear un gráfico de barras apiladas
 all_habitat_distribution %>%
   ggplot(aes(x = Region, y = Percentage, fill = Habitat)) +
   geom_bar(stat = "identity", position = "stack", color = "white") +
@@ -236,23 +236,23 @@ all_habitat_distribution %>%
             color = "white", fontface = "bold") +
   theme_minimal() +
   labs(
-    title = "Distribution of Habitat Types within Each Region",
-    x = "Region",
-    y = "Percentage of Plots",
-    fill = "Habitat Type"
+    title = "Distribución de Tipos de Hábitats dentro de Cada Región",
+    x = "Región",
+    y = "Porcentaje de Parcelas",
+    fill = "Tipo de Hábitat"
   ) +
-  # Apply custom theme
+  # Aplicar tema personalizado
   theme(
     axis.text.x = element_text(face = "bold"),
     legend.position = "right",
     plot.title = element_text(face = "bold"),
     panel.grid.major.x = element_blank()
   ) +
-  # Use a colorblind-friendly palette and consistent region colors
+  # Usar una paleta amigable para daltónicos y colores de región consistentes
   scale_fill_brewer(palette = "Set2") +
   scale_x_discrete(limits = PROVINCE_ORDER)
 
-# Save the plot
+# Guardar el gráfico
 ggsave("../figures/regional_habitat_distribution.png", width = 12, height = 8)
 ```
 

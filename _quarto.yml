@@ -19,8 +19,6 @@ book:
     - Chapters/06_Resultats.qmd
     - Chapters/07_Conclusions.qmd
     - references.qmd
-  appendices:
-    - Appendices/AppendixA.qmd
 
   repo-url: https://github.com/nmfs-opensci/quarto-thesis
   repo-actions: [edit, source, issue]

@@ -1,17 +1,17 @@
-# Global configuration settings for the project
-# This file contains shared variables to maintain consistency across all visualizations
+# Configuración global para el proyecto
+# Este archivo contiene variables compartidas para mantener la coherencia en todas las visualizaciones
 
-# --- Regional settings ---
+# --- Configuración regional ---
 
-# Define the standard order for provinces (regions)
+# Define el orden estándar para las provincias (regiones)
 PROVINCE_ORDER <- c("Tarragona", "Barcelona", "Girona")
 
-# Define consistent colors for each province
-# Using a custom color palette that will be used across all visualizations
+# Define colores consistentes para cada provincia
+# Utilizando una paleta de colores personalizada que se usará en todas las visualizaciones
 PROVINCE_COLORS <- c(
-  "Tarragona" = "#E41A1C",  # Red
-  "Barcelona" = "#377EB8",  # Blue
-  "Girona" = "#4DAF4A"      # Green
+  "Tarragona" = "#E41A1C",  # Rojo
+  "Barcelona" = "#377EB8",  # Azul
+  "Girona" = "#4DAF4A"      # Verde
 )
 
 # Function to apply standard province settings to a ggplot object
@@ -27,7 +27,7 @@ order_provinces <- function(data_frame, column_name = "Region") {
   return(data_frame)
 }
 
-# --- Braun-Blanquet Scale Settings ---
+# --- Configuración de estilos de gráficos ---
 
 # Define the Braun-Blanquet scale values for consistent use
 BRAUN_BLANQUET_VALUES <- c(0, 1, 2, 3, 4, 5)

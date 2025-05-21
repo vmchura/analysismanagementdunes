@@ -1,42 +1,42 @@
-## Data Exploration and Validation {#sec-data-exploration-validation}
+## Exploración y Validación de Datos {#sec-data-exploration-validation}
 
-### Dataset Overview
+### Visión General del Conjunto de Datos
 
-This chapter details the initial data exploration and validation process for the dune vegetation analysis project.
-The dataset consists of a primary Excel workbook (`db_species_20250214.xlsx`) containing several sheets with information about:
+Este capítulo detalla el proceso inicial de exploración y validación de datos para el proyecto de análisis de vegetación dunar.
+El conjunto de datos consiste en un libro de Excel principal (`db_species_20250214.xlsx`) que contiene varias hojas con información sobre:
 
-1. Species presence/abundance at different sampling plots (`original_data` sheet)
-2. Land cover percentages at 50m and 100m radii from sample points (province-specific sheets)
-3. Management practices and protection statuses for beach areas (province-specific sheets)
+1. Presencia/abundancia de especies en diferentes parcelas de muestreo (hoja `original_data`)
+2. Porcentajes de cobertura del suelo en radios de 50m y 100m desde los puntos de muestra (hojas específicas por provincia)
+3. Prácticas de gestión y estados de protección para áreas de playa (hojas específicas por provincia)
 
-The data is structured by geographic region (Girona, Barcelona, and Tarragona provinces) and contains information about different beaches, transects, and plots within each region.
+Los datos están estructurados por región geográfica (provincias de Girona, Barcelona y Tarragona) y contienen información sobre diferentes playas, transectos y parcelas dentro de cada región.
 
-### Data Processing Steps
+### Pasos de Procesamiento de Datos
 
-The data processing workflow follows these key steps:
+El flujo de trabajo para el procesamiento de datos sigue estos pasos clave:
 
-1. Loading and cleaning the main dataset
-2. Processing land cover data for each province 
-3. Processing management data for each province
-4. Validating the processed data files
+1. Carga y limpieza del conjunto de datos principal
+2. Procesamiento de datos de cobertura del suelo para cada provincia
+3. Procesamiento de datos de gestión para cada provincia
+4. Validación de los archivos de datos procesados
 
-All processing was implemented in R using the tidyverse ecosystem of packages, with special emphasis on data cleaning and transformation.
+Todo el procesamiento se implementó en R utilizando el ecosistema de paquetes tidyverse, con especial énfasis en la limpieza y transformación de datos.
 
-#### Loading the Main Dataset
+#### Carga del Conjunto de Datos Principal
 
-The main dataset containing species observations was loaded from the `original_data` sheet of the Excel workbook.
+El conjunto de datos principal que contiene observaciones de especies se cargó desde la hoja `original_data` del libro de Excel.
 
 ```{r}
 #| label: load-packages
 #| echo: false
 #| eval: true
 #| output: false
-## Load required packages
+## Cargar paquetes requeridos
 library(tidyverse)
 library(readxl)
 library(conflicted)
 library(ggplot2)
-library(janitor) # For clean_names function
+library(janitor) # Para la función clean_names
 library(dplyr)
 ```
 
@@ -45,109 +45,109 @@ library(dplyr)
 #| echo: false
 #| eval: true
 #| output: false
-## Load the main data sheet
+## Cargar el conjunto de datos principal
 main_data <- read_excel("../data/db_species_20250214.xlsx", sheet = "original_data")
 main_data <- main_data %>% select(where(~ !all(is.na(.))))
 
-## Clean column names using the janitor package
+## Limpiar nombres de columnas usando el paquete janitor
 main_data <- main_data %>% janitor::clean_names()
 ```
 
-This initial loading process removed completely empty columns and standardized column names.
+Este proceso inicial de carga eliminó columnas completamente vacías y estandarizó los nombres de las columnas.
 
-#### Numeric Column Conversion
+#### Conversión a Columnas Numéricas
 
-The species abundance data needed to be converted to numeric format for analysis.
+Los datos de abundancia de especies necesitaban ser convertidos a formato numérico para el análisis.
 
 ```{r}
 #| label: numeric-conversion
 #| echo: false
 #| eval: true
 #| output: false
-## Find the index of the EUNIS column
+## Encontrar el índice de la columna EUNIS
 eunis_col_index <- which(grepl("eunis", names(main_data), ignore.case = TRUE))
 if(length(eunis_col_index) == 0) {
-  cat("Warning: Could not find 'EUNIS' column. Will parse all columns from second onwards.\n")
-  eunis_col_index <- ncol(main_data) + 1  # Set to beyond the last column
+  cat("Advertencia: No se pudo encontrar la columna 'EUNIS'. Se analizarán todas las columnas desde la segunda en adelante.\n")
+  eunis_col_index <- ncol(main_data) + 1  # Establecer más allá de la última columna
 } else {
-  eunis_col_index <- min(eunis_col_index)  # Take the first match if multiple
+  eunis_col_index <- min(eunis_col_index)  # Tomar la primera coincidencia si hay varias
 }
 
-## Parse columns from second to EUNIS as numeric
+## Convertir columnas desde la segunda hasta EUNIS a numéricas
 for(i in 2:min(ncol(main_data), eunis_col_index - 1)) {
   col_name <- names(main_data)[i]
-  # Store the original values to check for parsing issues
+  # Almacenar los valores originales para verificar problemas de conversión
   original_values <- main_data[[i]]
 
-  # Try to convert to numeric
+  # Intentar convertir a numérico
   main_data[[i]] <- as.numeric(as.character(main_data[[i]]))
 
-  # Check if we lost any non-NA values
+  # Comprobar si se perdieron valores no-NA
   if(sum(!is.na(original_values)) > sum(!is.na(main_data[[i]]))) {
-    warning_msg <- paste("Warning: Some values in column", col_name, "could not be parsed as numeric")
+    warning_msg <- paste("Advertencia: Algunos valores en la columna", col_name, "no pudieron ser convertidos a numéricos")
     cat(warning_msg, "\n")
 
-    # Report the problematic values
+    # Reportar los valores problemáticos
     problematic <- original_values[!is.na(original_values) & is.na(main_data[[i]])]
     if(length(problematic) > 0) {
-      cat("  Problematic values:", toString(head(unique(problematic), 5)), "\n")
+      cat("  Valores problemáticos:", toString(head(unique(problematic), 5)), "\n")
     }
   }
 }
 ```
 
-This conversion process included validation checks to identify any values that could not be properly converted to numeric format, ensuring data quality through the transformation.
+Este proceso de conversión incluyó verificaciones de validación para identificar cualquier valor que no pudiera convertirse adecuadamente a formato numérico, asegurando la calidad de los datos durante la transformación.
 
-#### Column Reordering
+#### Reordenamiento de Columnas
 
-To ensure consistency in data structure, the columns were reordered to follow a specific pattern: `"plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis", rest of species columns`
+Para asegurar la consistencia en la estructura de datos, las columnas fueron reordenadas para seguir un patrón específico: `"plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis", resto de columnas de especies`
 
 ```{r}
 #| label: column-reorder
 #| echo: false
 #| eval: true
 #| output: false
-## Identify all desired columns
+## Identificar todas las columnas deseadas
 species_cols <- setdiff(names(main_data),
                       c("plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis"))
 
-## Create the desired column order
+## Crear el orden deseado de columnas
 ordered_cols <- c("plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis", species_cols)
-## Reorder columns (only those that exist)
+## Reordenar columnas (solo las que existen)
 main_data <- main_data %>% select(all_of(ordered_cols), everything())
 
-## Save the processed main data
+## Guardar los datos principales procesados
 save(main_data, file = "../data/processed_data_clean.RData")
 ```
 
-The reordering placed identifier columns first, followed by the species columns, making the data structure more intuitive for subsequent analysis.
+La reordenación colocó las columnas de identificación primero, seguidas por las columnas de especies, haciendo que la estructura de datos sea más intuitiva para el análisis posterior.
 
-#### Processing Land Cover Data
+#### Procesamiento de Datos de Cobertura del Suelo
 
-For each province (Girona, Barcelona, and Tarragona), the land cover data was processed separately.
+Para cada provincia (Girona, Barcelona y Tarragona), los datos de cobertura del suelo se procesaron por separado.
 
 ```{r}
 #| label: land-cover-processing
 #| echo: false
 #| eval: true
 #| output: false
-## Function to process land cover sheets
+## Función para procesar hojas de cobertura del suelo
 process_land_cover <- function(sheet_name) {
-  cat("Processing sheet:", sheet_name, "\n")
+  cat("Procesando hoja:", sheet_name, "\n")
 
-  # Read the sheet
+  # Leer la hoja
   land_cover_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
 
-  # Clean column names
+  # Limpiar nombres de columnas
   land_cover_data <- land_cover_data %>% janitor::clean_names()
 
-  # Select id_beach/id_plot column
+  # Seleccionar columna id_beach/id_plot
   id_col <- grep("^id_beach$|^id_plot$", names(land_cover_data), value = TRUE)[1]
   if(is.na(id_col)) {
     id_col <- grep("id.*beach|beach.*id|id.*plot|plot.*id", names(land_cover_data), value = TRUE)[1]
   }
 
-  # Get 50m and 100m columns
+  # Obtener columnas de 50m y 100m
   cols_50m <- grep("^(x)?50m_", names(land_cover_data), value = TRUE)
   cols_100m <- grep("^(x)?100m_", names(land_cover_data), value = TRUE)
 
@@ -159,68 +159,68 @@ process_land_cover <- function(sheet_name) {
     cols_100m <- grep("100.*m|100m|100 m", names(land_cover_data), value = TRUE)
   }
 
-  # Select columns
+  # Seleccionar columnas
   distance_cols <- c(cols_50m, cols_100m)
   selected_cols <- c(id_col, distance_cols)
 
-  # Filter data
+  # Filtrar datos
   filtered_data <- land_cover_data %>% select(all_of(selected_cols)) %>% distinct()
 
-  # Convert columns to numeric if needed
+  # Convertir columnas a numéricas si es necesario
   for(col in distance_cols) {
     filtered_data[[col]] <- as.numeric(filtered_data[[col]])
   }
 
-  # Convert ID column to integer
+  # Convertir columna ID a entero
   filtered_data[[id_col]] <- as.integer(filtered_data[[id_col]])
 
   return(filtered_data)
 }
 
-## Process each land cover sheet
+## Procesar cada hoja de cobertura del suelo
 girona_land_cover <- process_land_cover("girona_land cover")
 barcelona_land_cover <- process_land_cover("barcelona_land cover")
 tarragona_land_cover <- process_land_cover("tarragona_land cover")
 
-## Create a list containing all land cover datasets
+## Crear una lista que contiene todos los conjuntos de datos de cobertura del suelo
 land_cover_data <- list(
   "Girona" = girona_land_cover,
   "Barcelona" = barcelona_land_cover,
   "Tarragona" = tarragona_land_cover
 )
 
-## Save the combined land cover data
+## Guardar los datos combinados de cobertura del suelo
 save(land_cover_data, file = "../data/all_land_cover_data.RData")
 ```
 
-This processing function:
+Esta función de procesamiento:
 
-1. Identifies the ID column (beach or plot identifier)
-2. Extracts columns related to 50m and 100m land cover measurements
-3. Filters to keep only necessary columns
-4. Converts all measurements to numeric format
-5. Returns a standardized data frame for each province
+1. Identifica la columna ID (identificador de playa o parcela)
+2. Extrae columnas relacionadas con mediciones de cobertura del suelo de 50m y 100m
+3. Filtra para mantener solo las columnas necesarias
+4. Convierte todas las mediciones a formato numérico
+5. Devuelve un data frame estandarizado para cada provincia
 
-#### Processing Management Data
+#### Procesamiento de Datos de Gestión
 
-The management data followed a similar processing pattern, but with special handling for categorical variables like name of the beaches.
+Los datos de gestión siguieron un patrón de procesamiento similar, pero con manejo especial para variables categóricas como nombres de playas.
 
 ```{r}
 #| label: management-data-processing
 #| echo: false
 #| eval: true
 #| output: false
-## Function to process management sheets
+## Función para procesar hojas de gestión
 process_management <- function(sheet_name) {
-  cat("Processing sheet:", sheet_name, "\n")
+  cat("Procesando hoja:", sheet_name, "\n")
 
-  # Read the sheet
+  # Leer la hoja
   management_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
 
-  # Clean column names
+  # Limpiar nombres de columnas
   management_data <- management_data %>% janitor::clean_names()
 
-  # Standardize key column names based on what is expected
+  # Estandarizar nombres de columnas clave basados en lo esperado
   expected_cols <- c(
     "id_plot", "id_beach", "beach",
     "managed_paths", "rope_fences", "mechanical_cleaning",
@@ -230,7 +230,7 @@ process_management <- function(sheet_name) {
     "degree_of_protection_according_to_the_iucn_classification"
   )
 
-  # Find matching columns
+  # Encontrar columnas coincidentes
   actual_cols <- vector("character", length(expected_cols))
   for (i in seq_along(expected_cols)) {
     pattern <- expected_cols[i]
@@ -240,23 +240,23 @@ process_management <- function(sheet_name) {
     if (length(matches) > 0) {
       actual_cols[i] <- matches[1]
     } else {
-      cat("Warning: Could not find a column matching '", expected_cols[i], "'\n", sep = "")
+      cat("Advertencia: No se pudo encontrar una columna que coincida con '", expected_cols[i], "'\n", sep = "")
       actual_cols[i] <- NA
     }
   }
 
-  # Remove NA values
+  # Eliminar valores NA
   actual_cols <- actual_cols[!is.na(actual_cols)]
 
   if (length(actual_cols) > 0) {
-    # Subset the original data
+    # Subconjunto de los datos originales
     filtered_data <- management_data %>% select(all_of(actual_cols))
 
-    # Detect ID columns
+    # Detectar columnas ID
     id_plot_col <- grep("id.*plot|plot.*id", names(filtered_data), ignore.case = TRUE, value = TRUE)[1]
     id_beach_col <- grep("id.*beach|beach.*id", names(filtered_data), ignore.case = TRUE, value = TRUE)[1]
 
-    # Ensure ID columns are integers
+    # Asegurar que las columnas ID sean enteros
     if (!is.na(id_plot_col)) {
       filtered_data[[id_plot_col]] <- as.integer(filtered_data[[id_plot_col]])
     }
@@ -265,12 +265,12 @@ process_management <- function(sheet_name) {
       filtered_data[[id_beach_col]] <- as.integer(filtered_data[[id_beach_col]])
     }
 
-    # Convert appropriate columns to factors if they have categorical values
+    # Convertir columnas apropiadas a factores si tienen valores categóricos
     for (col in names(filtered_data)) {
       if (is.character(filtered_data[[col]]) &&
           !grepl("^id|^beach$", col, ignore.case = TRUE)) {
         unique_vals <- unique(na.omit(filtered_data[[col]]))
-        if (length(unique_vals) < 10) {  # Assume categorical if fewer than 10 unique values
+        if (length(unique_vals) < 10) {  # Asumir categórica si hay menos de 10 valores únicos
           filtered_data[[col]] <- factor(filtered_data[[col]])
         }
       }
@@ -278,46 +278,46 @@ process_management <- function(sheet_name) {
 
     return(filtered_data)
   } else {
-    warning("No usable columns found in the management sheet")
+    warning("No se encontraron columnas útiles en la hoja de gestión")
     return(NULL)
   }
 }
 
-## Process each management sheet
+## Procesar cada hoja de gestión
 girona_management <- process_management("girona_management")
 barcelona_management <- process_management("barcelona_management")
 tarragona_management <- process_management("tarragona_management")
 
-## Create a list containing all management datasets
+## Crear una lista que contiene todos los conjuntos de datos de gestión
 management_data <- list(
   "Girona" = girona_management,
   "Barcelona" = barcelona_management,
   "Tarragona" = tarragona_management
 )
 
-## Save the combined management data
+## Guardar los datos combinados de gestión
 save(management_data, file = "../data/all_management_data.RData")
 ```
 
-This processing function:
+Esta función de procesamiento:
 
-1. Attempts to locate columns matching expected management variables
-2. Converts ID columns to integer format
-3. Intelligently converts categorical variables to factors
-4. Returns a standardized data frame for each province
+1. Intenta localizar columnas que coincidan con variables de gestión esperadas
+2. Convierte columnas ID a formato entero
+3. Convierte inteligentemente variables categóricas a factores
+4. Devuelve un data frame estandarizado para cada provincia
 
-### Data Validation
+### Validación de Datos
 
-After the initial data processing, a validation script was executed to ensure data quality and integrity. The validation process included:
+Después del procesamiento inicial de datos, se ejecutó un script de validación para asegurar la calidad e integridad de los datos. El proceso de validación incluyó:
 
-1. Checking the dimensions of the processed datasets
-2. Verifying column presence and order
-3. Validating value ranges and formats
-4. Cross-checking relationships between identifier fields
+1. Comprobar las dimensiones de los conjuntos de datos procesados
+2. Verificar la presencia y orden de las columnas
+3. Validar rangos y formatos de valores
+4. Verificar las relaciones entre campos identificadores
 
-#### Main Data Validation
+#### Validación de Datos Principales
 
-The main data validation included these key checks:
+La validación de datos principales incluyó estas verificaciones clave:
 
 ```{r}
 #| label: main-data-validation
@@ -480,9 +480,9 @@ validate_main_data <- function(data) {
 }
 ```
 
-#### Land Cover Data Validation
+#### Validación de Datos de Cobertura del Suelo
 
-Validation for the land cover data focused on:
+La validación para los datos de cobertura del suelo se centró en:
 
 ```{r}
 #| label: land-cover-validation
@@ -619,11 +619,11 @@ validate_land_cover_data <- function(data) {
 }
 ```
 
-The key validation for the land cover data was ensuring that the percentages for different land cover types at each distance (50m and 100m) summed to approximately 100%.
+La validación clave para los datos de cobertura del suelo fue asegurar que los porcentajes para diferentes tipos de cobertura del suelo en cada distancia (50m y 100m) sumaran aproximadamente 100%.
 
-#### Management Data Validation
+#### Validación de Datos de Gestión
 
-The management data validation focused on:
+La validación de datos de gestión se centró en:
 
 ```{r}
 #| label: management-validation
@@ -711,95 +711,95 @@ validate_management_data <- function(data) {
 }
 ```
 
-The most important validation for management data was ensuring that the management rating columns contained only integer values between 0 and 5.
+La validación más importante para los datos de gestión fue asegurar que las columnas de calificación de gestión contuvieran solo valores enteros entre 0 y 5.
 
-### Executing the Validation
+### Ejecución de la Validación
 
-After creating the validation functions, they need to be executed on the processed data files. This is done by loading each of the saved RData files and passing them to the appropriate validation function.
+Después de crear las funciones de validación, necesitan ser ejecutadas en los archivos de datos procesados. Esto se hace cargando cada uno de los archivos RData guardados y pasándolos a la función de validación apropiada.
 
-#### Validation Summary Table
+#### Tabla Resumen de Validación
 
-The following table provides a comprehensive overview of all the validations performed on the different dataframes in this project:
+La siguiente tabla proporciona una visión general completa de todas las validaciones realizadas en los diferentes dataframes en este proyecto:
 
-| Dataset    | Validation Description   | Expected Format/Value                                                                                                                            | File                       |
+| Conjunto de Datos | Descripción de la Validación | Formato/Valor Esperado | Archivo |
 |------------|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|
-| Main Data  | Row count                | 278 observations                                                                                                                                 | processed_data_clean.RData |
-| Main Data  | Column presence          | Includes "plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis"                                                              | processed_data_clean.RData |
-| Main Data  | Plot format              | "D+_D+_D+" (e.g., "1_2_3")                                                                                                                       | processed_data_clean.RData |
-| Main Data  | id_beach format          | Integer values                                                                                                                                   | processed_data_clean.RData |
-| Main Data  | id_transect format       | Integer values                                                                                                                                   | processed_data_clean.RData |
-| Main Data  | id_plot format           | Integer values                                                                                                                                   | processed_data_clean.RData |
-| Main Data  | transect format          | "D+_D+" (e.g., "1_2")                                                                                                                            | processed_data_clean.RData |
-| Main Data  | Plot concatenation       | plot = id_beach_id_transect_id_plot                                                                                                              | processed_data_clean.RData |
-| Main Data  | Species abundance values | Integers between 0-5                                                                                                                             | processed_data_clean.RData |
-| Land Cover | Region presence          | Includes "Girona", "Barcelona", "Tarragona"                                                                                                      | all_land_cover_data.RData  |
-| Land Cover | Row counts               | Girona: 19, Barcelona: 4, Tarragona: 16                                                                                                          | all_land_cover_data.RData  |
-| Land Cover | Column count             | 19 columns (id_beach + 9 for 50m + 9 for 100m)                                                                                                   | all_land_cover_data.RData  |
-| Land Cover | ID column                | Contains "id_beach" column                                                                                                                       | all_land_cover_data.RData  |
-| Land Cover | Land cover types         | Contains columns for: scrubland, grassland, communication_routes, urban, forestry_bare_soil, forests, lagoon_and_salt_marshes, crops, freshwater | all_land_cover_data.RData  |
-| Land Cover | Column types             | All columns are numeric (except ID)                                                                                                              | all_land_cover_data.RData  |
-| Land Cover | 50m columns sum          | Each row sums to approximately 100%                                                                                                              | all_land_cover_data.RData  |
-| Land Cover | 100m columns sum         | Each row sums to approximately 100%                                                                                                              | all_land_cover_data.RData  |
-| Management | Region presence          | Includes "Girona", "Barcelona", "Tarragona"                                                                                                      | all_management_data.RData  |
-| Management | Row counts               | Girona: 19, Barcelona: 4, Tarragona: 16                                                                                                          | all_management_data.RData  |
-| Management | Column presence          | Contains key management columns (e.g., managed_paths, rope_fences, etc.)                                                                         | all_management_data.RData  |
-| Management | Rating format            | Management ratings are integers between 0-5                                                                                                      | all_management_data.RData  |
+| Datos Principales | Recuento de filas | 278 observaciones | processed_data_clean.RData |
+| Datos Principales | Presencia de columnas | Incluye "plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis" | processed_data_clean.RData |
+| Datos Principales | Formato de parcela | "D+_D+_D+" (ej., "1_2_3") | processed_data_clean.RData |
+| Datos Principales | Formato id_beach | Valores enteros | processed_data_clean.RData |
+| Datos Principales | Formato id_transect | Valores enteros | processed_data_clean.RData |
+| Datos Principales | Formato id_plot | Valores enteros | processed_data_clean.RData |
+| Datos Principales | Formato de transecto | "D+_D+" (ej., "1_2") | processed_data_clean.RData |
+| Datos Principales | Concatenación de parcela | plot = id_beach_id_transect_id_plot | processed_data_clean.RData |
+| Datos Principales | Valores de abundancia de especies | Enteros entre 0-5 | processed_data_clean.RData |
+| Cobertura del Suelo | Presencia de regiones | Incluye "Girona", "Barcelona", "Tarragona" | all_land_cover_data.RData |
+| Cobertura del Suelo | Recuento de filas | Girona: 19, Barcelona: 4, Tarragona: 16 | all_land_cover_data.RData |
+| Cobertura del Suelo | Recuento de columnas | 19 columnas (id_beach + 9 para 50m + 9 para 100m) | all_land_cover_data.RData |
+| Cobertura del Suelo | Columna ID | Contiene columna "id_beach" | all_land_cover_data.RData |
+| Cobertura del Suelo | Tipos de cobertura del suelo | Contiene columnas para: matorral, pastizal, vías de comunicación, urbano, suelo forestal desnudo, bosques, laguna y marismas, cultivos, agua dulce | all_land_cover_data.RData |
+| Cobertura del Suelo | Tipos de columnas | Todas las columnas son numéricas (excepto ID) | all_land_cover_data.RData |
+| Cobertura del Suelo | Suma de columnas 50m | Cada fila suma aproximadamente 100% | all_land_cover_data.RData |
+| Cobertura del Suelo | Suma de columnas 100m | Cada fila suma aproximadamente 100% | all_land_cover_data.RData |
+| Gestión | Presencia de regiones | Incluye "Girona", "Barcelona", "Tarragona" | all_management_data.RData |
+| Gestión | Recuento de filas | Girona: 19, Barcelona: 4, Tarragona: 16 | all_management_data.RData |
+| Gestión | Presencia de columnas | Contiene columnas clave de gestión (ej., senderos gestionados, cercas de cuerda, etc.) | all_management_data.RData |
+| Gestión | Formato de calificación | Las calificaciones de gestión son enteros entre 0-5 | all_management_data.RData |
 
-This validation framework ensures that all datasets maintain consistent structure, formatting, and quality across all stages of analysis.
+Este marco de validación asegura que todos los conjuntos de datos mantengan una estructura, formato y calidad consistente en todas las etapas del análisis.
 
 ```{r}
 #| label: execute-validation
 #| echo: false
 #| eval: true
 #| output: false
-## Load the required libraries
-cat("Starting data validation...\n\n")
+## Cargar las bibliotecas requeridas
+cat("Iniciando validación de datos...\n\n")
 
-## Load main_data
-cat("Loading main_data...\n")
+## Cargar main_data
+cat("Cargando main_data...\n")
 if (file.exists("../data/processed_data_clean.RData")) {
   load("../data/processed_data_clean.RData")
   validate_main_data(main_data)
 } else {
-  cat("ERROR: File 'data/processed_data_clean.RData' not found!\n\n")
+  cat("ERROR: ¡Archivo 'data/processed_data_clean.RData' no encontrado!\n\n")
 }
 
-## Load land_cover_data
-cat("Loading land_cover_data...\n")
+## Cargar land_cover_data
+cat("Cargando land_cover_data...\n")
 if (file.exists("../data/all_land_cover_data.RData")) {
   load("../data/all_land_cover_data.RData")
   validate_land_cover_data(land_cover_data)
 } else {
-  cat("ERROR: File 'data/all_land_cover_data.RData' not found!\n\n")
+  cat("ERROR: ¡Archivo 'data/all_land_cover_data.RData' no encontrado!\n\n")
 }
 
-## Load management_data (placeholder for future implementation)
-cat("Loading management_data...\n")
+## Cargar management_data (marcador de posición para implementación futura)
+cat("Cargando management_data...\n")
 if (file.exists("../data/all_management_data.RData")) {
   load("../data/all_management_data.RData")
   validate_management_data(management_data)
 } else {
-  cat("ERROR: File 'data/all_management_data.RData' not found!\n\n")
+  cat("ERROR: ¡Archivo 'data/all_management_data.RData' no encontrado!\n\n")
 }
 
-cat("Validation complete.\n")
+cat("Validación completa.\n")
 ```
 
 
-### Summary
+### Resumen
 
-The data exploration and validation process established a solid foundation for further analysis by:
+El proceso de exploración y validación de datos estableció una base sólida para análisis posteriores al:
 
-1. Loading and cleaning the raw data from the Excel workbook
-2. Standardizing column names and formats
-3. Converting data types appropriately for future analysis
-4. Structuring the data consistently across geographical regions
-5. Validating the integrity and quality of the processed datasets
+1. Cargar y limpiar los datos brutos del libro de Excel
+2. Estandarizar nombres y formatos de columnas
+3. Convertir tipos de datos apropiadamente para análisis futuros
+4. Estructurar los datos consistentemente a través de regiones geográficas
+5. Validar la integridad y calidad de los conjuntos de datos procesados
 
-The resulting processed datasets were saved as RData files for efficient loading in subsequent analysis steps:
+Los conjuntos de datos procesados resultantes se guardaron como archivos RData para una carga eficiente en pasos de análisis posteriores:
 
-1. `processed_data_clean.RData` - Main species observations dataset
-2. `all_land_cover_data.RData` - Land cover percentages for each province
-3. `all_management_data.RData` - Management practices for each province
+1. `processed_data_clean.RData` - Conjunto de datos principal de observaciones de especies
+2. `all_land_cover_data.RData` - Porcentajes de cobertura del suelo para cada provincia
+3. `all_management_data.RData` - Prácticas de gestión para cada provincia
 
-These processed files form the basis for the exploratory data analysis and modeling presented in subsequent chapters.
+Estos archivos procesados forman la base para el análisis exploratorio de datos y el modelado presentado en los capítulos siguientes.

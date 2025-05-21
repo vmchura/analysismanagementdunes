@@ -1,5 +1,5 @@
 ```{r 06_01_setup, include=FALSE}
-# Global knitr options - controls all code chunks
+# Configurar opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
@@ -7,42 +7,42 @@ knitr::opts_chunk$set(
 )
 ```
 
-This section visualizes the most abundant plant species across the three regions (Tarragona, Barcelona, and Girona). The chart displays the mean abundance of top plant species based on the Braun-Blanquet scale.
+Esta sección visualiza las especies de plantas más abundantes en las tres regiones (Tarragona, Barcelona y Girona). El gráfico muestra la abundancia media de las principales especies de plantas basada en la escala de Braun-Blanquet.
 ```{r}
-#| fig-cap: "Distribution of observations across the three regions"
+#| fig-cap: "Distribución de observaciones a través de las tres regiones"
 #| echo: false
 #| eval: true
 #| output: false
-# Load necessary libraries
+# Cargar bibliotecas necesarias
 library(tidyverse)
 library(ggplot2)
-library(gridExtra) # for arranging multiple plots
-library(RColorBrewer) # for color palettes
+library(gridExtra) # para organizar múltiples gráficos
+library(RColorBrewer) # para paletas de colores
 
-# Load global configuration
+# Cargar configuración global
 source("../R/global_config.R")
 
-# Load data
+# Cargar datos
 load("../data/all_observations_split.RData")
 load("../data/all_land_cover_data.RData")
 
-# --- Vegetation Pattern Analysis ---
+# --- Análisis de Patrones de Vegetación ---
 
-# Function to calculate average abundance for each species in a region
-# Converting Braun-Blanquet values to their maximum percentage coverage
+# Función para calcular la abundancia promedio para cada especie en una región
+# Convirtiendo valores de Braun-Blanquet a su cobertura porcentual máxima
 calculate_avg_abundance <- function(region_data) {
-  # Get species columns - exclude "plot" and "id_beach"
+  # Obtener columnas de especies - excluir "plot" y "id_beach"
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
   
-  # Create a new dataframe to store the percentage values
+  # Crear un nuevo dataframe para almacenar los valores porcentuales
   percentage_data <- region_data
   
-  # Process each species column individually to avoid the vectorized operation issues
+  # Procesar cada columna de especies individualmente para evitar problemas con operaciones vectorizadas
   for (col in species_cols) {
     percentage_data[[col]] <- sapply(region_data[[col]], function(value) {
       if (is.na(value)) return(0)
       
-      # Convert based on Braun-Blanquet scale
+      # Convertir basado en la escala de Braun-Blanquet
       if (value == 0) return(0)
       else if (value == 0.1) return(5)
       else if (value == 0.5) return(5)
@@ -55,7 +55,7 @@ calculate_avg_abundance <- function(region_data) {
     })
   }
   
-  # Calculate mean percentage for each species
+  # Calcular porcentaje medio para cada especie
   percentage_data %>%
     summarise(across(all_of(species_cols), mean, na.rm = TRUE)) %>%
     pivot_longer(cols = everything(),
@@ -64,29 +64,29 @@ calculate_avg_abundance <- function(region_data) {
     arrange(desc(mean_percentage))
 }
 
-# Calculate average abundance for each region
+# Calcular abundancia promedio para cada región
 girona_abundance <- calculate_avg_abundance(beaches_by_region$Girona)
 barcelona_abundance <- calculate_avg_abundance(beaches_by_region$Barcelona)
 tarragona_abundance <- calculate_avg_abundance(beaches_by_region$Tarragona)
 
-# Get top 10 most abundant species in each region
+# Obtener las 10 especies más abundantes en cada región
 top_girona <- girona_abundance %>% slice_head(n = 3)
 top_barcelona <- barcelona_abundance %>% slice_head(n = 3)
 top_tarragona <- tarragona_abundance %>% slice_head(n = 3)
 
-# Get the union of top species from all regions
+# Obtener la unión de especies principales de todas las regiones
 top_species <- unique(c(top_girona$species,
                          top_barcelona$species,
                          top_tarragona$species))
 
-# Function to prepare data for plotting
+# Función para preparar datos para visualización
 prepare_plot_data <- function(abundance_data, region_name, top_species_list) {
   abundance_data %>%
     filter(species %in% top_species_list) %>%
     mutate(region = region_name)
 }
 
-# Combine data from all regions
+# Combinar datos de todas las regiones
 plot_data <- bind_rows(
   prepare_plot_data(girona_abundance, "Girona", top_species),
   prepare_plot_data(barcelona_abundance, "Barcelona", top_species),
@@ -95,38 +95,38 @@ plot_data <- bind_rows(
 ```
 ```{r}
 #| label: fig-regional-distribution
-#| fig-cap: "Distribution of observations across the three regions"
+#| fig-cap: "Distribución de observaciones a través de las tres regiones"
 #| echo: false
 #| eval: true
 #| output: true
 #| fig-pos: "H"
-# Order regions according to our standard order
+# Ordenar regiones según nuestro orden estándar
 plot_data <- order_provinces(plot_data, column_name = "region")
 
 
-# Order regions according to our standard order
+# Ordenar regiones según nuestro orden estándar
 plot_data <- order_provinces(plot_data, column_name = "region")
 
-# Create a bar plot of top species by region
+# Crear un gráfico de barras de las principales especies por región
 p <- ggplot(plot_data, aes(x = reorder(species, mean_percentage), y = mean_percentage, fill = region)) +
-  # Add species bars
+  # Añadir barras de especies
   geom_bar(stat = "identity", position = "dodge") +
   coord_flip() +
   theme_minimal() +
-  labs(title = "Mean Coverage of Top Plant Species by Region",
-       x = "Species",
-       y = "Mean Coverage (%)",
-       fill = "Region") +
+  labs(title = "Cobertura Media de las Principales Especies Vegetales por Región",
+       x = "Especies",
+       y = "Cobertura Media (%)",
+       fill = "Región") +
   theme(legend.position = "top",
         axis.text.y = element_text(size = 8)) +
-  # Use our custom province colors
+  # Usar nuestros colores personalizados para provincias
   scale_fill_manual(values = PROVINCE_COLORS)
 
-# Apply the percentage scale from our global config
+# Aplicar la escala de porcentaje desde nuestra configuración global
 p <- apply_percentage_scale(p)
 p
 
-# Save the plot
+# Guardar el gráfico
 ggsave("../figures/top_species_by_region.png", width = 12, height = 8)
 
 ```
