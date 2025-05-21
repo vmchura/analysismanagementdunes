@@ -38,6 +38,10 @@
 {{< include 06_resultados/06_nmds_habitat_classification.qmd >}}
 :::
 
+::: {#sec-classificacio-habitats-regional}
+{{< include 06_resultados/06_nmds_regional_analysis.qmd >}}
+:::
+
 ### Classificación NMDS Region {#sec-classificacio-region}
 
 ::: {#sec-classificacio-habitats-content}
