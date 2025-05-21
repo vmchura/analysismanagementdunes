@@ -27,14 +27,14 @@ load("../data/all_land_cover_data.RData")
 prepare_nmds_data <- function(region_data) {
   # Get species columns - exclude non-species columns
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
-  
+
   # Create a matrix for NMDS analysis with percentage values
   nmds_matrix <- region_data %>%
     # Convert Braun-Blanquet values to percentages
     mutate(across(all_of(species_cols), bb_to_percentage)) %>%
     # Select only species columns to create the species matrix
     select(all_of(species_cols))
-  
+
   # Convert to matrix
   as.matrix(nmds_matrix)
 }
@@ -43,7 +43,7 @@ prepare_nmds_data <- function(region_data) {
 get_dominant_species <- function(region_data) {
   # Get species columns
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
-  
+
   # Create data frame with dominant species for each plot
   region_data %>%
     # Convert to long format
@@ -101,8 +101,8 @@ all_dominant_species <- bind_rows(girona_dominant, barcelona_dominant, tarragona
 # Using Bray-Curtis distance as it's appropriate for community composition data
 set.seed(123) # For reproducibility
 nmds_result <- metaMDS(
-  all_species_matrix, 
-  distance = "bray", 
+  all_species_matrix,
+  distance = "bray",
   k = 2,        # Number of dimensions (2 for easy visualization)
   trymax = 100,  # Maximum number of random starts
   autotransform = FALSE # Data already transformed to percentages
@@ -167,10 +167,10 @@ p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
   # Add points colored by region and shaped by habitat type
   geom_point(aes(color = Region, shape = Habitat), size = 3, alpha = 0.8) +
   # Add convex hulls to outline each habitat cluster
-  stat_ellipse(aes(group = Habitat, linetype = Habitat), 
+  stat_ellipse(aes(group = Habitat, linetype = Habitat),
                type = "norm", level = 0.8, size = 0.8) +
   # Add top species labels
-  geom_text(data = top_species, 
+  geom_text(data = top_species,
             aes(x = NMDS1, y = NMDS2, label = species),
             size = 3, fontface = "italic", hjust = -0.1, vjust = -0.1) +
   # Customize appearance
@@ -188,7 +188,7 @@ p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
   # Add arrows for top species
   geom_segment(data = top_species,
                aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2),
-               arrow = arrow(length = unit(0.2, "cm")), 
+               arrow = arrow(length = unit(0.2, "cm")),
                alpha = 0.5,
                color = "darkgrey") +
   # Customize theme elements
@@ -272,11 +272,11 @@ plot_mapping <- data.frame(
 )
 
 # Add row identifiers to original data so we can match to NMDS
-girona_with_rows <- beaches_by_region$Girona %>% 
+girona_with_rows <- beaches_by_region$Girona %>%
   mutate(region = "Girona", row_id = 1:nrow(beaches_by_region$Girona))
-barcelona_with_rows <- beaches_by_region$Barcelona %>% 
+barcelona_with_rows <- beaches_by_region$Barcelona %>%
   mutate(region = "Barcelona", row_id = (nrow(beaches_by_region$Girona) + 1):(nrow(beaches_by_region$Girona) + nrow(beaches_by_region$Barcelona)))
-tarragona_with_rows <- beaches_by_region$Tarragona %>% 
+tarragona_with_rows <- beaches_by_region$Tarragona %>%
   mutate(region = "Tarragona", row_id = (nrow(beaches_by_region$Girona) + nrow(beaches_by_region$Barcelona) + 1):(nrow(beaches_by_region$Girona) + nrow(beaches_by_region$Barcelona) + nrow(beaches_by_region$Tarragona)))
 
 # Combine all regions with row IDs
@@ -340,45 +340,4 @@ ggplot(indicator_species, aes(x = reorder(species, mean_bb), y = mean_bb, fill =
 
 # Save the plot
 ggsave("../figures/habitat_indicator_species.png", width = 14, height = 8)
-```
-
-### Interpretation of Habitat Types
-
-The NMDS analysis successfully classified the vegetation plots into four distinct habitat types, which align with typical zonation patterns in Mediterranean coastal dune systems:
-
-1. **Front-dune Habitat**: Characterized by pioneer species adapted to harsh conditions at the seaward edge of the dune system. These areas experience high salt spray, sand movement, and limited soil development. Indicator species include *Cakile maritima*, *Elymus farctus*, and *Ammophila arenaria*.
-
-2. **Back-dune Habitat**: Represents more stabilized areas further inland, with reduced wind and salt stress, and more developed soils. This habitat supports a greater diversity of species and is characterized by indicators such as *Crucianella maritima*, *Pancratium maritimum*, and *Helichrysum stoechas*.
-
-3. **Mixed Habitat**: Transition zones between front and back dunes, or areas with overlapping characteristics from multiple habitat types. These areas often host a mixture of species from adjacent habitats and may represent successional stages.
-
-4. **Disturbed Habitat**: Areas showing signs of human impact, characterized by the presence of ruderal or opportunistic species. These zones may be affected by human trampling, proximity to urban areas, or modified sediment dynamics due to coastal infrastructure.
-
-The stress value of `r round(nmds_result$stress, 3)` indicates a `r if(nmds_result$stress < 0.1) "good" else if(nmds_result$stress < 0.2) "acceptable" else "poor"` fit of the NMDS ordination. Values below 0.2 are generally considered acceptable in ecological studies, suggesting that our two-dimensional representation captures the underlying ecological patterns adequately.
-
-### Regional Distribution of Habitat Types
-
-The analysis reveals notable differences in habitat distribution across the three study regions:
-
-1. **Tarragona**: Shows the highest proportion of front-dune habitats, suggesting well-preserved embryonic dune systems. This may reflect the wider beaches and more natural coastal dynamics in this region.
-
-2. **Barcelona**: Displays the highest percentage of disturbed habitats, consistent with the intense urbanization and tourism pressure in this densely populated coastal area.
-
-3. **Girona**: Presents a more balanced distribution of habitat types, with substantial representation of back-dune and mixed habitats. This suggests more mature and complex dune systems.
-
-These patterns align with the known differences in coastal development, protection status, and natural features across the Catalan coast, with the Barcelona area being highly urbanized, while Tarragona and Girona retain more natural coastal landscapes.
-
-### Implications for Conservation and Management
-
-The habitat classification from this NMDS analysis provides valuable insights for targeted conservation strategies:
-
-- **Front-dune Habitats**: Require protection from trampling and coastal erosion, which are particularly vulnerable due to their position at the land-sea interface.
-
-- **Back-dune Habitats**: Need management approaches that maintain habitat complexity and prevent fragmentation by recreational infrastructure.
-
-- **Mixed Habitats**: May benefit from targeted interventions to ensure natural succession processes can continue.
-
-- **Disturbed Habitats**: Present opportunities for restoration efforts, particularly in Barcelona where this habitat type dominates.
-
-By tailoring management approaches to the specific needs of each habitat type identified through this analysis, conservation efforts can be more effective in preserving the biodiversity and ecological function of Catalonian coastal dune systems.
 ```
