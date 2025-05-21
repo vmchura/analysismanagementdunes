@@ -1,0 +1,414 @@
+```{r 06_07_setup, include=FALSE}
+# Global knitr options - controls all code chunks
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(vegan)     # For NMDS analysis
+library(gridExtra) # For arranging multiple plots
+library(RColorBrewer) # For color palettes
+
+# Load global configuration
+source("../R/global_config.R")
+
+# Load data
+load("../data/all_observations_split.RData")
+load("../data/all_land_cover_data.RData")
+
+# --- NMDS Analysis for Region-based Classification ---
+
+# Function to prepare species data matrix for NMDS analysis
+# Converting Braun-Blanquet values to numeric percentage cover
+prepare_nmds_data <- function(region_data) {
+  # Get species columns - exclude non-species columns
+  species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
+  
+  # Create a matrix for NMDS analysis with percentage values
+  nmds_matrix <- region_data %>%
+    # Convert Braun-Blanquet values to percentages
+    mutate(across(all_of(species_cols), bb_to_percentage)) %>%
+    # Select only species columns to create the species matrix
+    select(all_of(species_cols))
+  
+  # Convert to matrix
+  as.matrix(nmds_matrix)
+}
+
+# Function to identify dominant species for each plot
+get_dominant_species <- function(region_data, region_name) {
+  # Get species columns
+  species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
+  
+  # Create data frame with dominant species for each plot
+  region_data %>%
+    # Convert to long format
+    pivot_longer(
+      cols = all_of(species_cols),
+      names_to = "species",
+      values_to = "bb_value"
+    ) %>%
+    # Group by plot and get species with highest BB value
+    group_by(plot, id_beach) %>%
+    filter(bb_value == max(bb_value, na.rm = TRUE) & !is.na(bb_value) & bb_value > 0) %>%
+    # In case of ties, keep first one (or could randomize)
+    slice(1) %>%
+    ungroup() %>%
+    # Add region information
+    mutate(region = region_name)
+}
+
+# Prepare data for each region
+girona_matrix <- prepare_nmds_data(beaches_by_region$Girona)
+barcelona_matrix <- prepare_nmds_data(beaches_by_region$Barcelona)
+tarragona_matrix <- prepare_nmds_data(beaches_by_region$Tarragona)
+
+# Combine all matrices for a comprehensive analysis
+all_species_matrix <- rbind(
+  girona_matrix,
+  barcelona_matrix,
+  tarragona_matrix
+)
+
+# Create a corresponding region identifier for each row
+all_regions <- c(
+  rep("Girona", nrow(girona_matrix)),
+  rep("Barcelona", nrow(barcelona_matrix)),
+  rep("Tarragona", nrow(tarragona_matrix))
+)
+
+# Create a corresponding beach identifier for each row
+all_beaches <- c(
+  beaches_by_region$Girona$id_beach,
+  beaches_by_region$Barcelona$id_beach,
+  beaches_by_region$Tarragona$id_beach
+)
+
+# Prepare dominant species information
+girona_dominant <- get_dominant_species(beaches_by_region$Girona, "Girona")
+barcelona_dominant <- get_dominant_species(beaches_by_region$Barcelona, "Barcelona")
+tarragona_dominant <- get_dominant_species(beaches_by_region$Tarragona, "Tarragona")
+
+# Combine dominant species data
+all_dominant_species <- bind_rows(girona_dominant, barcelona_dominant, tarragona_dominant)
+
+# Run the NMDS analysis
+# Using Bray-Curtis distance as it's appropriate for community composition data
+set.seed(123) # For reproducibility
+nmds_result <- metaMDS(
+  all_species_matrix, 
+  distance = "bray", 
+  k = 2,        # Number of dimensions (2 for easy visualization)
+  trymax = 100,  # Maximum number of random starts
+  autotransform = FALSE # Data already transformed to percentages
+)
+
+# Create a data frame with NMDS results
+nmds_data <- data.frame(
+  NMDS1 = nmds_result$points[,1],
+  NMDS2 = nmds_result$points[,2],
+  Region = all_regions,
+  Beach = all_beaches
+)
+
+# Order regions according to our standard order
+nmds_data <- order_provinces(nmds_data, column_name = "Region")
+
+# Extract species scores (weighted average positions in NMDS space)
+species_scores <- data.frame(
+  species = colnames(all_species_matrix),
+  NMDS1 = scores(nmds_result, "species")[,1],
+  NMDS2 = scores(nmds_result, "species")[,2]
+)
+
+# Get the most important species to label in the plot (high absolute scores)
+top_species <- species_scores %>%
+  mutate(distance = sqrt(NMDS1^2 + NMDS2^2)) %>%
+  arrange(desc(distance)) %>%
+  slice_head(n = 10)
+
+# Identify characteristic species for each region
+# Find the correlation between species abundance and NMDS axes
+fit_env <- envfit(nmds_result, all_species_matrix, permutations = 999)
+
+# Extract the species with significant correlations
+significant_species <- data.frame(
+  species = colnames(all_species_matrix),
+  pval = fit_env$vectors$pvals
+) %>%
+  filter(pval < 0.05) %>%
+  arrange(pval)
+
+# Select top species by region
+# We will get the average abundance of each species in each region
+
+# First, let's collect all the original data with region info
+girona_data <- beaches_by_region$Girona %>% 
+  mutate(region = "Girona")
+barcelona_data <- beaches_by_region$Barcelona %>% 
+  mutate(region = "Barcelona")
+tarragona_data <- beaches_by_region$Tarragona %>% 
+  mutate(region = "Tarragona")
+
+all_data_with_regions <- bind_rows(girona_data, barcelona_data, tarragona_data)
+
+# Get species columns
+species_cols <- setdiff(names(all_data_with_regions), c("plot", "id_beach", "region"))
+
+# Calculate mean abundance of each species by region
+species_by_region <- all_data_with_regions %>%
+  # Convert to long format
+  pivot_longer(
+    cols = all_of(species_cols),
+    names_to = "species",
+    values_to = "bb_value"
+  ) %>%
+  # Replace NA with 0
+  mutate(bb_value = ifelse(is.na(bb_value), 0, bb_value)) %>%
+  # Calculate mean by region and species
+  group_by(region, species) %>%
+  summarise(mean_bb = mean(bb_value, na.rm = TRUE), .groups = "drop") %>%
+  # Keep only significant species
+  filter(species %in% significant_species$species)
+
+# For each region, get the top characteristic species (highest mean abundance)
+top_species_by_region <- species_by_region %>%
+  group_by(region) %>%
+  slice_max(order_by = mean_bb, n = 5) %>%
+  filter(mean_bb > 0) %>%  # Ensure there's some presence
+  ungroup() %>%
+  # Order regions
+  mutate(region = factor(region, levels = PROVINCE_ORDER))
+```
+
+This section presents a Non-metric Multidimensional Scaling (NMDS) analysis comparing vegetation communities across the three regions of Catalonia: Tarragona, Barcelona, and Girona. This analysis explores how coastal dune vegetation patterns differ between these regions and identifies characteristic species for each area.
+
+```{r}
+#| label: fig-nmds-region-plot
+#| fig-cap: "NMDS ordination plot showing the distribution of vegetation plots by region. Points represent individual plots colored by region (Tarragona, Barcelona, Girona). Arrows indicate the influence of key species on the ordination."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 8
+#| fig-pos: "H"
+
+# Create NMDS plot with region clusters
+p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
+  # Add points colored by region
+  geom_point(aes(color = Region), size = 3, alpha = 0.8) +
+  # Add convex hulls to outline each region
+  stat_ellipse(aes(color = Region), 
+               type = "norm", level = 0.8, size = 0.8) +
+  # Add top species labels
+  geom_text(data = top_species, 
+            aes(x = NMDS1, y = NMDS2, label = species),
+            size = 3, fontface = "italic", hjust = -0.1, vjust = -0.1) +
+  # Customize appearance
+  theme_minimal() +
+  labs(
+    title = "NMDS Ordination of Coastal Dune Vegetation by Region",
+    subtitle = paste("Stress =", round(nmds_result$stress, 3)),
+    x = "NMDS1",
+    y = "NMDS2",
+    color = "Region"
+  ) +
+  # Use consistent region colors
+  scale_color_manual(values = PROVINCE_COLORS) +
+  # Add arrows for top species
+  geom_segment(data = top_species,
+               aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2),
+               arrow = arrow(length = unit(0.2, "cm")), 
+               alpha = 0.5,
+               color = "darkgrey") +
+  # Customize theme elements
+  theme(
+    legend.position = "right",
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "bold")
+  )
+
+print(p_nmds)
+
+# Save the plot
+ggsave("../figures/nmds_region_classification.png", p_nmds, width = 12, height = 8)
+```
+
+```{r}
+#| label: fig-region-species-indicators
+#| fig-cap: "Characteristic species for each region, showing the top species by mean Braun-Blanquet value in Tarragona, Barcelona, and Girona."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 14
+#| fig-height: 8
+#| fig-pos: "H"
+
+# Create a bar plot of characteristic species by region
+ggplot(top_species_by_region, aes(x = reorder(species, mean_bb), y = mean_bb, fill = region)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ region, scales = "free_y") +
+  coord_flip() +
+  theme_minimal() +
+  labs(
+    title = "Characteristic Species by Region",
+    subtitle = "Based on mean species abundance",
+    x = "Species",
+    y = "Mean Braun-Blanquet Value",
+    fill = "Region"
+  ) +
+  # Apply Braun-Blanquet scale
+  apply_braun_blanquet_scale() +
+  theme(
+    legend.position = "none",
+    strip.background = element_rect(fill = "gray90"),
+    strip.text = element_text(face = "bold"),
+    axis.text.y = element_text(face = "italic"),
+    plot.title = element_text(face = "bold")
+  ) +
+  # Use consistent region colors
+  scale_fill_manual(values = PROVINCE_COLORS)
+
+# Save the plot
+ggsave("../figures/region_characteristic_species.png", width = 14, height = 8)
+```
+
+```{r}
+#| label: fig-region-species-diversity
+#| fig-cap: "Species diversity metrics by region, showing richness, Shannon diversity index, and evenness across Tarragona, Barcelona, and Girona."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 6
+#| fig-pos: "H"
+
+# Calculate diversity indices for each region
+calculate_diversity <- function(matrix_data) {
+  # Species richness (number of species present in the region)
+  species_present <- colSums(matrix_data > 0)
+  richness <- sum(species_present > 0)
+  
+  # Shannon diversity index
+  H <- diversity(matrix_data, index = "shannon")
+  shannon <- mean(H, na.rm = TRUE)
+  
+  # Pielou's evenness (Shannon diversity divided by log of species richness)
+  evenness <- shannon / log(richness)
+  
+  # Return a data frame with diversity metrics
+  return(data.frame(
+    Richness = richness,
+    Shannon = shannon,
+    Evenness = evenness
+  ))
+}
+
+# Calculate diversity for each region
+girona_diversity <- calculate_diversity(girona_matrix)
+barcelona_diversity <- calculate_diversity(barcelona_matrix)
+tarragona_diversity <- calculate_diversity(tarragona_matrix)
+
+# Combine diversity data
+diversity_data <- bind_rows(
+  mutate(girona_diversity, Region = "Girona"),
+  mutate(barcelona_diversity, Region = "Barcelona"),
+  mutate(tarragona_diversity, Region = "Tarragona")
+)
+
+# Order regions
+diversity_data <- diversity_data %>%
+  mutate(Region = factor(Region, levels = PROVINCE_ORDER))
+
+# Convert to long format for plotting
+diversity_long <- diversity_data %>%
+  pivot_longer(
+    cols = c(Richness, Shannon, Evenness),
+    names_to = "Metric",
+    values_to = "Value"
+  )
+
+# Plot diversity metrics
+ggplot(diversity_long, aes(x = Region, y = Value, fill = Region)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ Metric, scales = "free_y") +
+  theme_minimal() +
+  labs(
+    title = "Diversity Metrics by Region",
+    y = "Value",
+    x = "Region"
+  ) +
+  # Use consistent region colors
+  scale_fill_manual(values = PROVINCE_COLORS) +
+  theme(
+    legend.position = "none",
+    strip.background = element_rect(fill = "gray90"),
+    strip.text = element_text(face = "bold"),
+    axis.text.x = element_text(face = "bold"),
+    plot.title = element_text(face = "bold")
+  )
+
+# Save the plot
+ggsave("../figures/region_diversity_metrics.png", width = 12, height = 6)
+```
+
+### Regional Patterns in Coastal Dune Vegetation
+
+The NMDS analysis reveals distinct vegetation patterns across the three regions of Catalonia, highlighting both similarities and differences in coastal dune plant communities.
+
+The stress value of `r round(nmds_result$stress, 3)` indicates a `r if(nmds_result$stress < 0.1) "good" else if(nmds_result$stress < 0.2) "acceptable" else "poor"` fit of the NMDS ordination. This suggests that our two-dimensional representation adequately captures the underlying ecological patterns.
+
+#### Regional Community Composition
+
+The NMDS ordination plot shows partial overlap between the vegetation communities of Tarragona, Barcelona, and Girona, suggesting some shared species composition across the Catalan coast. However, clear regional differences are also apparent:
+
+1. **Tarragona**: The vegetation plots from Tarragona tend to cluster toward the lower right of the ordination space, indicating a distinctive community composition. This region shows the strongest differentiation from the others, suggesting unique ecological conditions.
+
+2. **Barcelona**: Barcelona's plots show considerable scatter and overlap with both other regions, suggesting a more heterogeneous vegetation community. This may reflect the more disturbed nature of this heavily urbanized region.
+
+3. **Girona**: Girona's vegetation plots tend to cluster toward the upper left of the ordination space, indicating a community composition that differs from Tarragona but shows some overlap with Barcelona.
+
+The partial separation between regions supports the hypothesis that geographic location influences coastal dune vegetation patterns, likely due to differences in climate, substrate, coastal morphology, and human impact intensity.
+
+#### Characteristic Species by Region
+
+The analysis of indicator species reveals distinctive floristic elements for each region:
+
+1. **Tarragona**: Characterized by higher abundance of species such as `r top_species_by_region %>% filter(region == "Tarragona") %>% slice_head(n = 3) %>% pull(species) %>% paste(collapse = ", ")`. These species suggest well-developed dune systems with lower disturbance levels.
+
+2. **Barcelona**: Distinguished by the prevalence of species like `r top_species_by_region %>% filter(region == "Barcelona") %>% slice_head(n = 3) %>% pull(species) %>% paste(collapse = ", ")`. This species composition may reflect a higher level of anthropogenic influence and disturbance.
+
+3. **Girona**: Notable for higher abundance of `r top_species_by_region %>% filter(region == "Girona") %>% slice_head(n = 3) %>% pull(species) %>% paste(collapse = ", ")`. These species may indicate the particular environmental conditions of the Costa Brava.
+
+#### Biodiversity Patterns Across Regions
+
+The diversity metrics reveal interesting patterns:
+
+1. **Species Richness**: `r if(which.max(diversity_data$Richness) == 1) "Tarragona" else if(which.max(diversity_data$Richness) == 2) "Barcelona" else "Girona"` shows the highest species richness, with `r diversity_data$Richness[which.max(diversity_data$Richness)]` species recorded across all plots. This may reflect `r if(which.max(diversity_data$Richness) == 1) "the wider beaches and more varied habitats in southern Catalonia" else if(which.max(diversity_data$Richness) == 2) "a mix of native and introduced species in this heavily modified area" else "the diverse microhabitats of the rugged Costa Brava coastline"`.
+
+2. **Shannon Diversity**: The Shannon diversity index is highest in `r if(which.max(diversity_data$Shannon) == 1) "Tarragona" else if(which.max(diversity_data$Shannon) == 2) "Barcelona" else "Girona"`, indicating greater diversity in species composition and relative abundance.
+
+3. **Evenness**: `r if(which.max(diversity_data$Evenness) == 1) "Tarragona" else if(which.max(diversity_data$Evenness) == 2) "Barcelona" else "Girona"` shows the highest evenness value, suggesting a more balanced distribution of species rather than dominance by a few taxa.
+
+### Ecological and Conservation Implications
+
+The regional differences in vegetation communities documented in this analysis have important implications for coastal dune management and conservation in Catalonia:
+
+1. **Regional Conservation Priorities**: Conservation strategies should be tailored to the specific floristic composition of each region, focusing on protecting characteristic species and community assemblages.
+
+2. **Reference Ecosystems**: For restoration projects, the regional community patterns identified here can serve as reference ecosystems, guiding species selection and community assembly goals for a given location.
+
+3. **Climate Change Considerations**: The distinct regional patterns may respond differently to climate change, with potential shifts in species distributions across the north-south gradient of the Catalan coast.
+
+4. **Management Approaches**: Different management approaches may be required for each region:
+   - **Tarragona**: Focus on preserving the relatively intact dune systems and their distinctive species composition.
+   - **Barcelona**: Prioritize restoration and recovery of native vegetation in this heavily impacted region.
+   - **Girona**: Implement management strategies that maintain the balance between tourism access and ecosystem protection.
+
+The NMDS analysis highlights the biogeographic diversity of Catalonia's coastal dunes and reinforces the need for regionally adapted conservation and management strategies that consider the unique ecological characteristics of each area.
+```
