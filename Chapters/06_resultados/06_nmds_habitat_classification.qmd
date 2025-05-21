@@ -14,11 +14,11 @@ library(gridExtra) # For arranging multiple plots
 library(RColorBrewer) # For color palettes
 
 # Load global configuration
-source("../../R/global_config.R")
+source("../R/global_config.R")
 
 # Load data
-load("../../data/all_observations_split.RData")
-load("../../data/all_land_cover_data.RData")
+load("../data/all_observations_split.RData")
+load("../data/all_land_cover_data.RData")
 
 # --- NMDS Analysis for Habitat Classification ---
 
@@ -203,7 +203,7 @@ p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
 print(p_nmds)
 
 # Save the plot
-ggsave("../../figures/nmds_habitat_classification.png", p_nmds, width = 12, height = 8)
+ggsave("../figures/nmds_habitat_classification.png", p_nmds, width = 12, height = 8)
 ```
 
 ```{r}
@@ -249,7 +249,7 @@ habitat_distribution %>%
   scale_fill_brewer(palette = "Set2")
 
 # Save the plot
-ggsave("../../figures/habitat_distribution_by_region.png", width = 10, height = 6)
+ggsave("../figures/habitat_distribution_by_region.png", width = 10, height = 6)
 ```
 
 ```{r}
@@ -262,37 +262,56 @@ ggsave("../../figures/habitat_distribution_by_region.png", width = 10, height = 
 #| fig-height: 8
 #| fig-pos: "H"
 
-# Join the dominant species data with the NMDS data to associate species with clusters
-dominant_with_clusters <- all_dominant_species %>%
-  left_join(
-    nmds_data %>% 
-      mutate(row_id = row_number()) %>%
-      select(row_id, Habitat),
-    by = c("plot" = "row_id")
-  )
+# Create a mapping between original data and NMDS results
+# We'll create a data frame that links beach ID and plot to habitat type
+plot_mapping <- data.frame(
+  beach_id = all_beaches,
+  habitat = nmds_data$Habitat,
+  cluster = nmds_data$Cluster,
+  row_num = 1:nrow(nmds_data)
+)
+
+# Add row identifiers to original data so we can match to NMDS
+girona_with_rows <- beaches_by_region$Girona %>% 
+  mutate(region = "Girona", row_id = 1:nrow(beaches_by_region$Girona))
+barcelona_with_rows <- beaches_by_region$Barcelona %>% 
+  mutate(region = "Barcelona", row_id = (nrow(beaches_by_region$Girona) + 1):(nrow(beaches_by_region$Girona) + nrow(beaches_by_region$Barcelona)))
+tarragona_with_rows <- beaches_by_region$Tarragona %>% 
+  mutate(region = "Tarragona", row_id = (nrow(beaches_by_region$Girona) + nrow(beaches_by_region$Barcelona) + 1):(nrow(beaches_by_region$Girona) + nrow(beaches_by_region$Barcelona) + nrow(beaches_by_region$Tarragona)))
+
+# Combine all regions with row IDs
+all_data_with_rows <- bind_rows(girona_with_rows, barcelona_with_rows, tarragona_with_rows)
+
+# Join the dominant species data with habitat information
+# First, join the dominant species with the all_data_with_rows to get row_id
+dominant_with_data <- all_dominant_species %>%
+  left_join(all_data_with_rows %>% select(plot, id_beach, region, row_id),
+            by = c("plot", "id_beach", "region"))
+
+# Then join with plot_mapping to get habitat information
+dominant_with_clusters <- dominant_with_data %>%
+  left_join(plot_mapping %>% select(row_num, habitat, cluster),
+            by = c("row_id" = "row_num"))
 
 # Find indicator species for each habitat type
 # These are species that are more frequently dominant in a specific habitat
 # We'll calculate the average BB value of each species in each habitat type
-indicator_species <- all_dominant_species %>%
-  mutate(row_id = row_number()) %>%
-  left_join(
-    nmds_data %>% select(Habitat, Cluster),
-    by = c("row_id" = "row_number")
-  ) %>%
-  group_by(Habitat, species) %>%
+indicator_species <- dominant_with_clusters %>%
+  group_by(habitat, species) %>%
   summarise(
     mean_bb = mean(bb_value, na.rm = TRUE),
     count = n(),
     .groups = "drop"
   ) %>%
-  filter(!is.na(Habitat)) %>%
+  filter(!is.na(habitat)) %>%
   # Keep only species that appear at least twice in a habitat
   filter(count >= 2) %>%
   # For each habitat, get the top 3 indicator species
-  group_by(Habitat) %>%
+  group_by(habitat) %>%
   slice_max(order_by = mean_bb, n = 3) %>%
-  ungroup()
+  ungroup() %>%
+  # Rename column to match expected names in downstream code
+  rename(Habitat = habitat)
 
 # Create a bar plot of indicator species by habitat type
 ggplot(indicator_species, aes(x = reorder(species, mean_bb), y = mean_bb, fill = Habitat)) +
@@ -320,7 +339,7 @@ ggplot(indicator_species, aes(x = reorder(species, mean_bb), y = mean_bb, fill =
   scale_fill_brewer(palette = "Set2")
 
 # Save the plot
-ggsave("../../figures/habitat_indicator_species.png", width = 14, height = 8)
+ggsave("../figures/habitat_indicator_species.png", width = 14, height = 8)
 ```
 
 ### Interpretation of Habitat Types
