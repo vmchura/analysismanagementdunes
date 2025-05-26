@@ -1,4 +1,4 @@
-# Resúmen {.unnumbered}
+# Resumen {.unnumbered}
 
 Este documento presenta el Trabajo Final de Máster (TFM) titulado "Análisis y Gestión de la Vegetación Dunar en la Costa Catalana" dentro del programa de Máster en Ciencia de Datos de la Universidad de Girona.
 

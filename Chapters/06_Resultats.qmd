@@ -1,38 +1,38 @@
 # Resultados {#sec-resultats}
 
-## Anàlisi de Patrons de Vegetació {#sec-patrons-vegetacio}
+## Análisis de Patrones de Vegetación {#sec-patrons-vegetacio}
 
-### Espècies Més Abundants {#sec-especies-abundants}
+### Especies Más Abundantes {#sec-especies-abundants}
 
 ::: {#sec-especies-abundants-content}
 {{< include 06_resultados/01_abundant_species.qmd >}}
 :::
 
-### Riquesa i Diversitat d'Espècies {#sec-riquesa-diversitat}
+### Riqueza y Diversidad de Especies {#sec-riquesa-diversitat}
 
 ::: {#sec-riquesa-diversitat-content}
 {{< include 06_resultados/02_species_richness.qmd >}}
 :::
 
-### Impacte de la Cobertura del Sòl a 50m {#sec-impacte-50m}
+### Impacto de la Cobertura del Suelo a 50m {#sec-impacte-50m}
 
 ::: {#sec-impacte-50m-content}
 {{< include 06_resultados/03_land_cover_50m.qmd >}}
 :::
 
-### Impacte de la Cobertura del Sòl a 100m {#sec-impacte-100m}
+### Impacto de la Cobertura del Suelo a 100m {#sec-impacte-100m}
 
 ::: {#sec-impacte-100m-content}
 {{< include 06_resultados/04_land_cover_100m.qmd >}}
 :::
 
-### Relació Entre Riquesa d'Espècies i Cobertura del Sòl {#sec-relacio-riquesa-cobertura}
+### Relación Entre Riqueza de Especies y Cobertura del Suelo {#sec-relacio-riquesa-cobertura}
 
 ::: {#sec-relacio-riquesa-cobertura-content}
 {{< include 06_resultados/05_richness_vs_land_cover.qmd >}}
 :::
 
-### Classificació d'Hàbitats Mitjançant NMDS {#sec-classificacio-habitats}
+### Clasificación de Hábitats Mediante NMDS {#sec-classificacio-habitats}
 
 ::: {#sec-classificacio-habitats-content}
 {{< include 06_resultados/06_nmds_habitat_classification.qmd >}}
@@ -42,30 +42,30 @@
 {{< include 06_resultados/06_nmds_regional_analysis.qmd >}}
 :::
 
-### Classificación NMDS Region {#sec-classificacio-region}
+### Clasificación NMDS por Región {#sec-classificacio-region}
 
 ::: {#sec-classificacio-habitats-content}
 {{< include 06_resultados/06_nmds_region_classification.qmd >}}
 :::
 
-### Anàlisi de Redundància (RDA) {#sec-analisi-rda}
+### Análisis de Redundancia (RDA) {#sec-analisi-rda}
 
-## Efectes de les Pràctiques de Gestió {#sec-efectes-gestio}
+## Efectos de las Prácticas de Gestión {#sec-efectes-gestio}
 
-### Impacte Individual de les Pràctiques de Gestió {#sec-impacte-individual}
+### Impacto Individual de las Prácticas de Gestión {#sec-impacte-individual}
 
-### Model Predictiu de Riquesa d'Espècies {#sec-model-predictiu}
+### Modelo Predictivo de Riqueza de Especies {#sec-model-predictiu}
 
-### Visualització de l'Efecte de Gestió per Regió {#sec-visualitzacio-efecte}
+### Visualización del Efecto de Gestión por Región {#sec-visualitzacio-efecte}
 
-## Índex d'Efectivitat de Gestió (IEG) {#sec-index-efectivitat}
+## Índice de Efectividad de Gestión (IEG) {#sec-index-efectivitat}
 
-## Modelització Predictiva de la Biodiversitat {#sec-modelitzacio-predictiva}
+## Modelización Predictiva de la Biodiversidad {#sec-modelitzacio-predictiva}
 
-### Model Random Forest {#sec-model-random-forest}
+### Modelo Random Forest {#sec-model-random-forest}
 
-### Mapa de Predicció de Biodiversitat {#sec-mapa-prediccio}
+### Mapa de Predicción de Biodiversidad {#sec-mapa-prediccio}
 
-### Escenaris de Gestió {#sec-escenaris-gestio}
+### Escenarios de Gestión {#sec-escenaris-gestio}
 
-## Resum dels Resultats {#sec-resum-resultats}
+## Resumen de los Resultados {#sec-resum-resultats}

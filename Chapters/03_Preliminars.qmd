@@ -1,6 +1,6 @@
 # Preliminares {#sec-preliminares}
 
-## Domini: Ecosistemes Dunars Costaners
+## Dominio: Ecosistemas Dunares Costeros
 
 {{< include 03_01_exploration_validation.qmd >}}
 {{< include 03_02_split_provinces.qmd >}}

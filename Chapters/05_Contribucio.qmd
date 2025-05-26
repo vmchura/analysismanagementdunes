@@ -1,37 +1,37 @@
-# Contribució Metodològica {#sec-contribucio}
+# Contribución Metodológica {#sec-contribucio}
 
-## Exploració i Validació de Dades
+## Exploración y Validación de Datos
 
-### Recopilació i Estructuració de Dades
+### Recopilación y Estructuración de Datos
 
-### Validació de la Qualitat de les Dades
+### Validación de la Calidad de los Datos
 
-### Indicadors de Deficiències de Dades
+### Indicadores de Deficiencias de Datos
 
-## Divisió per Províncies i Anàlisi Comparativa
+## División por Provincias y Análisis Comparativo
 
-### Criteris de Divisió Regional
+### Criterios de División Regional
 
-### Mètodes d'Anàlisi Comparativa
+### Métodos de Análisis Comparativo
 
-## Integració de Dades Ambientals i de Gestió
+## Integración de Datos Ambientales y de Gestión
 
-### Anàlisi de Correspondències Canòniques (CCA)
+### Análisis de Correspondencias Canónicas (CCA)
 
-### Índex d'Efectivitat de Gestió (IEG)
+### Índice de Efectividad de Gestión (IEG)
 
-### Models Predictius de Biodiversitat
+### Modelos Predictivos de Biodiversidad
 
-## Innovacions en Visualització de Dades Ecològiques
+## Innovaciones en Visualización de Datos Ecológicos
 
-### Mapes de Calor Multivariants
+### Mapas de Calor Multivariantes
 
-### Diagrames d'Ordenació Augmentats
+### Diagramas de Ordenación Aumentados
 
-### Perfils Ecològics Interactius
+### Perfiles Ecológicos Interactivos
 
-## Reproduïbilitat i Escalabilitat dels Mètodes
+## Reproducibilidad y Escalabilidad de los Métodos
 
-## Limitacions i Consideracions Metodològiques
+## Limitaciones y Consideraciones Metodológicas
 
-## Resum de les Contribucions Metodològiques
+## Resumen de las Contribuciones Metodológicas

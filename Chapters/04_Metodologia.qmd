@@ -1,41 +1,41 @@
-# Planificació i Metodologia {#sec-metodologia}
+# Planificación y Metodología {#sec-metodologia}
 
-## Metodologia de Desenvolupament
+## Metodología de Desarrollo
 
-### Enfocament Metodològic
+### Enfoque Metodológico
 
-## Fases del Projecte
+## Fases del Proyecto
 
-### Fase 1: Definició i Planificació
+### Fase 1: Definición y Planificación
 
-### Fase 2: Adquisició i Exploració de Dades
+### Fase 2: Adquisición y Exploración de Datos
 
-### Fase 3: Preparació i Validació de Dades
+### Fase 3: Preparación y Validación de Datos
 
-### Fase 4: Anàlisi i Modelització
+### Fase 4: Análisis y Modelización
 
-### Fase 5: Interpretació i Documentació
+### Fase 5: Interpretación y Documentación
 
-## Eines i Tecnologies Utilitzades
+## Herramientas y Tecnologías Utilizadas
 
-### Llenguatges i Entorns de Programació
+### Lenguajes y Entornos de Programación
 
-### Biblioteques i Paquets
+### Bibliotecas y Paquetes
 
-### Eines de Gestió i Col·laboració
+### Herramientas de Gestión y Colaboración
 
-## Planificació Temporal
+## Planificación Temporal
 
 ### Cronograma Inicial vs. Real
 
 ### Diagrama de Gantt
 
-## Recursos i Pressupost
+## Recursos y Presupuesto
 
-### Recursos Humans
+### Recursos Humanos
 
-### Recursos Materials i Programari
+### Recursos Materiales y Software
 
-### Cost Total Estimat
+### Coste Total Estimado
 
-## Consideracions Ètiques i Legals
+## Consideraciones Éticas y Legales
