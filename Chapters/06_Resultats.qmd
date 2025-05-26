@@ -48,6 +48,12 @@
 {{< include 06_resultados/06_nmds_region_classification.qmd >}}
 :::
 
+### CCA por Región {#sec-cca-region}
+
+::: {#sec-cca-cca-region-content}
+{{< include 06_resultados/07_cca_analysis.qmd >}}
+:::
+
 ### Análisis de Redundancia (RDA) {#sec-analisi-rda}
 
 ## Efectos de las Prácticas de Gestión {#sec-efectes-gestio}
