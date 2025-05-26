@@ -10,3 +10,4 @@ previous_report/*
 /.quarto/
 libs/
 *.html
+*.png
