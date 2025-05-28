@@ -16,11 +16,11 @@ library(patchwork)  # For combining plots
 library(ggrepel)   # For non-overlapping text labels
 
 # Load global configuration
-source("../R/global_config.R")
+source("../../R/global_config.R")
 
 # Load data
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load("../../data/all_observations_split.RData")
+load("../../data/all_land_cover_data.RData")
 
 # --- Canonical Correspondence Analysis (CCA) ---
 
@@ -256,16 +256,16 @@ create_cca_biplot <- function(cca_analysis, title_suffix = "") {
   p <- ggplot() +
     # Add site points
     geom_point(data = site_scores, aes(x = CCA1, y = CCA2), 
-               color = "blue", alpha = 0.6, size = 2) +
+               color = "blue", alpha = 0.6, size = 5) +
     # Add environmental arrows
     geom_segment(data = env_scores, 
                  aes(x = 0, y = 0, xend = CCA1 * 2, yend = CCA2 * 2),
-                 arrow = arrow(length = unit(0.3, "cm")), 
-                 color = "red", size = 1, alpha = 0.8) +
+                 arrow = arrow(length = unit(0.8, "cm")), 
+                 color = "red", size = 2, alpha = 0.8) +
     # Add environmental variable labels with repelling
     ggrepel::geom_text_repel(data = env_scores, 
               aes(x = CCA1 * 2.3, y = CCA2 * 2.3, label = Variable),
-              color = "red", fontface = "bold", size = 3,
+              color = "red", fontface = "bold", size = 8,
               max.overlaps = Inf,
               box.padding = 0.5,
               point.padding = 0.3,
@@ -273,11 +273,11 @@ create_cca_biplot <- function(cca_analysis, title_suffix = "") {
               segment.alpha = 0.5) +
     # Add top species points
     geom_point(data = top_species, aes(x = CCA1, y = CCA2), 
-               color = "darkgreen", alpha = 0.8, size = 1.5) +
+               color = "darkgreen", alpha = 0.8, size = 4) +
     # Add top species labels with repelling to avoid overlap
     ggrepel::geom_text_repel(data = top_species, 
               aes(x = CCA1, y = CCA2, label = Species),
-              color = "darkgreen", fontface = "italic", size = 2.5,
+              color = "darkgreen", fontface = "italic", size = 6,
               max.overlaps = Inf, 
               box.padding = 0.5,
               point.padding = 0.3,
@@ -292,7 +292,12 @@ create_cca_biplot <- function(cca_analysis, title_suffix = "") {
       y = paste("CCA2 (", round(100 * eigenvals(cca_result)[2] / sum(eigenvals(cca_result)), 1), "%)", sep = "")
     ) +
     theme(
-      plot.title = element_text(face = "bold"),
+      plot.title = element_text(face = "bold", size = 24),
+      plot.subtitle = element_text(size = 18),
+      axis.title.x = element_text(size = 16),
+      axis.title.y = element_text(size = 16),
+      axis.text.x = element_text(size = 14),
+      axis.text.y = element_text(size = 14),
       panel.grid.minor = element_blank(),
       aspect.ratio = 1  # This makes the plot square
     )
@@ -343,7 +348,7 @@ if(!is.null(combined_cca)) {
   print(p_combined)
   
   # Save the plot
-  ggsave("../figures/cca_combined_analysis.png", p_combined, width = 12, height = 8)
+  ggsave("../../figures/cca_combined_analysis.png", p_combined, width = 12, height = 8)
 } else {
   cat("Combined CCA analysis could not be performed.\n")
 }
@@ -413,8 +418,8 @@ This interpretation framework allows you to understand how land cover patterns s
 #| echo: false
 #| eval: true
 #| output: true
-#| fig-width: 28
-#| fig-height: 36
+#| fig-width: 15
+#| fig-height: 45
 #| fig-pos: "H"
 
 # Create regional CCA biplots
@@ -449,7 +454,7 @@ if(length(regional_plots) > 0) {
     print(combined_regional)
     
     # Save the combined regional plot
-    ggsave("../figures/cca_regional_analysis.png", combined_regional,
+    ggsave("../../figures/cca_regional_analysis.png", combined_regional,
            width = 14, height = 12)
   }
 } else {
@@ -596,14 +601,14 @@ if(!is.null(combined_cca)) {
   p_associations <- ggplot() +
     # Add all species points (small, semi-transparent)
     geom_point(data = all_species_scores, aes(x = CCA1, y = CCA2), 
-               color = "lightgreen", alpha = 0.4, size = 1) +
+               color = "lightgreen", alpha = 0.4, size = 2) +
     # Add top species points (larger, more visible)
     geom_point(data = top_species_detailed, aes(x = CCA1, y = CCA2), 
-               color = "darkgreen", alpha = 0.8, size = 2) +
+               color = "darkgreen", alpha = 0.8, size = 4) +
     # Add species labels for top species with repelling
     ggrepel::geom_text_repel(data = top_species_detailed, 
               aes(x = CCA1, y = CCA2, label = Species),
-              color = "darkgreen", fontface = "italic", size = 3,
+              color = "darkgreen", fontface = "italic", size = 8,
               max.overlaps = Inf,
               box.padding = 0.5,
               point.padding = 0.3,
@@ -612,12 +617,12 @@ if(!is.null(combined_cca)) {
     # Add environmental arrows (thicker)
     geom_segment(data = env_scores_detailed, 
                  aes(x = 0, y = 0, xend = CCA1 * 2.5, yend = CCA2 * 2.5),
-                 arrow = arrow(length = unit(0.4, "cm")), 
-                 color = "red", size = 1.2, alpha = 0.9) +
+                 arrow = arrow(length = unit(1.0, "cm")), 
+                 color = "red", size = 2.5, alpha = 0.9) +
     # Add environmental variable labels with repelling
     ggrepel::geom_text_repel(data = env_scores_detailed, 
               aes(x = CCA1 * 2.8, y = CCA2 * 2.8, label = Variable),
-              color = "red", fontface = "bold", size = 4,
+              color = "red", fontface = "bold", size = 10,
               max.overlaps = Inf,
               box.padding = 0.5,
               point.padding = 0.3,
@@ -635,8 +640,12 @@ if(!is.null(combined_cca)) {
       y = paste("CCA2 (", round(100 * eigenvals(cca_result)[2] / sum(eigenvals(cca_result)), 1), "%)", sep = "")
     ) +
     theme(
-      plot.title = element_text(face = "bold", size = 14),
-      plot.subtitle = element_text(size = 11),
+      plot.title = element_text(face = "bold", size = 28),
+      plot.subtitle = element_text(size = 22),
+      axis.title.x = element_text(size = 18),
+      axis.title.y = element_text(size = 18),
+      axis.text.x = element_text(size = 16),
+      axis.text.y = element_text(size = 16),
       panel.grid.minor = element_blank(),
       legend.position = "none"
     ) +
@@ -646,7 +655,7 @@ if(!is.null(combined_cca)) {
   print(p_associations)
   
   # Save the plot
-  ggsave("../figures/cca_species_environment_associations.png", p_associations,
+  ggsave("../../figures/cca_species_environment_associations.png", p_associations,
          width = 12, height = 8)
 } else {
   cat("Species-environment association plot could not be created.\n")
