@@ -15,11 +15,11 @@ library(RColorBrewer) # For color palettes
 library(patchwork)  # For combining plots
 
 # Load global configuration
-source("../../R/global_config.R")
+source("../R/global_config.R")
 
 # Load data
-load("../../data/all_observations_split.RData")
-load("../../data/all_management_data.RData")
+load("../data/all_observations_split.RData")
+load("../data/all_management_data.RData")
 
 # --- Regional NMDS Analysis with Management Integration ---
 
@@ -308,7 +308,7 @@ combined_mgmt_plot <- tarragona_analysis$plot_management /
 print(combined_mgmt_plot)
 
 # Save the plot
-ggsave("../../figures/nmds_regional_management_categories.png", combined_mgmt_plot, width = 16, height = 18)
+ggsave("../figures/nmds_regional_management_categories.png", combined_mgmt_plot, width = 16, height = 18)
 ```
 
 ```{r}
@@ -338,7 +338,7 @@ combined_gradient_plot <- tarragona_analysis$plot_gradient /
 print(combined_gradient_plot)
 
 # Save the plot
-ggsave("../../figures/nmds_regional_management_gradient.png", combined_gradient_plot, width = 16, height = 18)
+ggsave("../figures/nmds_regional_management_gradient.png", combined_gradient_plot, width = 16, height = 18)
 ```
 
 ```{r}
@@ -378,7 +378,7 @@ all_management_distribution %>%
   scale_x_discrete(limits = PROVINCE_ORDER)
 
 # Save the plot
-ggsave("../../figures/regional_management_distribution.png", width = 12, height = 8)
+ggsave("../figures/regional_management_distribution.png", width = 12, height = 8)
 ```
 
 ```{r}
@@ -479,7 +479,7 @@ combined_practices_plot <- p1 / p2 +
 print(combined_practices_plot)
 
 # Save the plot
-ggsave("../../figures/management_practices_by_region.png", combined_practices_plot, width = 14, height = 10)
+ggsave("../figures/management_practices_by_region.png", combined_practices_plot, width = 14, height = 10)
 ```
 
 ```{r}
@@ -527,7 +527,7 @@ ggplot(habitat_management_interaction, aes(x = Habitat, y = percentage, fill = M
   scale_fill_brewer(palette = "Spectral", direction = -1)
 
 # Save the plot
-ggsave("../../figures/habitat_management_interaction.png", width = 12, height = 8)
+ggsave("../figures/habitat_management_interaction.png", width = 12, height = 8)
 ```
 
 ```{r}

@@ -245,13 +245,8 @@ tarragona_sig_100m <- test_env_significance_100m(tarragona_cca_100m)
 combined_sig_100m <- test_env_significance_100m(combined_cca_100m)
 ```
 
-This section presents Canonical Correspondence Analysis (CCA) results using land cover variables measured at **100m distance** from coastal dune sites. This broader spatial scale captures wider landscape context that may influence vegetation patterns beyond the immediate vicinity of the dunes.
+This section presents Canonical Correspondence Analysis (CCA) results using land cover variables measured at **100m distance** from coastal dune sites.
 
-**Scale Considerations**: The 100m scale is particularly relevant for understanding:
-- Regional landscape influences on local vegetation patterns
-- Connectivity effects between coastal and inland habitats  
-- Broader disturbance gradients that operate at landscape scales
-- Edge effects from land uses that may not directly border the beach
 
 ```{r}
 #| label: fig-cca-combined-100m
@@ -359,54 +354,3 @@ if(nrow(cca_summary_100m) > 0) {
 }
 ```
 
-## **Multi-Scale Analysis: Comparing 50m vs 100m Results**
-
-The 100m scale analysis provides complementary insights to the 50m analysis, revealing how vegetation patterns are influenced by environmental gradients operating at different spatial scales.
-
-### **Scale-Dependent Environmental Drivers**
-
-**Local Scale (50m) Effects:**
-- Capture immediate environmental influences from adjacent land uses
-- Reveal direct edge effects and microhabitat conditions
-- Show relationships with proximate disturbance sources
-
-**Landscape Scale (100m) Effects:**  
-- Reveal broader landscape context influences
-- Capture regional connectivity patterns and matrix effects
-- Show cumulative impacts of multiple land use types
-
-### **Conservation and Management Implications**
-
-**Multi-Scale Conservation Strategy:**
-
-1. **Local Management (50m focus):**
-   - Direct habitat protection and restoration
-   - Immediate threat mitigation
-   - Buffer zone establishment around high-value areas
-
-2. **Landscape Management (100m focus):**
-   - Regional land use planning and zoning
-   - Habitat connectivity corridor design
-   - Coordination between multiple jurisdictions
-
-3. **Integrated Approach:**
-   - Species responding at both scales need management at both levels
-   - Adaptive management considering scale-dependent responses
-   - Monitoring programs designed to track changes at appropriate scales
-
-### **Regional Patterns Across Scales**
-
-Each coastal region shows different patterns of scale-dependence:
-
-**Girona:** May show stronger landscape-scale effects due to more natural, connected habitats
-**Barcelona:** Urban-natural gradients likely important at both scales  
-**Tarragona:** Agricultural matrix effects may dominate at 100m scale
-
-### **Future Research Directions**
-
-1. **Temporal dynamics:** How do scale effects change over time?
-2. **Functional traits:** Which species characteristics predict scale-dependent responses?
-3. **Restoration effectiveness:** How do restoration outcomes vary by management scale?
-4. **Climate change vulnerability:** Scale-dependent habitat requirements under changing conditions
-
-This comprehensive multi-scale CCA analysis provides the scientific foundation for evidence-based coastal dune conservation that addresses environmental pressures operating across multiple spatial scales.

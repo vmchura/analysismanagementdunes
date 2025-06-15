@@ -14,11 +14,11 @@ library(gridExtra) # For arranging multiple plots
 library(RColorBrewer) # For color palettes
 
 # Load global configuration
-source("../../R/global_config.R")
+source("../R/global_config.R")
 
 # Load data
-load("../../data/all_observations_split.RData")
-load("../../data/all_management_data.RData")
+load("../data/all_observations_split.RData")
+load("../data/all_management_data.RData")
 
 # --- NMDS Analysis for Management Classification ---
 
@@ -208,7 +208,7 @@ top_species <- species_scores %>%
   slice_head(n = 10)
 ```
 
-This section presents the results of a Non-metric Multidimensional Scaling (NMDS) analysis to examine how beach management practices influence coastal dune vegetation composition. The analysis combines species data with management variables including managed paths, rope fences, mechanical cleaning, and protection status to understand how different management approaches affect plant community structure.
+This section presents the results of a Non-metric Multidimensional Scaling (NMDS) analysis to examine how beach management practices influence coastal dune vegetation composition.
 
 ```{r}
 #| label: fig-nmds-management-plot
@@ -262,7 +262,7 @@ p_nmds_management <- ggplot(nmds_data %>% filter(!is.na(management_simple)),
 print(p_nmds_management)
 
 # Save the plot
-ggsave("../../figures/nmds_management_analysis.png", p_nmds_management, width = 12, height = 8)
+ggsave("../figures/nmds_management_analysis.png", p_nmds_management, width = 12, height = 8)
 ```
 
 ```{r}
@@ -310,7 +310,7 @@ management_distribution %>%
   scale_fill_brewer(palette = "Spectral", direction = -1)
 
 # Save the plot
-ggsave("../../figures/management_distribution_by_region.png", width = 10, height = 6)
+ggsave("../figures/management_distribution_by_region.png", width = 10, height = 6)
 ```
 
 ```{r}
@@ -374,7 +374,7 @@ ggplot(management_practices, aes(x = Region, y = mean_score, fill = practice)) +
   geom_hline(yintercept = c(1, 2, 3, 4, 5), linetype = "dashed", alpha = 0.3)
 
 # Save the plot
-ggsave("../../figures/management_practices_comparison.png", width = 14, height = 8)
+ggsave("../figures/management_practices_comparison.png", width = 14, height = 8)
 ```
 
 ```{r}
@@ -440,7 +440,7 @@ ggplot(species_by_management, aes(x = reorder(species, mean_abundance), y = mean
   scale_fill_brewer(palette = "Spectral", direction = -1)
 
 # Save the plot
-ggsave("../../figures/species_management_response.png", width = 14, height = 10)
+ggsave("../figures/species_management_response.png", width = 14, height = 10)
 ```
 
 ```{r}
@@ -594,7 +594,7 @@ ggplot(gradient_data, aes(x = management_rounded, y = mean_abundance, color = sp
   scale_color_viridis_d(option = "turbo")
 
 # Save the plot
-ggsave("../../figures/management_gradient_analysis.png", width = 14, height = 10)
+ggsave("../figures/management_gradient_analysis.png", width = 14, height = 10)
 ```
 
 ```{r}
@@ -652,6 +652,5 @@ ggplot(cor_long, aes(x = var1, y = var2, fill = correlation)) +
   coord_fixed()
 
 # Save the plot
-ggsave("../../figures/management_correlation_matrix.png", width = 10, height = 8)
-```
+ggsave("../figures/management_correlation_matrix.png", width = 10, height = 8)
 ```

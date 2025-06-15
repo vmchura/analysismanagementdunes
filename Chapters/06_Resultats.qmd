@@ -54,24 +54,20 @@
 {{< include 06_resultados/07_cca_analysis.qmd >}}
 :::
 
-### Análisis de Redundancia (RDA) {#sec-analisi-rda}
+::: {#sec-cca-cca-region-100_content}
+{{< include 06_resultados/08_cca_analysis_100m.qmd >}}
+:::
 
 ## Efectos de las Prácticas de Gestión {#sec-efectes-gestio}
 
-### Impacto Individual de las Prácticas de Gestión {#sec-impacte-individual}
+::: {#sec-nmds-management-content}
+{{< include 06_resultados/09_nmds_management_analysis.qmd >}}
+:::
 
-### Modelo Predictivo de Riqueza de Especies {#sec-model-predictiu}
+::: {#sec-nmds-region-management}
+{{< include 06_resultados/10_nmds_regional_management_analysis.qmd >}}
+:::
 
-### Visualización del Efecto de Gestión por Región {#sec-visualitzacio-efecte}
-
-## Índice de Efectividad de Gestión (IEG) {#sec-index-efectivitat}
-
-## Modelización Predictiva de la Biodiversidad {#sec-modelitzacio-predictiva}
-
-### Modelo Random Forest {#sec-model-random-forest}
-
-### Mapa de Predicción de Biodiversidad {#sec-mapa-prediccio}
-
-### Escenarios de Gestión {#sec-escenaris-gestio}
-
-## Resumen de los Resultados {#sec-resum-resultats}
+::: {#sec-cca-management}
+{{< include 06_resultados/07_cca_analysis_management.qmd >}}
+:::
