@@ -1,37 +1,56 @@
 # Contribución Metodológica {#sec-contribucio}
 
-## Exploración y Validación de Datos
+## Resumen
 
-### Recopilación y Estructuración de Datos
+Este trabajo desarrolla un marco metodológico estructurado, principalmente replicable para el análisis de datos.
+Las principales contribuciones incluyen estandarización de datos, análisis multivariantes adaptados a comunidades dunares,
+y métodos de validación automatizada.
 
-### Validación de la Calidad de los Datos
+## Estandarización de Datos.
 
-### Indicadores de Deficiencias de Datos
+Se desarrolló un protocolo robusto para convertir datos de la escala Braun-Blanquet a valores numéricos continuos.
+La función implementada transforma valores ordinales (0, 0.1, 0.5, 1, 2, 3, 4, 5) a porcentajes representativos
+(0%, 2.5%, 2.5%, 2.5%, 15%, 37.5%, 62.5%, 87.5%) basándose en puntos medios de intervalos de cobertura.
+Esta conversión preserva la información ecológica original permitiendo análisis estadísticos multivariantes.
 
-## División por Provincias y Análisis Comparativo
+## Integración Multiescalar de Datos
 
-### Criterios de División Regional
+Los datos de especies se agregaron a nivel playa calculando coberturas medias, eliminando pseudoreplicación y permitiendo análisis apropiados de relaciones especie-ambiente.
 
-### Métodos de Análisis Comparativo
+## Análisis Multivariantes Especializados
 
-## Integración de Datos Ambientales y de Gestión
+### Clasificación de Hábitats mediante NMDS
 
-### Análisis de Correspondencias Canónicas (CCA)
+Se implementó análisis NMDS para ordenación de comunidades vegetales dunares usando distancia Bray-Curtis.
+La metodología incluye conversión Braun-Blanquet, análisis de agrupamiento k-means (k=4), e identificación de especies indicadoras por grupo. Los grupos resultantes requieren validación ecológica posterior para asignación definitiva de tipos de hábitat.
 
-### Índice de Efectividad de Gestión (IEG)
+### Análisis de Correspondencias Canónicas Optimizado
 
-### Modelos Predictivos de Biodiversidad
+Se desarrolló una aproximación CCA adaptada que incluye selección automática de variables ambientales (eliminando variables con varianza <0.01), validación estadística mediante permutaciones (999), y análisis comparativo entre regiones. Esta aproximación identifica gradientes ambientales región-específicos estructurando comunidades vegetales.
 
-## Innovaciones en Visualización de Datos Ecológicos
+## Validación Automatizada de Datos
 
-### Mapas de Calor Multivariantes
+Se implementó un sistema comprehensivo de validación que verifica:
+- **Integridad estructural**: Dimensiones esperadas y formatos de identificadores
+- **Consistencia de contenido**: Rangos válidos de abundancia (0-5) y coherencia relacional
+- **Calidad ambiental**: Suma de porcentajes de cobertura ≈100% por distancia de muestreo
 
-### Diagramas de Ordenación Aumentados
+## Visualización Interpretativa
 
-### Perfiles Ecológicos Interactivos
+Se desarrollaron métodos de visualización que integran elementos diferenciados por color en biplots CCA (sitios: azul, variables ambientales: rojo, especies: verde), selección automática de especies informativas, y etiquetado inteligente anti-solapamiento. Para análisis de gestión, se creó un índice compuesto (0-5) combinando cinco variables ordinales y visualizaciones de curvas de respuesta especies-específicas.
 
-## Reproducibilidad y Escalabilidad de los Métodos
+## Reproducibilidad y Escalabilidad
 
-## Limitaciones y Consideraciones Metodológicas
+El marco implementa configuración global estandarizada, funciones reutilizables para conversión de datos y análisis, y estructura modular independiente. Todos los protocolos están documentados en código ejecutable facilitando reproducción y adaptación.
 
-## Resumen de las Contribuciones Metodológicas
+## Limitaciones Metodológicas
+
+Las principales limitaciones incluyen representatividad temporal limitada (datos de momento único), diferencias en poder estadístico entre regiones debido a tamaños de muestra desiguales, y potencial pérdida de información al categorizar prácticas de gestión. Los datos ambientales estáticos no capturan variabilidad intra-playa de microhábitats.
+
+## Transferibilidad
+
+La metodología es directamente aplicable a otros ecosistemas dunares mediterráneos. Los protocolos de conversión Braun-Blanquet, análisis multivariantes y validación son universalmente adaptables. El marco puede extenderse para estudios temporales, integración con teledetección, y modelización predictiva de efectos de gestión.
+
+## Contribución Final
+
+Este trabajo establece protocolos estándar para análisis integral de ecosistemas dunares, proporcionando herramientas reproducibles que avanzan tanto la investigación básica como la gestión aplicada de estos ecosistemas vulnerables. La metodología desarrollada constituye una base sólida para monitoreo a largo plazo y evaluación de estrategias de conservación en costas mediterráneas.
