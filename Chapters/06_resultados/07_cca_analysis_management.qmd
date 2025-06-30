@@ -1,0 +1,860 @@
+```{r 07_mgmt_setup, include=FALSE}
+# Global knitr options - controls all code chunks
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(vegan)     # For CCA analysis
+library(gridExtra) # For arranging multiple plots
+library(RColorBrewer) # For color palettes
+library(patchwork)  # For combining plots
+library(ggrepel)   # For non-overlapping text labels
+
+# Load global configuration
+source("../R/global_config.R")
+
+# Load data
+load("../data/all_observations_split.RData")
+load("../data/all_management_data.RData")
+
+# --- Data Exploration and Preparation ---
+
+# First, let's explore the structure of management data
+cat("=== MANAGEMENT DATA STRUCTURE ===\n")
+cat("Available regions in management data:", names(management_data), "\n")
+
+# Check management data structure for each region
+for(region_name in names(management_data)) {
+  cat("\n", region_name, "management data:\n")
+  cat("  Dimensions:", dim(management_data[[region_name]]), "\n")
+  cat("  Columns:", names(management_data[[region_name]]), "\n")
+  
+  # Show sample of numeric/ordinal columns
+  numeric_cols <- management_data[[region_name]] %>%
+    select(where(is.numeric)) %>%
+    names()
+  
+  if(length(numeric_cols) > 0) {
+    cat("  Numeric/ordinal columns:", paste(numeric_cols, collapse = ", "), "\n")
+    
+    # Show summary statistics for management variables
+    mgmt_summary <- management_data[[region_name]] %>%
+      select(all_of(numeric_cols)) %>%
+      summarise(across(everything(), ~ paste(min(.x, na.rm = TRUE), "-", max(.x, na.rm = TRUE))))
+    
+    cat("  Value ranges:\n")
+    for(col in names(mgmt_summary)) {
+      cat("    ", col, ":", mgmt_summary[[col]], "\n")
+    }
+  }
+}
+
+# Check species data structure
+cat("\n=== SPECIES DATA STRUCTURE ===\n")
+cat("Available regions in species data:", names(beaches_by_region), "\n")
+
+for(region_name in names(beaches_by_region)) {
+  cat("\n", region_name, "species data:\n")
+  cat("  Dimensions:", dim(beaches_by_region[[region_name]]), "\n")
+  cat("  Number of unique beaches:", length(unique(beaches_by_region[[region_name]]$id_beach)), "\n")
+  
+  # Count species columns
+  species_cols <- setdiff(names(beaches_by_region[[region_name]]), c("plot", "id_beach", "region"))
+  cat("  Number of species:", length(species_cols), "\n")
+}
+```
+
+# CCA Analysis with Management Variables per Region and Species
+
+This chapter presents Canonical Correspondence Analysis (CCA) examining the relationships between coastal dune vegetation composition and beach management practices across the three regions Girona, Barcelona, and Tarragona.
+
+**Key aspects of this analysis:**
+
+1. **Management Variables**: Ordinal scale variables (0-5) representing management quality:
+   - 0 = No management / Poor quality
+   - 5 = Good quality management
+
+2. **Regional Analysis**: Separate analysis for each region to understand local management effectiveness
+
+3. **Species Response**: How different plant species respond to various management interventions
+
+**Management Variables Analyzed:**
+- Managed paths (controlling trampling)
+- Rope fences (protecting vegetation)
+- Mechanical cleaning (beach maintenance)
+- Seasonal services impact
+- Fixed infrastructure impact
+
+```{r}
+# --- Function Definitions for CCA with Management Variables ---
+
+# Function to prepare species data matrix for CCA analysis by region
+prepare_species_matrix_mgmt <- function(region_data) {
+  cat("Preparing species matrix for region with", nrow(region_data), "observations\n")
+  
+  # Get species columns - exclude non-species columns
+  non_species_cols <- c("plot", "id_beach", "region")
+  species_cols <- setdiff(names(region_data), non_species_cols)
+  
+  cat("  Found", length(species_cols), "species columns\n")
+  
+  # Aggregate species data by beach (calculate mean cover per beach)
+  species_by_beach <- region_data %>%
+    # Convert Braun-Blanquet values to percentages first
+    mutate(across(all_of(species_cols), bb_to_percentage)) %>%
+    # Group by beach and calculate mean species cover
+    group_by(id_beach) %>%
+    summarise(across(all_of(species_cols), ~ mean(.x, na.rm = TRUE)), .groups = "drop") %>%
+    # Keep id_beach for matching with management data
+    arrange(id_beach)
+  
+  cat("  Aggregated to", nrow(species_by_beach), "beaches\n")
+  
+  # Extract just the species columns for the matrix
+  species_matrix <- species_by_beach %>%
+    select(all_of(species_cols)) %>%
+    as.matrix()
+  
+  # Remove species that are never present across all beaches
+  species_present <- colSums(species_matrix) > 0
+  species_matrix_final <- species_matrix[, species_present, drop = FALSE]
+  
+  cat("  Kept", ncol(species_matrix_final), "species with presence > 0\n")
+  
+  # Return both the matrix and the beach IDs for matching
+  return(list(
+    matrix = species_matrix_final,
+    beach_ids = species_by_beach$id_beach
+  ))
+}
+
+# Function to prepare management data by region for CCA analysis
+prepare_mgmt_matrix <- function(management_region_data, beach_ids) {
+  cat("Preparing management matrix\n")
+  cat("  Management data dimensions:", dim(management_region_data), "\n")
+  cat("  Target beach IDs:", length(beach_ids), "\n")
+  
+  # Ensure id_beach column exists and is numeric
+  if(!"id_beach" %in% names(management_region_data)) {
+    stop("No id_beach column found in management data")
+  }
+  
+  # Convert id_beach to numeric if it's not already
+  management_region_data$id_beach <- as.numeric(management_region_data$id_beach)
+  beach_ids <- as.numeric(beach_ids)
+  
+  # Get management data for the beaches in our species data
+  mgmt_data <- management_region_data %>%
+    filter(id_beach %in% beach_ids) %>%
+    arrange(id_beach)
+  
+  cat("  Matched", nrow(mgmt_data), "beaches\n")
+  
+  if(nrow(mgmt_data) == 0) {
+    stop("No matching beaches found between species and management data")
+  }
+  
+  # Identify potential management variables (numeric columns, excluding id_beach)
+  numeric_cols <- mgmt_data %>%
+    select(where(is.numeric)) %>%
+    select(-id_beach) %>%
+    names()
+  
+  cat("  Found potential management variables:", paste(numeric_cols, collapse = ", "), "\n")
+  
+  if(length(numeric_cols) == 0) {
+    stop("No numeric management variables found")
+  }
+  
+  # Create management matrix
+  mgmt_matrix <- mgmt_data %>%
+    select(id_beach, all_of(numeric_cols)) %>%
+    # Convert to numeric and handle missing values
+    mutate(across(all_of(numeric_cols), ~ as.numeric(.x))) %>%
+    # Replace NA with 0 (assuming no data means no management)
+    mutate(across(all_of(numeric_cols), ~ ifelse(is.na(.x), 0, .x)))
+  
+  # Remove variables with zero variance
+  variance_check <- mgmt_matrix %>%
+    select(-id_beach) %>%
+    summarise(across(everything(), ~ var(.x, na.rm = TRUE)))
+  
+  valid_vars <- names(variance_check)[variance_check > 0 & !is.na(variance_check)]
+  
+  cat("  Variables with variance > 0:", paste(valid_vars, collapse = ", "), "\n")
+  
+  if(length(valid_vars) == 0) {
+    stop("No management variables with variance > 0")
+  }
+  
+  mgmt_matrix_final <- mgmt_matrix %>%
+    select(id_beach, all_of(valid_vars))
+  
+  # Clean up column names for better readability
+  clean_names <- valid_vars
+  
+  # Apply name cleaning only if the original names match expected patterns
+  name_mappings <- c(
+    "surface area occupied by seasonal services and amenities on or less than 5 m from the dunes" = "Seasonal Services",
+    "surface area of parking or other fixed services on or less than 5 m from the dunes" = "Fixed Services",
+    "managed paths" = "Managed Paths",
+    "rope fences" = "Rope Fences",
+    "mechanical cleaning" = "Mechanical Cleaning"
+  )
+  
+  for(old_name in names(name_mappings)) {
+    if(old_name %in% clean_names) {
+      clean_names[clean_names == old_name] <- name_mappings[old_name]
+    }
+  }
+  
+  # General cleaning
+  clean_names <- clean_names %>%
+    str_replace_all("_", " ") %>%
+    tools::toTitleCase()
+  
+  # Update column names
+  names(mgmt_matrix_final)[names(mgmt_matrix_final) %in% valid_vars] <- clean_names
+  
+  cat("  Final management variables:", paste(clean_names, collapse = ", "), "\n")
+  
+  return(mgmt_matrix_final)
+}
+
+# Function to run CCA analysis for a region with management variables
+run_cca_mgmt_analysis <- function(region_data, mgmt_region_data, region_name) {
+  cat("\n=== Running CCA with management variables for", region_name, "===\n")
+  
+  # Check if we have enough data
+  if(nrow(region_data) < 3) {
+    warning(paste("Not enough data for CCA analysis in", region_name))
+    return(NULL)
+  }
+  
+  # Prepare species matrix (aggregated by beach)
+  tryCatch({
+    species_result <- prepare_species_matrix_mgmt(region_data)
+    species_matrix <- species_result$matrix
+    species_beach_ids <- species_result$beach_ids
+  }, error = function(e) {
+    warning(paste("Error preparing species data for", region_name, ":", e$message))
+    return(NULL)
+  })
+  
+  if(is.null(species_result) || ncol(species_matrix) < 2) {
+    warning(paste("Not enough species for CCA analysis in", region_name))
+    return(NULL)
+  }
+  
+  # Prepare management matrix
+  tryCatch({
+    mgmt_matrix <- prepare_mgmt_matrix(mgmt_region_data, species_beach_ids)
+  }, error = function(e) {
+    warning(paste("Error preparing management data for", region_name, ":", e$message))
+    return(NULL)
+  })
+  
+  if(is.null(mgmt_matrix)) {
+    return(NULL)
+  }
+  
+  # Match management data to the aggregated species data
+  mgmt_matrix_matched <- mgmt_matrix %>% 
+    filter(id_beach %in% species_beach_ids) %>%
+    arrange(id_beach)
+  
+  # Ensure both datasets have the same beaches in the same order
+  common_beaches <- intersect(species_beach_ids, mgmt_matrix_matched$id_beach)
+  
+  if(length(common_beaches) < 3) {
+    warning(paste("Not enough matching beaches for CCA analysis in", region_name))
+    return(NULL)
+  }
+  
+  # Filter both datasets to common beaches and ensure same order
+  beach_order <- sort(common_beaches)
+  
+  # Reorder species matrix to match beach order
+  species_order <- match(beach_order, species_beach_ids)
+  species_matrix_final <- species_matrix[species_order, , drop = FALSE]
+  
+  # Reorder management matrix to match beach order
+  mgmt_matrix_final <- mgmt_matrix_matched %>% 
+    filter(id_beach %in% beach_order) %>%
+    arrange(id_beach)
+  
+  # Remove id_beach from management matrix for analysis
+  mgmt_vars <- mgmt_matrix_final %>% select(-id_beach)
+  
+  cat("Final dimensions:\n")
+  cat("  Species matrix:", nrow(species_matrix_final), "x", ncol(species_matrix_final), "\n")
+  cat("  Management matrix:", nrow(mgmt_vars), "x", ncol(mgmt_vars), "\n")
+  cat("  Management variables:", paste(names(mgmt_vars), collapse = ", "), "\n")
+  
+  # Run CCA
+  tryCatch({
+    cca_result <- cca(species_matrix_final ~ ., data = mgmt_vars)
+    
+    # Calculate explained variance
+    eigenvals <- eigenvals(cca_result)
+    total_inertia <- sum(eigenvals)
+    constrained_inertia <- sum(eigenvals[1:min(length(eigenvals), ncol(mgmt_vars))])
+    explained_variance <- constrained_inertia / total_inertia * 100
+    
+    cat("  SUCCESS: Explained variance =", round(explained_variance, 2), "%\n")
+    
+    return(list(
+      cca = cca_result,
+      species_matrix = species_matrix_final,
+      mgmt_matrix = mgmt_vars,
+      explained_variance = explained_variance,
+      beach_ids = beach_order,
+      region = region_name
+    ))
+  }, error = function(e) {
+    warning(paste("CCA analysis failed for", region_name, ":", e$message))
+    return(NULL)
+  })
+}
+```
+
+```{r}
+# Run CCA analysis for each region
+cat("\n=== RUNNING REGIONAL CCA ANALYSES ===\n")
+
+# Initialize results list
+cca_mgmt_results <- list()
+
+# Girona region
+if("Girona" %in% names(management_data) && "Girona" %in% names(beaches_by_region)) {
+  cca_mgmt_results$girona <- run_cca_mgmt_analysis(
+    beaches_by_region$Girona, 
+    management_data$Girona, 
+    "Girona"
+  )
+}
+
+# Barcelona region  
+if("Barcelona" %in% names(management_data) && "Barcelona" %in% names(beaches_by_region)) {
+  cca_mgmt_results$barcelona <- run_cca_mgmt_analysis(
+    beaches_by_region$Barcelona, 
+    management_data$Barcelona, 
+    "Barcelona"
+  )
+}
+
+# Tarragona region
+if("Tarragona" %in% names(management_data) && "Tarragona" %in% names(beaches_by_region)) {
+  cca_mgmt_results$tarragona <- run_cca_mgmt_analysis(
+    beaches_by_region$Tarragona, 
+    management_data$Tarragona, 
+    "Tarragona"
+  )
+}
+
+# Combined analysis
+cat("\n=== RUNNING COMBINED CCA ANALYSIS ===\n")
+
+# Prepare combined datasets
+all_species_mgmt_data <- bind_rows(
+  beaches_by_region$Girona %>% mutate(region = "Girona"),
+  beaches_by_region$Barcelona %>% mutate(region = "Barcelona"),
+  beaches_by_region$Tarragona %>% mutate(region = "Tarragona")
+)
+
+all_mgmt_data <- bind_rows(
+  management_data$Girona %>% mutate(region = "Girona"),
+  management_data$Barcelona %>% mutate(region = "Barcelona"),
+  management_data$Tarragona %>% mutate(region = "Tarragona")
+)
+
+cca_mgmt_results$combined <- run_cca_mgmt_analysis(all_species_mgmt_data, all_mgmt_data, "Combined")
+
+# Filter out NULL results for summary
+valid_results <- cca_mgmt_results[!sapply(cca_mgmt_results, is.null)]
+cat("\nSuccessful CCA analyses:", length(valid_results), "out of", length(cca_mgmt_results), "\n")
+
+# Store individual results for easier access
+girona_cca_mgmt <- cca_mgmt_results$girona
+barcelona_cca_mgmt <- cca_mgmt_results$barcelona
+tarragona_cca_mgmt <- cca_mgmt_results$tarragona
+combined_cca_mgmt <- cca_mgmt_results$combined
+```
+
+```{r}
+# --- Visualization Functions ---
+
+# Function to create CCA biplot with management variables
+create_cca_mgmt_biplot <- function(cca_analysis, title_suffix = "") {
+  if(is.null(cca_analysis)) {
+    cat("Cannot create biplot: CCA analysis is NULL\n")
+    return(NULL)
+  }
+  
+  cca_result <- cca_analysis$cca
+  
+  # Extract site scores (beaches)
+  site_scores <- data.frame(
+    CCA1 = scores(cca_result, display = "sites")[, 1],
+    CCA2 = scores(cca_result, display = "sites")[, 2],
+    Beach = cca_analysis$beach_ids
+  )
+  
+  # Extract species scores
+  species_scores <- data.frame(
+    CCA1 = scores(cca_result, display = "species")[, 1],
+    CCA2 = scores(cca_result, display = "species")[, 2],
+    Species = rownames(scores(cca_result, display = "species"))
+  )
+  
+  # Extract management variable scores (biplot arrows)
+  mgmt_scores <- data.frame(
+    CCA1 = scores(cca_result, display = "bp")[, 1],
+    CCA2 = scores(cca_result, display = "bp")[, 2],
+    Variable = rownames(scores(cca_result, display = "bp"))
+  )
+  
+  # Select top species by distance from origin for labeling
+  species_scores$distance <- sqrt(species_scores$CCA1^2 + species_scores$CCA2^2)
+  top_species <- species_scores %>%
+    arrange(desc(distance)) %>%
+    slice_head(n = 8)
+  
+  # Create the biplot
+  p <- ggplot() +
+    # Add site points
+    geom_point(data = site_scores, aes(x = CCA1, y = CCA2), 
+               color = "blue", alpha = 0.6, size = 4) +
+    # Add management arrows
+    geom_segment(data = mgmt_scores, 
+                 aes(x = 0, y = 0, xend = CCA1 * 2, yend = CCA2 * 2),
+                 arrow = arrow(length = unit(0.6, "cm")), 
+                 color = "red", size = 1.5, alpha = 0.8) +
+    # Add management variable labels with repelling
+    ggrepel::geom_text_repel(data = mgmt_scores, 
+              aes(x = CCA1 * 2.2, y = CCA2 * 2.2, label = Variable),
+              color = "red", fontface = "bold", size = 6,
+              max.overlaps = Inf,
+              box.padding = 0.5,
+              point.padding = 0.3,
+              segment.color = "red",
+              segment.alpha = 0.5) +
+    # Add top species points
+    geom_point(data = top_species, aes(x = CCA1, y = CCA2), 
+               color = "darkgreen", alpha = 0.8, size = 3) +
+    # Add top species labels with repelling to avoid overlap
+    ggrepel::geom_text_repel(data = top_species, 
+              aes(x = CCA1, y = CCA2, label = Species),
+              color = "darkgreen", fontface = "italic", size = 4,
+              max.overlaps = Inf, 
+              box.padding = 0.5,
+              point.padding = 0.3,
+              segment.color = "darkgreen",
+              segment.alpha = 0.5) +
+    # Add origin lines
+    geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.3) +
+    geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.3) +
+    # Customize appearance
+    theme_minimal() +
+    labs(
+      title = paste("CCA Biplot - Management Variables:", cca_analysis$region, title_suffix),
+      subtitle = paste("Explained variance:", round(cca_analysis$explained_variance, 1), "% | Management scale: 0 (none) to 5 (good)"),
+      x = paste("CCA1 (", round(100 * eigenvals(cca_result)[1] / sum(eigenvals(cca_result)), 1), "%)", sep = ""),
+      y = paste("CCA2 (", round(100 * eigenvals(cca_result)[2] / sum(eigenvals(cca_result)), 1), "%)", sep = "")
+    ) +
+    theme(
+      plot.title = element_text(face = "bold", size = 16),
+      plot.subtitle = element_text(size = 12),
+      axis.title.x = element_text(size = 12),
+      axis.title.y = element_text(size = 12),
+      axis.text.x = element_text(size = 10),
+      axis.text.y = element_text(size = 10),
+      panel.grid.minor = element_blank(),
+      aspect.ratio = 1
+    )
+  
+  return(p)
+}
+
+# Function to test significance of management variables
+test_mgmt_significance <- function(cca_analysis) {
+  if(is.null(cca_analysis)) return(NULL)
+  
+  # Test overall model significance
+  model_test <- tryCatch({
+    anova(cca_analysis$cca, permutations = 999)
+  }, error = function(e) {
+    warning("Model significance test failed:", e$message)
+    return(NULL)
+  })
+  
+  # Test individual variable significance
+  var_test <- tryCatch({
+    anova(cca_analysis$cca, by = "terms", permutations = 999)
+  }, error = function(e) {
+    warning("Variable significance test failed:", e$message)
+    return(NULL)
+  })
+  
+  return(list(
+    model = model_test,
+    variables = var_test
+  ))
+}
+
+# Function to create management variable importance plot
+create_mgmt_importance_plot <- function(cca_results) {
+  if(length(cca_results) == 0) return(NULL)
+  
+  # Extract management variable importance across regions
+  mgmt_importance <- data.frame()
+  
+  for(region_name in names(cca_results)) {
+    if(!is.null(cca_results[[region_name]])) {
+      cca_result <- cca_results[[region_name]]$cca
+      mgmt_vars <- cca_results[[region_name]]$mgmt_matrix
+      
+      # Get variable scores
+      var_scores <- scores(cca_result, display = "bp")
+      var_importance <- sqrt(var_scores[, 1]^2 + var_scores[, 2]^2)
+      
+      temp_df <- data.frame(
+        Variable = names(var_importance),
+        Importance = var_importance,
+        Region = str_to_title(region_name),
+        stringsAsFactors = FALSE
+      )
+      
+      mgmt_importance <- rbind(mgmt_importance, temp_df)
+    }
+  }
+  
+  if(nrow(mgmt_importance) == 0) return(NULL)
+  
+  # Create importance plot
+  p <- ggplot(mgmt_importance, aes(x = reorder(Variable, Importance), y = Importance, fill = Region)) +
+    geom_col(position = position_dodge(width = 0.7), alpha = 0.8) +
+    coord_flip() +
+    scale_fill_brewer(type = "qual", palette = "Set2") +
+    labs(
+      title = "Management Variable Importance in CCA Analysis",
+      subtitle = "Length of CCA biplot arrows indicates importance",
+      x = "Management Variables",
+      y = "Importance (Arrow Length)",
+      fill = "Region"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 14),
+      plot.subtitle = element_text(size = 12),
+      axis.title = element_text(size = 12),
+      axis.text = element_text(size = 10),
+      legend.title = element_text(size = 12),
+      legend.text = element_text(size = 10)
+    )
+  
+  return(p)
+}
+```
+
+```{r}
+#| label: fig-cca-mgmt-combined
+#| fig-cap: "CCA biplot showing relationships between coastal dune vegetation and management practices across all regions. Blue points represent beaches, red arrows show management gradients (0=no management, 5=good management), green points indicate key species."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 15
+#| fig-height: 15
+#| fig-pos: "H"
+
+# Create and display the combined CCA biplot with management variables
+if(!is.null(combined_cca_mgmt)) {
+  p_combined_mgmt <- create_cca_mgmt_biplot(combined_cca_mgmt, "- All Regions")
+  print(p_combined_mgmt)
+  
+  # Save the plot
+  ggsave("../figures/cca_combined_management_analysis.png", p_combined_mgmt, width = 12, height = 10)
+} else {
+  cat("Combined CCA analysis with management variables could not be performed.\n")
+  cat("Possible reasons:\n")
+  cat("- Insufficient matching data between species and management datasets\n")
+  cat("- No management variables with sufficient variation\n")
+  cat("- Technical issues with data preparation\n")
+}
+```
+
+```{r}
+#| label: fig-cca-mgmt-regional
+#| fig-cap: "Regional CCA biplots showing how vegetation responds to management practices in each region of Catalonia. Each plot reveals which management practices are most effective for conserving coastal dune vegetation in different regional contexts."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 15
+#| fig-height: 45
+#| fig-pos: "H"
+
+# Create regional CCA biplots with management variables
+regional_mgmt_plots <- list()
+
+if(!is.null(girona_cca_mgmt)) {
+  regional_mgmt_plots$girona <- create_cca_mgmt_biplot(girona_cca_mgmt, "- Girona")
+}
+
+if(!is.null(barcelona_cca_mgmt)) {
+  regional_mgmt_plots$barcelona <- create_cca_mgmt_biplot(barcelona_cca_mgmt, "- Barcelona")
+}
+
+if(!is.null(tarragona_cca_mgmt)) {
+  regional_mgmt_plots$tarragona <- create_cca_mgmt_biplot(tarragona_cca_mgmt, "- Tarragona")
+}
+
+# Combine regional plots
+if(length(regional_mgmt_plots) > 0) {
+  # Filter out NULL plots
+  valid_mgmt_plots <- regional_mgmt_plots[!sapply(regional_mgmt_plots, is.null)]
+  
+  if(length(valid_mgmt_plots) > 0) {
+    if(length(valid_mgmt_plots) == 3) {
+      combined_regional_mgmt <- valid_mgmt_plots$girona / valid_mgmt_plots$barcelona / valid_mgmt_plots$tarragona
+    } else if(length(valid_mgmt_plots) == 2) {
+      combined_regional_mgmt <- valid_mgmt_plots[[1]] / valid_mgmt_plots[[2]]
+    } else {
+      combined_regional_mgmt <- valid_mgmt_plots[[1]]
+    }
+    
+    print(combined_regional_mgmt)
+    
+    # Save the combined regional plot
+    ggsave("../figures/cca_regional_management_analysis.png", combined_regional_mgmt,
+           width = 14, height = 16)
+  } else {
+    cat("No valid regional CCA plots could be created.\n")
+  }
+} else {
+  cat("No regional CCA analyses with management variables could be performed.\n")
+}
+```
+
+```{r}
+#| label: fig-mgmt-importance
+#| fig-cap: "Management variable importance across regions, showing which management practices have the strongest influence on vegetation composition. Longer bars indicate more influential management practices."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 8
+#| fig-pos: "H"
+
+# Create management importance plot
+if(length(valid_results) > 0) {
+  p_importance <- create_mgmt_importance_plot(valid_results)
+  if(!is.null(p_importance)) {
+    print(p_importance)
+    
+    # Save the plot
+    ggsave("../figures/management_variable_importance.png", p_importance, width = 12, height = 8)
+  } else {
+    cat("Management importance plot could not be created.\n")
+  }
+} else {
+  cat("No valid CCA results available for importance analysis.\n")
+}
+```
+
+```{r}
+#| label: results-summary-mgmt
+#| echo: false
+#| eval: true
+#| output: true
+
+# Summary of analysis results
+cat("=== CCA MANAGEMENT ANALYSIS RESULTS SUMMARY ===\n\n")
+
+results_summary <- data.frame(
+  Region = character(),
+  Status = character(),
+  Explained_Variance = character(),
+  Management_Variables = character(),
+  Species_Count = character(),
+  Beach_Count = character(),
+  stringsAsFactors = FALSE
+)
+
+# Check each region and combined analysis
+all_regions <- c("girona", "barcelona", "tarragona", "combined")
+
+for(region_name in all_regions) {
+  region_display <- str_to_title(region_name)
+  
+  if(region_name %in% names(valid_results) && !is.null(valid_results[[region_name]])) {
+    result <- valid_results[[region_name]]
+    results_summary <- rbind(results_summary, data.frame(
+      Region = region_display,
+      Status = "SUCCESS",
+      Explained_Variance = paste0(round(result$explained_variance, 1), "%"),
+      Management_Variables = paste(names(result$mgmt_matrix), collapse = ", "),
+      Species_Count = as.character(ncol(result$species_matrix)),
+      Beach_Count = as.character(nrow(result$species_matrix)),
+      stringsAsFactors = FALSE
+    ))
+  } else {
+    results_summary <- rbind(results_summary, data.frame(
+      Region = region_display,
+      Status = "FAILED",
+      Explained_Variance = "N/A",
+      Management_Variables = "N/A",
+      Species_Count = "N/A",
+      Beach_Count = "N/A",
+      stringsAsFactors = FALSE
+    ))
+  }
+}
+
+print(knitr::kable(results_summary, caption = "CCA Management Analysis Results Summary"))
+
+# Count successful analyses
+successful_analyses <- sum(results_summary$Status == "SUCCESS")
+cat("\nSuccessful analyses:", successful_analyses, "out of", nrow(results_summary), "\n")
+```
+
+```{r}
+#| label: mgmt-significance-tests
+#| echo: false
+#| eval: true
+#| output: true
+
+# Test significance of management variables
+cat("\n=== STATISTICAL SIGNIFICANCE TESTS ===\n\n")
+
+significance_results <- list()
+
+for(region_name in names(valid_results)) {
+  if(!is.null(valid_results[[region_name]])) {
+    cat("Testing significance for", str_to_title(region_name), "region:\n")
+    
+    sig_test <- test_mgmt_significance(valid_results[[region_name]])
+    significance_results[[region_name]] <- sig_test
+    
+    if(!is.null(sig_test$model)) {
+      # Check if F and p values exist and are not NA
+      if(!is.na(sig_test$model$F[1]) && !is.na(sig_test$model$`Pr(>F)`[1])) {
+        cat("  Overall model F =", round(sig_test$model$F[1], 3), 
+            ", p =", round(sig_test$model$`Pr(>F)`[1], 4), "\n")
+        
+        if(sig_test$model$`Pr(>F)`[1] < 0.05) {
+          cat("  Model is statistically significant (p < 0.05)\n")
+        } else {
+          cat("  Model is not statistically significant (p >= 0.05)\n")
+        }
+      } else {
+        cat("  Overall model significance test could not be completed\n")
+      }
+    } else {
+      cat("  Overall model significance test failed\n")
+    }
+    
+    if(!is.null(sig_test$variables)) {
+      cat("  Individual variable significance:\n")
+      for(i in 1:nrow(sig_test$variables)) {
+        if(!is.na(sig_test$variables$F[i]) && !is.na(sig_test$variables$`Pr(>F)`[i])) {
+          var_name <- rownames(sig_test$variables)[i]
+          f_val <- round(sig_test$variables$F[i], 3)
+          p_val <- round(sig_test$variables$`Pr(>F)`[i], 4)
+          
+          significance <- if(p_val < 0.001) "***" else if(p_val < 0.01) "**" else if(p_val < 0.05) "*" else if(p_val < 0.1) "." else ""
+          
+          cat("    ", var_name, ": F =", f_val, ", p =", p_val, significance, "\n")
+        } else {
+          var_name <- rownames(sig_test$variables)[i]
+          cat("    ", var_name, ": significance test failed\n")
+        }
+      }
+    } else {
+      cat("  Individual variable significance tests failed\n")
+    }
+    cat("\n")
+  }
+}
+```
+
+```{r}
+#| label: tbl-mgmt-summary
+#| tbl-cap: "Summary of management variable effects across regions, showing which management practices are most important for vegetation conservation."
+#| echo: false
+#| eval: true
+#| output: true
+
+# Create summary table of management effects
+if(length(valid_results) > 0) {
+  mgmt_effects_summary <- data.frame()
+  
+  for(region_name in names(valid_results)) {
+    if(!is.null(valid_results[[region_name]])) {
+      result <- valid_results[[region_name]]
+      cca_result <- result$cca
+      
+      # Get variable scores (importance)
+      var_scores <- scores(cca_result, display = "bp")
+      var_importance <- sqrt(var_scores[, 1]^2 + var_scores[, 2]^2)
+      
+      # Get significance if available
+      sig_test <- significance_results[[region_name]]
+      p_values <- rep(NA, length(var_importance))
+      
+      if(!is.null(sig_test$variables)) {
+        var_names <- names(var_importance)
+        test_names <- rownames(sig_test$variables)
+        
+        for(i in seq_along(var_names)) {
+          match_idx <- which(test_names == var_names[i])
+          if(length(match_idx) > 0) {
+            p_val <- sig_test$variables$`Pr(>F)`[match_idx[1]]
+            if(!is.na(p_val)) {
+              p_values[i] <- p_val
+            }
+          }
+        }
+      }
+      
+      temp_df <- data.frame(
+        Region = str_to_title(region_name),
+        Management_Variable = names(var_importance),
+        Importance = round(var_importance, 3),
+        P_Value = ifelse(is.na(p_values), NA, round(p_values, 4)),
+        Significance = ifelse(is.na(p_values), "", 
+                             ifelse(p_values < 0.001, "***",
+                                   ifelse(p_values < 0.01, "**",
+                                         ifelse(p_values < 0.05, "*",
+                                               ifelse(p_values < 0.1, ".", ""))))),
+        stringsAsFactors = FALSE
+      )
+      
+      mgmt_effects_summary <- rbind(mgmt_effects_summary, temp_df)
+    }
+  }
+  
+  if(nrow(mgmt_effects_summary) > 0) {
+    # Sort by importance within each region
+    mgmt_effects_summary <- mgmt_effects_summary %>%
+      arrange(Region, desc(Importance))
+    
+    # Replace NA with "N/A" for display
+    mgmt_effects_summary$P_Value <- ifelse(is.na(mgmt_effects_summary$P_Value), "N/A", as.character(mgmt_effects_summary$P_Value))
+    
+    knitr::kable(mgmt_effects_summary,
+                 col.names = c("Region", "Management Variable", "Importance", "P-value", "Sig."),
+                 align = c("l", "l", "c", "c", "c"),
+                 caption = "Significance codes: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1")
+  } else {
+    cat("No management effects summary could be created.\n")
+  }
+} else {
+  cat("No valid results available for management effects summary.\n")
+}
+```
+

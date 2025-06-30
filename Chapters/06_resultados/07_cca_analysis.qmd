@@ -1,4 +1,4 @@
-```{r 06_07_setup, include=FALSE}
+```{r 07_07_setup, include=FALSE}
 # Global knitr options - controls all code chunks
 knitr::opts_chunk$set(
   warning = FALSE,
@@ -13,13 +13,14 @@ library(vegan)     # For CCA analysis
 library(gridExtra) # For arranging multiple plots
 library(RColorBrewer) # For color palettes
 library(patchwork)  # For combining plots
+library(ggrepel)   # For non-overlapping text labels
 
 # Load global configuration
-source("../../R/global_config.R")
+source("../R/global_config.R")
 
 # Load data
-load("../../data/all_observations_split.RData")
-load("../../data/all_land_cover_data.RData")
+load("../data/all_observations_split.RData")
+load("../data/all_land_cover_data.RData")
 
 # --- Canonical Correspondence Analysis (CCA) ---
 
@@ -255,24 +256,33 @@ create_cca_biplot <- function(cca_analysis, title_suffix = "") {
   p <- ggplot() +
     # Add site points
     geom_point(data = site_scores, aes(x = CCA1, y = CCA2), 
-               color = "blue", alpha = 0.6, size = 2) +
+               color = "blue", alpha = 0.6, size = 5) +
     # Add environmental arrows
     geom_segment(data = env_scores, 
                  aes(x = 0, y = 0, xend = CCA1 * 2, yend = CCA2 * 2),
-                 arrow = arrow(length = unit(0.3, "cm")), 
-                 color = "red", size = 1, alpha = 0.8) +
-    # Add environmental variable labels
-    geom_text(data = env_scores, 
+                 arrow = arrow(length = unit(0.8, "cm")), 
+                 color = "red", size = 2, alpha = 0.8) +
+    # Add environmental variable labels with repelling
+    ggrepel::geom_text_repel(data = env_scores, 
               aes(x = CCA1 * 2.3, y = CCA2 * 2.3, label = Variable),
-              color = "red", fontface = "bold", size = 3) +
+              color = "red", fontface = "bold", size = 8,
+              max.overlaps = Inf,
+              box.padding = 0.5,
+              point.padding = 0.3,
+              segment.color = "red",
+              segment.alpha = 0.5) +
     # Add top species points
     geom_point(data = top_species, aes(x = CCA1, y = CCA2), 
-               color = "darkgreen", alpha = 0.8, size = 1.5) +
-    # Add top species labels
-    geom_text(data = top_species, 
+               color = "darkgreen", alpha = 0.8, size = 4) +
+    # Add top species labels with repelling to avoid overlap
+    ggrepel::geom_text_repel(data = top_species, 
               aes(x = CCA1, y = CCA2, label = Species),
-              color = "darkgreen", fontface = "italic", size = 2.5,
-              hjust = -0.1, vjust = -0.1) +
+              color = "darkgreen", fontface = "italic", size = 6,
+              max.overlaps = Inf, 
+              box.padding = 0.5,
+              point.padding = 0.3,
+              segment.color = "darkgreen",
+              segment.alpha = 0.5) +
     # Customize appearance
     theme_minimal() +
     labs(
@@ -282,8 +292,14 @@ create_cca_biplot <- function(cca_analysis, title_suffix = "") {
       y = paste("CCA2 (", round(100 * eigenvals(cca_result)[2] / sum(eigenvals(cca_result)), 1), "%)", sep = "")
     ) +
     theme(
-      plot.title = element_text(face = "bold"),
-      panel.grid.minor = element_blank()
+      plot.title = element_text(face = "bold", size = 24),
+      plot.subtitle = element_text(size = 18),
+      axis.title.x = element_text(size = 16),
+      axis.title.y = element_text(size = 16),
+      axis.text.x = element_text(size = 14),
+      axis.text.y = element_text(size = 14),
+      panel.grid.minor = element_blank(),
+      aspect.ratio = 1  # This makes the plot square
     )
   
   return(p)
@@ -322,8 +338,8 @@ This section presents the results of Canonical Correspondence Analysis (CCA) to 
 #| echo: false
 #| eval: true
 #| output: true
-#| fig-width: 12
-#| fig-height: 8
+#| fig-width: 20
+#| fig-height: 20
 #| fig-pos: "H"
 
 # Create and display the combined CCA biplot
@@ -332,20 +348,78 @@ if(!is.null(combined_cca)) {
   print(p_combined)
   
   # Save the plot
-  ggsave("../../figures/cca_combined_analysis.png", p_combined, width = 12, height = 8)
+  ggsave("../figures/cca_combined_analysis.png", p_combined, width = 12, height = 8)
 } else {
   cat("Combined CCA analysis could not be performed.\n")
 }
 ```
 
+## **How to Interpret CCA Biplots**
+
+Canonical Correspondence Analysis (CCA) biplots are powerful visualization tools that display the relationships between species composition, sampling sites, and environmental variables in a single plot. Understanding the different elements and their colors is crucial for interpreting the ecological patterns revealed by the analysis.
+
+### **Elements of the CCA Biplot**
+
+**Blue Points (Sampling Sites/Beaches):**
+- Each blue point represents a sampling location (beach) in the analysis
+- The position of each point in the biplot space reflects the overall species composition at that site
+- Sites that are close together have similar species compositions
+- Sites that are far apart have different species assemblages
+
+**Red Arrows (Environmental Variables):**
+- Red arrows represent environmental gradients (land cover variables such as urban cover, forest cover, agricultural land, etc.)
+- The **length** of each arrow indicates the **strength** of the environmental gradient - longer arrows represent variables that have stronger relationships with species composition
+- The **direction** of each arrow shows the direction of increasing values for that environmental variable
+- Variables with arrows pointing in similar directions are positively correlated with each other
+- Variables with arrows pointing in opposite directions are negatively correlated
+
+**Green Points and Labels (Plant Species):**
+- Green points represent individual plant species found in the study
+- Only the most ecologically important species (those with the strongest associations with environmental gradients) are labeled to avoid overcrowding
+- Species positioned **closer to the tip of an environmental arrow** are more strongly associated with that environmental condition
+- Species positioned on the **opposite side of the origin** from an arrow are negatively associated with that environmental variable
+
+### **Interpreting Spatial Relationships**
+
+**Species-Environment Associations:**
+- When a species (green) is positioned near the tip of an environmental arrow (red), it indicates that species is favored by high values of that environmental variable
+- Species positioned far from an arrow tip, especially on the opposite side of the plot center, are typically found where that environmental variable has low values
+
+**Site Characterization:**
+- Sampling sites (blue points) positioned near environmental arrows are characterized by high values of those environmental variables
+- Sites positioned in the direction of multiple arrows experience the combined influence of those environmental factors
+- Sites near the center of the biplot have average environmental conditions
+
+**Gradient Interpretation:**
+- The first axis (CCA1, horizontal) represents the primary environmental gradient that best explains species composition patterns
+- The second axis (CCA2, vertical) represents the secondary gradient, independent of the first
+- The percentage values in axis labels indicate how much of the total species-environment relationship each axis explains
+
+### **Practical Example of Interpretation**
+
+If you observe:
+- A **long red arrow** pointing toward "Urban Cover" → Urban development is a strong environmental driver
+- **Green species points** near this arrow tip → These species are adapted to or favored by urban environments
+- **Blue site points** in the same direction → These beaches have high urban development nearby
+- **Green species points** on the opposite side → These species avoid urban areas and prefer more natural conditions
+
+### **Regional Comparison Considerations**
+
+When comparing biplots across regions (Girona, Barcelona, Tarragona):
+- Different arrow lengths indicate that the same environmental variable may have different importance in each region
+- Different arrow directions show that environmental gradients may operate differently across regions
+- Species that appear in multiple regions may show different environmental associations depending on local conditions
+
+This interpretation framework allows you to understand how land cover patterns shape coastal dune vegetation communities and identify the key environmental drivers in each region of Catalonia.
+
 ```{r}
 #| label: fig-cca-regional
-#| fig-cap: "Regional CCA biplots showing how vegetation-environment relationships vary across the three coastal regions of Catalonia. Each plot shows the specific land cover gradients that structure vegetation communities in each region."
+#| fig-cap: "Regional CCA biplots showing how vegetation-environment relationships vary across the three coastal regions of Catalonia. Each plot shows the specific land cover gradients that structure vegetation communities in each region. Red arrows represent environmental gradients (land cover variables), green points and labels show plant species, and blue points represent sampling sites (beaches). Longer arrows indicate stronger environmental gradients, and species positioned closer to arrow tips are more strongly associated with those environmental conditions."
 #| echo: false
 #| eval: true
 #| output: true
-#| fig-width: 14
-#| fig-height: 12
+#| fig-width: 15
+#| fig-height: 45
 #| fig-pos: "H"
 
 # Create regional CCA biplots
@@ -380,7 +454,7 @@ if(length(regional_plots) > 0) {
     print(combined_regional)
     
     # Save the combined regional plot
-    ggsave("../../figures/cca_regional_analysis.png", combined_regional,
+    ggsave("../figures/cca_regional_analysis.png", combined_regional,
            width = 14, height = 12)
   }
 } else {
@@ -493,8 +567,8 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
 #| echo: false
 #| eval: true
 #| output: true
-#| fig-width: 12
-#| fig-height: 8
+#| fig-width: 20
+#| fig-height: 20
 #| fig-pos: "H"
 
 # Create a detailed species-environment association plot
@@ -527,24 +601,33 @@ if(!is.null(combined_cca)) {
   p_associations <- ggplot() +
     # Add all species points (small, semi-transparent)
     geom_point(data = all_species_scores, aes(x = CCA1, y = CCA2), 
-               color = "lightgreen", alpha = 0.4, size = 1) +
+               color = "lightgreen", alpha = 0.4, size = 2) +
     # Add top species points (larger, more visible)
     geom_point(data = top_species_detailed, aes(x = CCA1, y = CCA2), 
-               color = "darkgreen", alpha = 0.8, size = 2) +
-    # Add species labels for top species
-    geom_text(data = top_species_detailed, 
+               color = "darkgreen", alpha = 0.8, size = 4) +
+    # Add species labels for top species with repelling
+    ggrepel::geom_text_repel(data = top_species_detailed, 
               aes(x = CCA1, y = CCA2, label = Species),
-              color = "darkgreen", fontface = "italic", size = 3,
-              hjust = -0.1, vjust = -0.1) +
+              color = "darkgreen", fontface = "italic", size = 8,
+              max.overlaps = Inf,
+              box.padding = 0.5,
+              point.padding = 0.3,
+              segment.color = "darkgreen",
+              segment.alpha = 0.5) +
     # Add environmental arrows (thicker)
     geom_segment(data = env_scores_detailed, 
                  aes(x = 0, y = 0, xend = CCA1 * 2.5, yend = CCA2 * 2.5),
-                 arrow = arrow(length = unit(0.4, "cm")), 
-                 color = "red", size = 1.2, alpha = 0.9) +
-    # Add environmental variable labels
-    geom_text(data = env_scores_detailed, 
+                 arrow = arrow(length = unit(1.0, "cm")), 
+                 color = "red", size = 2.5, alpha = 0.9) +
+    # Add environmental variable labels with repelling
+    ggrepel::geom_text_repel(data = env_scores_detailed, 
               aes(x = CCA1 * 2.8, y = CCA2 * 2.8, label = Variable),
-              color = "red", fontface = "bold", size = 4) +
+              color = "red", fontface = "bold", size = 10,
+              max.overlaps = Inf,
+              box.padding = 0.5,
+              point.padding = 0.3,
+              segment.color = "red",
+              segment.alpha = 0.5) +
     # Add origin lines
     geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
     geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.5) +
@@ -557,8 +640,12 @@ if(!is.null(combined_cca)) {
       y = paste("CCA2 (", round(100 * eigenvals(cca_result)[2] / sum(eigenvals(cca_result)), 1), "%)", sep = "")
     ) +
     theme(
-      plot.title = element_text(face = "bold", size = 14),
-      plot.subtitle = element_text(size = 11),
+      plot.title = element_text(face = "bold", size = 28),
+      plot.subtitle = element_text(size = 22),
+      axis.title.x = element_text(size = 18),
+      axis.title.y = element_text(size = 18),
+      axis.text.x = element_text(size = 16),
+      axis.text.y = element_text(size = 16),
       panel.grid.minor = element_blank(),
       legend.position = "none"
     ) +
@@ -568,7 +655,7 @@ if(!is.null(combined_cca)) {
   print(p_associations)
   
   # Save the plot
-  ggsave("../../figures/cca_species_environment_associations.png", p_associations,
+  ggsave("../figures/cca_species_environment_associations.png", p_associations,
          width = 12, height = 8)
 } else {
   cat("Species-environment association plot could not be created.\n")

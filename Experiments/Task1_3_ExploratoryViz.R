@@ -8,9 +8,9 @@ library(ggplot2)
 library(gridExtra) # for arranging multiple plots
 
 # Load data
-load("data/all_observations_split.RData")
+load("../data/all_observations_split.RData")
 names(beaches_by_region) # "Girona"    "Barcelona" "Tarragona"
-load("data/all_land_cover_data.RData")
+load("../data/all_land_cover_data.RData")
 names(land_cover_data) # "Girona"    "Barcelona" "Tarragona"
 
 # --- Vegetation Pattern Analysis ---

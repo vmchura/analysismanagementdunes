@@ -1,0 +1,356 @@
+```{r 08_07_setup, include=FALSE}
+# Global knitr options - controls all code chunks
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(vegan)     # For CCA analysis
+library(gridExtra) # For arranging multiple plots
+library(RColorBrewer) # For color palettes
+library(patchwork)  # For combining plots
+library(ggrepel)   # For non-overlapping text labels
+
+# Load global configuration
+source("../R/global_config.R")
+
+# Load data
+load("../data/all_observations_split.RData")
+load("../data/all_land_cover_data.RData")
+
+# --- Canonical Correspondence Analysis (CCA) for 100m Land Cover Data ---
+
+# Function to prepare species data matrix for CCA analysis by region
+prepare_species_matrix <- function(region_data) {
+  non_species_cols <- c("plot", "id_beach", "region")
+  species_cols <- setdiff(names(region_data), non_species_cols)
+  
+  species_by_beach <- region_data %>%
+    mutate(across(all_of(species_cols), bb_to_percentage)) %>%
+    group_by(id_beach) %>%
+    summarise(across(all_of(species_cols), ~ mean(.x, na.rm = TRUE)), .groups = "drop") %>%
+    arrange(id_beach)
+  
+  species_matrix <- species_by_beach %>%
+    select(all_of(species_cols)) %>%
+    as.matrix()
+  
+  species_present <- colSums(species_matrix) > 0
+  species_matrix_final <- species_matrix[, species_present, drop = FALSE]
+  
+  return(list(
+    matrix = species_matrix_final,
+    beach_ids = species_by_beach$id_beach
+  ))
+}
+
+# Function to prepare environmental data for 100m analysis
+prepare_env_matrix_100m <- function(land_cover_region_data, region_species_data) {
+  beach_ids <- region_species_data$id_beach
+  
+  env_data <- land_cover_region_data %>%
+    filter(id_beach %in% beach_ids) %>%
+    arrange(id_beach)
+  
+  # Select 100m land cover variables
+  land_cover_cols <- grep("^x100m_.*_percent$", names(env_data), value = TRUE)
+  
+  env_matrix <- env_data %>%
+    select(id_beach, all_of(land_cover_cols)) %>%
+    select(where(~ var(., na.rm = TRUE) > 0.01))
+  
+  # Clean column names
+  numeric_cols <- setdiff(names(env_matrix), "id_beach")
+  names(env_matrix)[names(env_matrix) %in% numeric_cols] <- 
+    gsub("^x100m_(.*)_percent$", "\\1", numeric_cols)
+  names(env_matrix) <- gsub("_", " ", names(env_matrix))
+  names(env_matrix) <- tools::toTitleCase(names(env_matrix))
+  names(env_matrix)[names(env_matrix) == "Id Beach"] <- "id_beach"
+  
+  return(env_matrix)
+}
+
+# Function to run CCA analysis at 100m scale
+run_cca_analysis_100m <- function(region_data, land_cover_region_data, region_name) {
+  cat("Running CCA analysis (100m scale) for", region_name, "...\n")
+  
+  if(nrow(region_data) < 3) {
+    warning(paste("Not enough data for CCA analysis in", region_name))
+    return(NULL)
+  }
+  
+  species_result <- prepare_species_matrix(region_data)
+  species_matrix <- species_result$matrix
+  species_beach_ids <- species_result$beach_ids
+  
+  if(ncol(species_matrix) < 2) {
+    warning(paste("Not enough species for CCA analysis in", region_name))
+    return(NULL)
+  }
+  
+  env_matrix <- prepare_env_matrix_100m(land_cover_region_data, region_data)
+  env_matrix_matched <- env_matrix %>% 
+    filter(id_beach %in% species_beach_ids) %>%
+    arrange(id_beach)
+  
+  common_beaches <- intersect(species_beach_ids, env_matrix_matched$id_beach)
+  
+  if(length(common_beaches) < 3) {
+    warning(paste("Not enough matching beaches for CCA analysis in", region_name))
+    return(NULL)
+  }
+  
+  beach_order <- sort(common_beaches)
+  species_order <- match(beach_order, species_beach_ids)
+  species_matrix_final <- species_matrix[species_order, , drop = FALSE]
+  
+  env_matrix_final <- env_matrix_matched %>% 
+    filter(id_beach %in% beach_order) %>%
+    arrange(id_beach)
+  
+  env_vars <- env_matrix_final %>% select(-id_beach)
+  env_vars <- env_vars[, sapply(env_vars, var, na.rm = TRUE) > 0, drop = FALSE]
+  
+  if(ncol(env_vars) == 0) {
+    warning(paste("No environmental variables with variation found in", region_name))
+    return(NULL)
+  }
+  
+  tryCatch({
+    cca_result <- cca(species_matrix_final ~ ., data = env_vars)
+    eigenvals <- eigenvals(cca_result)
+    total_inertia <- sum(eigenvals)
+    constrained_inertia <- sum(eigenvals[1:min(length(eigenvals), ncol(env_vars))])
+    explained_variance <- constrained_inertia / total_inertia * 100
+    
+    return(list(
+      cca = cca_result,
+      species_matrix = species_matrix_final,
+      env_matrix = env_vars,
+      explained_variance = explained_variance,
+      beach_ids = beach_order,
+      region = region_name
+    ))
+  }, error = function(e) {
+    warning(paste("CCA analysis failed for", region_name, ":", e$message))
+    return(NULL)
+  })
+}
+
+# Run CCA analyses
+girona_cca_100m <- run_cca_analysis_100m(beaches_by_region$Girona, land_cover_data$Girona, "Girona")
+barcelona_cca_100m <- run_cca_analysis_100m(beaches_by_region$Barcelona, land_cover_data$Barcelona, "Barcelona")
+tarragona_cca_100m <- run_cca_analysis_100m(beaches_by_region$Tarragona, land_cover_data$Tarragona, "Tarragona")
+
+# Combined analysis
+all_species_data <- bind_rows(
+  beaches_by_region$Girona %>% mutate(region = "Girona"),
+  beaches_by_region$Barcelona %>% mutate(region = "Barcelona"),
+  beaches_by_region$Tarragona %>% mutate(region = "Tarragona")
+)
+
+all_land_cover <- bind_rows(
+  land_cover_data$Girona %>% mutate(region = "Girona"),
+  land_cover_data$Barcelona %>% mutate(region = "Barcelona"),
+  land_cover_data$Tarragona %>% mutate(region = "Tarragona")
+)
+
+combined_cca_100m <- run_cca_analysis_100m(all_species_data, all_land_cover, "Combined")
+
+# Function to create CCA biplots
+create_cca_biplot_100m <- function(cca_analysis, title_suffix = "") {
+  if(is.null(cca_analysis)) return(NULL)
+  
+  cca_result <- cca_analysis$cca
+  
+  site_scores <- data.frame(
+    CCA1 = scores(cca_result, display = "sites")[, 1],
+    CCA2 = scores(cca_result, display = "sites")[, 2],
+    Beach = cca_analysis$beach_ids
+  )
+  
+  species_scores <- data.frame(
+    CCA1 = scores(cca_result, display = "species")[, 1],
+    CCA2 = scores(cca_result, display = "species")[, 2],
+    Species = rownames(scores(cca_result, display = "species"))
+  )
+  
+  env_scores <- data.frame(
+    CCA1 = scores(cca_result, display = "bp")[, 1],
+    CCA2 = scores(cca_result, display = "bp")[, 2],
+    Variable = rownames(scores(cca_result, display = "bp"))
+  )
+  
+  species_scores$distance <- sqrt(species_scores$CCA1^2 + species_scores$CCA2^2)
+  top_species <- species_scores %>%
+    arrange(desc(distance)) %>%
+    slice_head(n = 8)
+  
+  p <- ggplot() +
+    geom_point(data = site_scores, aes(x = CCA1, y = CCA2), 
+               color = "blue", alpha = 0.6, size = 5) +
+    geom_segment(data = env_scores, 
+                 aes(x = 0, y = 0, xend = CCA1 * 2, yend = CCA2 * 2),
+                 arrow = arrow(length = unit(0.8, "cm")), 
+                 color = "red", size = 2, alpha = 0.8) +
+    ggrepel::geom_text_repel(data = env_scores, 
+              aes(x = CCA1 * 2.3, y = CCA2 * 2.3, label = Variable),
+              color = "red", fontface = "bold", size = 8,
+              max.overlaps = Inf) +
+    geom_point(data = top_species, aes(x = CCA1, y = CCA2), 
+               color = "darkgreen", alpha = 0.8, size = 4) +
+    ggrepel::geom_text_repel(data = top_species, 
+              aes(x = CCA1, y = CCA2, label = Species),
+              color = "darkgreen", fontface = "italic", size = 6,
+              max.overlaps = Inf) +
+    theme_minimal() +
+    labs(
+      title = paste("CCA Biplot (100m scale):", cca_analysis$region, title_suffix),
+      subtitle = paste("Explained variance:", round(cca_analysis$explained_variance, 1), "%"),
+      x = paste("CCA1 (", round(100 * eigenvals(cca_result)[1] / sum(eigenvals(cca_result)), 1), "%)", sep = ""),
+      y = paste("CCA2 (", round(100 * eigenvals(cca_result)[2] / sum(eigenvals(cca_result)), 1), "%)", sep = "")
+    ) +
+    theme(
+      plot.title = element_text(face = "bold", size = 24),
+      plot.subtitle = element_text(size = 18),
+      axis.title.x = element_text(size = 16),
+      axis.title.y = element_text(size = 16),
+      panel.grid.minor = element_blank(),
+      aspect.ratio = 1
+    )
+  
+  return(p)
+}
+
+# Test significance
+test_env_significance_100m <- function(cca_analysis) {
+  if(is.null(cca_analysis)) return(NULL)
+  
+  model_test <- anova(cca_analysis$cca, permutations = 999)
+  var_test <- anova(cca_analysis$cca, by = "terms", permutations = 999)
+  
+  return(list(
+    model = model_test,
+    variables = var_test
+  ))
+}
+
+girona_sig_100m <- test_env_significance_100m(girona_cca_100m)
+barcelona_sig_100m <- test_env_significance_100m(barcelona_cca_100m)
+tarragona_sig_100m <- test_env_significance_100m(tarragona_cca_100m)
+combined_sig_100m <- test_env_significance_100m(combined_cca_100m)
+```
+
+This section presents Canonical Correspondence Analysis (CCA) results using land cover variables measured at **100m distance** from coastal dune sites.
+
+
+```{r}
+#| label: fig-cca-combined-100m
+#| fig-cap: "CCA biplot at 100m scale showing vegetation-landscape relationships across all coastal dune sites. Blue points represent beaches, red arrows show environmental gradients at 100m scale, and green points indicate key species."
+#| fig-width: 20
+#| fig-height: 20
+
+if(!is.null(combined_cca_100m)) {
+  p_combined_100m <- create_cca_biplot_100m(combined_cca_100m, "- All Regions")
+  print(p_combined_100m)
+  ggsave("../figures/cca_combined_analysis_100m.png", p_combined_100m, width = 12, height = 8)
+} else {
+  cat("Combined CCA analysis at 100m scale could not be performed.\n")
+}
+```
+
+```{r}
+#| label: fig-cca-regional-100m  
+#| fig-cap: "Regional CCA biplots at 100m scale showing how broader landscape-vegetation relationships vary across the three coastal regions."
+#| fig-width: 15
+#| fig-height: 45
+
+regional_plots_100m <- list()
+
+if(!is.null(girona_cca_100m)) {
+  regional_plots_100m$girona <- create_cca_biplot_100m(girona_cca_100m)
+}
+if(!is.null(barcelona_cca_100m)) {
+  regional_plots_100m$barcelona <- create_cca_biplot_100m(barcelona_cca_100m)
+}
+if(!is.null(tarragona_cca_100m)) {
+  regional_plots_100m$tarragona <- create_cca_biplot_100m(tarragona_cca_100m)
+}
+
+if(length(regional_plots_100m) > 0) {
+  valid_plots_100m <- regional_plots_100m[!sapply(regional_plots_100m, is.null)]
+  
+  if(length(valid_plots_100m) > 0) {
+    if(length(valid_plots_100m) == 3) {
+      combined_regional_100m <- valid_plots_100m$girona / valid_plots_100m$barcelona / valid_plots_100m$tarragona
+    } else if(length(valid_plots_100m) == 2) {
+      combined_regional_100m <- valid_plots_100m[[1]] / valid_plots_100m[[2]]
+    } else {
+      combined_regional_100m <- valid_plots_100m[[1]]
+    }
+    
+    print(combined_regional_100m)
+    ggsave("../figures/cca_regional_analysis_100m.png", combined_regional_100m, width = 14, height = 12)
+  }
+}
+```
+
+```{r}
+#| label: tbl-cca-summary-100m
+#| tbl-cap: "Summary of CCA results at 100m scale showing variance explained by broader landscape variables."
+
+cca_summary_100m <- data.frame(
+  Region = character(),
+  Explained_Variance_Percent = numeric(),
+  Num_Environmental_Variables = integer(),
+  Num_Species = integer(),
+  Model_F_Value = numeric(),
+  Model_P_Value = numeric(),
+  stringsAsFactors = FALSE
+)
+
+extract_sig_info_100m <- function(sig_test) {
+  if(is.null(sig_test) || is.null(sig_test$model)) {
+    return(list(f_val = NA, p_val = NA))
+  }
+  return(list(
+    f_val = sig_test$model$F[1],
+    p_val = sig_test$model$`Pr(>F)`[1]
+  ))
+}
+
+regions_100m <- list(
+  list(name = "Girona", cca = girona_cca_100m, sig = girona_sig_100m),
+  list(name = "Barcelona", cca = barcelona_cca_100m, sig = barcelona_sig_100m),
+  list(name = "Tarragona", cca = tarragona_cca_100m, sig = tarragona_sig_100m),
+  list(name = "Combined", cca = combined_cca_100m, sig = combined_sig_100m)
+)
+
+for(region in regions_100m) {
+  if(!is.null(region$cca)) {
+    sig_info <- extract_sig_info_100m(region$sig)
+    
+    cca_summary_100m <- rbind(cca_summary_100m, data.frame(
+      Region = region$name,
+      Explained_Variance_Percent = round(region$cca$explained_variance, 1),
+      Num_Environmental_Variables = ncol(region$cca$env_matrix),
+      Num_Species = ncol(region$cca$species_matrix),
+      Model_F_Value = round(sig_info$f_val, 2),
+      Model_P_Value = round(sig_info$p_val, 3),
+      stringsAsFactors = FALSE
+    ))
+  }
+}
+
+if(nrow(cca_summary_100m) > 0) {
+  knitr::kable(cca_summary_100m, 
+               col.names = c("Region", "Explained Variance (%)", "Env. Variables", 
+                           "Species", "F-value", "P-value"),
+               align = c("l", "c", "c", "c", "c", "c"))
+}
+```
+

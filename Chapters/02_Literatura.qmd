@@ -1,33 +1,87 @@
 # Literatura Relacionada y Estado del Arte {#sec-literatura}
 
-## Estudios Ecológicos de Sistemas Dunares
+## Sistemas dunares litorales: Características y valores ecológicos
 
-### Estructura y Dinámica de la Vegetación Dunar
+Los sistemas dunares o dunas, constituyen montículos de sedimento no consolidado, formado por acción del viento sobre la arena de las playas (sistema playa-duna), y que se encuentran en la zona seca de las playas, albergando una diversidad de especies vegetales [@garcia_lozano_2019].
 
-### Factores Ambientales y Distribución de Especies
+Según la clasificación tradicional, existen cuatro tipos de dunas:
 
-## Estudios de Impacto Antropogénico en Sistemas Dunares
+**Dunas primarias:** Localizadas justo detrás de la playa, en la zona más cercana al mar, conformadas en una o más franjas paralelas a la costa. Su formación radica en la acumulación de arena transportada por el viento desde la playa. Se subdivide en dunas incipientes (alberga vegetación pionera) y estables (fijadas por vegetación herbácea).
 
-### Efectos de la Urbanización y el Turismo
+**Dunas secundarias:** Localizadas detrás de las primarias, y se desarrollan cuando hay estabilidad y el ecosistema crea las condiciones para la acumulación progresiva de la arena. La vegetación es mucho más diversa que las que poseen las primarias, incluyen arbustos y plantas pequeñas.
 
-### Impactos de las Prácticas de Gestión de Playas
+**Dunas parabólicas:** Son dunas que toman la forma de U o en herradura, en donde la vegetación es más debilitada por causas climáticas o antrópicas.
 
-## Estrategias de Gestión y Conservación
+**Dunas transgresivas:** Dunas tierra adentro, cubierta de vegetación, suelos y estructuras. Son activas, inestables y móviles, puesto que se desplazan en dirección del viento. Su desestabilización radica en el exceso de arena, pérdida de vegetación e impacto de la actividad antrópica.
 
-### Técnicas de Restauración y Rehabilitación
+Los sistemas dunares poseen diversos valores intrínsecos [@garcia_lozano_2019], los cuales se clasifican en:
 
-### Evaluación de la Eficacia de Medidas de Gestión
+- **Valores naturales:** Factores geo-ambientales y topográficos de los sistemas, que albergan una diversidad de especies.
+- **Valores protección:** Protección de las playas frente a una erosión a través del balance sedimentario.
+- **Valores culturales:** Soporte de las actividades de carácter cultural y económico.
 
-## Métodos de Análisis en Ecología Dunar
+La estabilidad y equilibrio de los sistemas dunares depende por factores como el suministro de arena, tasa de transporte sedimentario, fuerzas del oleaje y el viento, el estado de la playa a largo plazo, la ocurrencia y magnitud de tormentas, y la vegetación [@davidson_arnott_et_al_2005; @delgado_fernandez_2011; @walker_et_al_2006].
 
-### Aproximaciones Metodológicas
+La importancia de conservar los sistemas dunares radica en que permite la protección sistema playa-duna frente a los temporales marítimos [@martin_prieto_et_al_2016].
 
-### Indicadores de Calidad y Estado de Conservación
+Un análisis multiparamétrico realizado en los sistemas playa-duna de la Costa Brava (Girona) durante los años 1956 - 2012, indica que desde el año 1956 existe una degradación y urbanización de los principales espacios urbanos con tendencias erosivas, vislumbrando una falta de planes y medidas de gestión. Entre los años 2005 y 2012 se observa que si bien el proceso degradación continua vigente, algunos ayuntamientos han iniciado el proceso de recuperación de las dunas a través de interferencia eólica, así como restricción de los accesos [@roig_munar_et_al_2013].
 
-## Contexto Catalán y Mediterráneo
+## Diversidad ecológica en sistemas dunares
 
-### Particularidades de los Sistemas Dunares Mediterráneos
+Los sistemas dunares constituyen sistemas morfológicos frágiles y dinámicos fundamentales para el equilibrio del litoral [@roig_munar_et_al_2018].
 
-### Estudios Previos en Cataluña
+La vegetación presente en los sistemas dunares es clave en la retención y transporte del sedimento de arena a las playas [@martin_prieto_rodriguez_1996]. Así mismo, un aumento de la superficie vegetal aumenta la rugosidad de la duna, disminuyendo la velocidad del viento y favorece la deposición de sedimentos y formación dunar, impactando en la morfología, ubicación de las crestas dunares y funcionamiento [@garcia_lozano_2019].
 
-## Aportación de Este Trabajo al Estado del Arte
+La afectación de la superficie vegetal afecta negativamente al sistema dunar, impidiendo el trasvase natural de sedimentos de una zona a otra, así como afectando la morfología de la duna [@martin_prieto_rodriguez_1996].
+
+En Cataluña, la mayoría de los sistemas dunares poseen un desarrollo medio y bajo ecológico y geomorfológico, sin embargo, presentan valores altos de índice de restauración dunar [@garcia_lozano_et_al_2019]. Se han identificado diez hábitats dunares que albergan unas 37 especies vegetales (Figura \ref{fig:especies-vegetales}).
+
+FALTA AGREGAR IMAGEN
+
+## Actividad antrópica e impacto en los ecosistemas dunares
+
+Algunas de las causas de degradación son atribuidas al desarrollo turístico masivo, a la construcción de paseos marítimos, una elevada presión antrópica, a la instalación de servicios y medidas incorrectas [@gomez_pina_et_al_2002].
+
+Los sistemas playa-duna constituyen espacios naturales vulnerables, influidos constantemente por la naturaleza pero también por la actividad antrópica. El reciente incremento de los negocios en las zonas litorales han traído un crecimiento positivo de la economía de las zonas costeras, siendo una de las principales fuentes de ingreso del estado español [@roig_munar_et_al_2012] sin embargo, los negocios no necesariamente han tenido en consideración las características del sistema, transformando los atributos naturales que nos proveen las playas litorales en un recurso netamente económico, poniendo en riesgo los ecosistemas [@roig_munar_et_al_2018].
+
+## Gestión de playas y conservación de sistemas dunares
+
+A lo largo de los años se han implementado diversas estrategias para mitigar esta pérdida de sistemas dunares así como de su vegetación. En costas antrópicas, la gestión está enfocada especialmente a potenciar la experiencia recreativa de las personas, pasando a segundo plano la coexistencia de las funciones del sistema playa-duna [@garcia_lozano_2019], en otros casos, se imponen medidas rígidas que no se adaptan a las peculiaridades de cada sistema playa-duna [@roig_munar_et_al_2012].
+
+Las medidas de conservación de sistemas dunares se basan en la recuperación de arena y crecimiento de vegetación asociada, así como colocación de barreras que eviten la degradación del sistema [@martin_prieto_et_al_2016]. Algunos ejemplos son:
+
+### Proyecto LIFE (Girona)
+
+Implementado en la Pletera, tuvo por objetivo la restauración integral del conjunto lagunar costero para recuperar la funcionalidad, a través de la conservación hábitats dunares, el incremento de la superficie y volumen dunar, recuperación cobertura vegetal de los sistemas dunares, conseguir compatibilidad entre la conservación y restauración de los hábitats y el uso público del espacio, entre otros.
+
+### Estudios en la Costa Brava
+
+Un estudio desarrollado en los sistemas dunares de la Costa Brava, a través del método de evaluación de la morfología dunar, diversidad vegetal y presión antrópica, concluye que las playas con una gestión más respetuosa (menos limpieza mecánica, control de accesos) presentan mayor diversidad vegetal. Ejemplo de ellos son las playas de Can Comes, La Fonollera y Pals [@pinto_et_al_2013].
+
+### Proyecto de regeneración de dunas metropolitanas - Área metropolitana de Barcelona (AMB)
+
+Cuyo ámbito de acción es El Prat, Viladecans, Gavà y Castelldefels. Las acciones están enfocadas en restaurar la vegetación dunar con especies autóctonas, así como controlar los accesos y brindar educación ambiental. El proyecto, vigente actualmente, espera tener un impacto en la mejora de la biodiversidad vegetal y recuperación de hábitats degradados.
+
+### Proyecto MASDUNAS (Gran Canaria)
+
+Implementado en la Reserva Natural Especial de las Dunas de Maspalomas, tuvo por objetivo restaurar el sistema dunar afectado por el turismo y el cambio climático, a través de la reintroducción de especies vegetales como \textit{Traganum moquinii} (balancón) el cual es clave en el acúmulo progresivo de sedimentos al interior de las dunas, eliminación de especies invasoras, recuperación de la dinámica eólica natural, entre otras.
+
+### Proyecto RESALAR (Murcia)
+
+Implementado en el litoral del Mar Menor, tuvo por objetivo regenerar salinas y arenales costeros, incluyendo los sistemas dunares, a través de la restauración vegetal, la eliminación de acacias invasoras y la plantación de flora dunar típica. Se obtuvo como resultado el aumento de la biodiversidad vegetal y la recuperación de hábitats.
+
+### Proyecto de restauración del Arenal de Liencres (Cantabria)
+
+La degradación de los sistemas dunares del Arenal de Liencres tuvo como base el tránsito peatonal y la pérdida de vegetación. En ese sentido, las acciones estuvieron dirigidas a instalar empalizadas para retener arena, revegetación con \textit{Ammophila arenaria} (barrón), cierre de accesos no autorizados, entre otros. Se obtuvo como resultado la recuperación de la morfología dunar y la mejora de la cobertura vegetal.
+
+### Proyecto de restauración de El Saler (Valencia)
+
+Los principales problemas identificados fueron la urbanización intensiva y la pérdida de dinámica eólica. Algunas de las acciones que se realizaron radicaron en la eliminación de las especies invasoras (\textit{Carpobrotus edulis}), la plantación de especies autóctonas como \textit{Elymus farctus} y \textit{Pancratium maritimum}, así como la reconfiguración de los cordones dunares. El resultado fue la mejora de la biodiversidad y la estabilización del sistema.
+
+### Proyecto de restauración de la Punta Umbría (Huelva)
+
+La fragmentación y la presión turística fueron los principales problemas identificados. Las acciones de restauración estuvieron dirigidas a restaurar la vegetación arbustiva (\textit{Juniperus oxycedrus}), el control de accesos mediante pasarelas elevadas y educación ambiental a visitantes. El aumento de la cobertura vegetal y la reducción de impactos humanos fueron algunos de los resultados.
+
+### Proyecto de restauración El Espigón (Huelva)
+
+El principal problema identificado fue producto de la alteración de la dinámica sedimentaria por infraestructuras portuarias. En ese sentido, se redistribuyó la arena mediante maquinaria, así como se sembraron especies pioneras para fijación de sedimentos. El resultado fue la rehabilitación parcial del sistema dunar y la recuperación de los hábitats.
