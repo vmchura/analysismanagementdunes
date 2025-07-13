@@ -183,10 +183,11 @@
 %	REQUIRED PACKAGES
 %----------------------------------------------------------------------------------------
 
-% Conditionally load babel - let Quarto handle it if language is specified
-\@ifpackageloaded{babel}{}{%
-    \RequirePackage{babel} % Required for automatically changing names of document elements to languages besides english
-}
+% Don't load babel here - let the document handle it completely
+% This prevents option clash errors when babel is loaded from Quarto or document headers
+% \@ifpackageloaded{babel}{}{%
+%     \RequirePackage{babel} % Required for automatically changing names of document elements to languages besides english
+% }
 
 \RequirePackage{scrbase} % Required for handling language-dependent names of sections/document elements
 

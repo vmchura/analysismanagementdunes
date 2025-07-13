@@ -15,9 +15,8 @@ book:
     - Chapters/02_Literatura.qmd
     - Chapters/03_Preliminars.qmd
     - Chapters/04_Metodologia.qmd
-    - Chapters/05_Contribucio.qmd
-    - Chapters/06_Resultats.qmd
-    - Chapters/07_Conclusions.qmd
+    - Chapters/05_Resultados.qmd
+    - Chapters/06_Conclusions.qmd
     - references.qmd
 
   repo-url: https://github.com/nmfs-opensci/quarto-thesis
@@ -40,22 +39,25 @@ execute:
   echo: false
   code-overflow: wrap
 
-# urlcolor changes the url color in the body of the PDF
-# linkcolor changes color of internal links (like to figures)
-# toclinkcolor changes color of toc, lof and lot links
+# Use lang to set main language
 lang: es
 
 format:
-  quarto-thesis-pdf: 
+  quarto-thesis-pdf:
     classoption: ["11pt", "singlespacing", "headsepline"]
     documentclass: MastersDoctoralThesis
     urlcolor: red
     toclinkcolor: black
     toc-depth: 2
-    lang: es
+    # Load babel early with all required options before any other packages
+    include-before-body:
+      - text: |
+          \selectlanguage{spanish}
     include-in-header:
       - text: |
-          % Spanish language configuration - let Quarto handle babel loading
+          % Load babel with all required options at the very beginning
+          \PassOptionsToPackage{spanish,bidi=default}{babel}
+          % Spanish language customizations
           \AtBeginDocument{
             \addto\captionsspanish{
               \renewcommand{\contentsname}{Índice de contenidos}
@@ -72,9 +74,4 @@ format:
               \renewcommand{\refname}{Referencias}
               \renewcommand{\proofname}{Demostración}
             }
-            % Force Spanish language
-            \def\tablename{Tabla}
-            \def\figurename{Figura}
-            \def\chaptername{Capítulo}
-            \selectlanguage{spanish}
           }
