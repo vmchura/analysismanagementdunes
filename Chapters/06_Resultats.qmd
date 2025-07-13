@@ -1,64 +1,64 @@
-# Resultados {#sec-resultats}
+# Resultados {#sec-resultados}
 
-## Análisis de Patrones de Vegetación {#sec-patrons-vegetacio}
+## Análisis de Patrones de Vegetación {#sec-patrones-vegetacion}
 
-### Especies Más Abundantes {#sec-especies-abundants}
+### Especies Más Abundantes {#sec-especies-abundantes}
 
-::: {#sec-especies-abundants-content}
+::: {#sec-especies-abundantes-content}
 {{< include 06_resultados/01_abundant_species.qmd >}}
 :::
 
-### Riqueza y Diversidad de Especies {#sec-riquesa-diversitat}
+### Riqueza y Diversidad de Especies {#sec-riqueza-diversidad}
 
-::: {#sec-riquesa-diversitat-content}
+::: {#sec-riqueza-diversidad-content}
 {{< include 06_resultados/02_species_richness.qmd >}}
 :::
 
-### Impacto de la Cobertura del Suelo a 50m {#sec-impacte-50m}
+### Impacto de la Cobertura del Suelo a 50m {#sec-impacto-50m}
 
-::: {#sec-impacte-50m-content}
+::: {#sec-impacto-50m-content}
 {{< include 06_resultados/03_land_cover_50m.qmd >}}
 :::
 
-### Impacto de la Cobertura del Suelo a 100m {#sec-impacte-100m}
+### Impacto de la Cobertura del Suelo a 100m {#sec-impacto-100m}
 
-::: {#sec-impacte-100m-content}
+::: {#sec-impacto-100m-content}
 {{< include 06_resultados/04_land_cover_100m.qmd >}}
 :::
 
-### Relación Entre Riqueza de Especies y Cobertura del Suelo {#sec-relacio-riquesa-cobertura}
+### Relación Entre Riqueza de Especies y Cobertura del Suelo {#sec-relacion-riqueza-cobertura}
 
-::: {#sec-relacio-riquesa-cobertura-content}
+::: {#sec-relacion-riqueza-cobertura-content}
 {{< include 06_resultados/05_richness_vs_land_cover.qmd >}}
 :::
 
-### Clasificación de Hábitats Mediante NMDS {#sec-classificacio-habitats}
+### Clasificación de Hábitats Mediante NMDS {#sec-clasificacion-habitats}
 
-::: {#sec-classificacio-habitats-content}
+::: {#sec-clasificacion-habitats-content}
 {{< include 06_resultados/06_nmds_habitat_classification.qmd >}}
 :::
 
-::: {#sec-classificacio-habitats-regional}
+::: {#sec-clasificacion-habitats-regional}
 {{< include 06_resultados/06_nmds_regional_analysis.qmd >}}
 :::
 
-### Clasificación NMDS por Región {#sec-classificacio-region}
+### Clasificación NMDS por Región {#sec-clasificacion-region}
 
-::: {#sec-classificacio-habitats-content}
+::: {#sec-clasificacion-region-content}
 {{< include 06_resultados/06_nmds_region_classification.qmd >}}
 :::
 
 ### CCA por Región {#sec-cca-region}
 
-::: {#sec-cca-cca-region-content}
+::: {#sec-cca-region-content}
 {{< include 06_resultados/07_cca_analysis.qmd >}}
 :::
 
-::: {#sec-cca-cca-region-100_content}
+::: {#sec-cca-region-100-content}
 {{< include 06_resultados/08_cca_analysis_100m.qmd >}}
 :::
 
-## Efectos de las Prácticas de Gestión {#sec-efectes-gestio}
+## Efectos de las Prácticas de Gestión {#sec-efectos-gestion}
 
 ::: {#sec-nmds-management-content}
 {{< include 06_resultados/09_nmds_management_analysis.qmd >}}

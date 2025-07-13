@@ -1,4 +1,4 @@
-# Introducción {#sec-introduccio}
+# Introducción {#sec-introduccion}
 
 ## Contexto del Trabajo
 
@@ -38,11 +38,11 @@ Analizar la relación entre las prácticas de gestión de playas y la diversidad
 
 **Recopilación de Datos**: Integración y estandarización de datos de 278 parcelas en 39 playas catalanas, incluyendo 147 especies vegetales (escala Braun-Blanquet), variables de cobertura del suelo a 50m y 100m, y prácticas de gestión costera.
 
-**Desarrollo Metodológico**: Implementación de análisis multivariantes especializados (NMDS, CCA) para comunidades dunares, sistema automatizado de validación de datos, y conversión estandarizada de valores Braun-Blanquet a porcentajes.
+**Implementación Metodológica**: Implementación de análisis multivariantes especializados (NMDS, CCA) para comunidades dunares, sistema automatizado de validación de datos, y conversión estandarizada de valores Braun-Blanquet a porcentajes.
 
 **Análisis Empírico**: Clasificación de hábitats dunares, evaluación de efectos de cobertura del suelo y prácticas de gestión sobre diversidad vegetal, y análisis comparativo entre regiones (Girona, Barcelona, Tarragona).
 
-**Herramientas de Visualización**: Desarrollo de biplots interpretativos y representaciones gráficas para comunicación de resultados a gestores costeros.
+**Herramientas de Visualización**: Desarrollo de gráficos biplots interpretativos y representaciones gráficas para comunicación de resultados a gestores costeros.
 
 ## Resultados Principales
 
@@ -60,8 +60,7 @@ Este trabajo se organiza en los siguientes capítulos:
 
 - **Capítulo 2 - Literatura Relacionada y Estado del Arte**: Revisa los trabajos previos relevantes sobre ecología dunar, gestión costera y metodologías de análisis
 - **Capítulo 3 - Preliminares**: Establece los conceptos fundamentales y la terminología necesaria
-- **Capítulo 4 - Planificación y Metodología**: Describe la metodología empleada y los recursos utilizados
-- **Capítulos 5-7**: Presentan el desarrollo metodológico, exploración de datos y análisis por regiones
-- **Capítulo 8 - Contribución Metodológica**: Detalla las principales aportaciones metodológicas
-- **Capítulo 9 - Resultados**: Expone los resultados obtenidos
-- **Capítulo 10 - Conclusiones**: Sintetiza las conclusiones, limitaciones y líneas futuras
+- **Capítulo 4 - Metodología**: Describe la metodología empleada y los recursos utilizados
+- **Capítulo 5 - Contribución Metodológica**: Presenta las principales aportaciones metodológicas del trabajo
+- **Capítulo 6 - Resultados**: Expone los resultados obtenidos a partir de los análisis realizados
+- **Capítulo 7 - Conclusiones**: Sintetiza las conclusiones, limitaciones y líneas futuras de investigación
