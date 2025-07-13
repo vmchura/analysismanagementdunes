@@ -47,43 +47,34 @@ lang: es
 
 format:
   quarto-thesis-pdf: 
-    classoption: ["11pt", "spanish", "singlespacing", "headsepline"]
+    classoption: ["11pt", "singlespacing", "headsepline"]
     documentclass: MastersDoctoralThesis
     urlcolor: red
     toclinkcolor: black
     toc-depth: 2
     lang: es
-    include-before-body:
-      - text: |
-          \selectlanguage{spanish}
     include-in-header:
       - text: |
-          \usepackage[spanish]{babel}
-          \selectlanguage{spanish}
-          \addto\captionsspanish{
-            \renewcommand{\contentsname}{Índice de contenidos}
-            \renewcommand{\listfigurename}{Lista de figuras}
-            \renewcommand{\listtablename}{Lista de tablas}
-            \renewcommand{\figurename}{Figura}
-            \renewcommand{\tablename}{Tabla}
-            \renewcommand{\chaptername}{Capítulo}
-            \renewcommand{\appendixname}{Apéndice}
-            \renewcommand{\bibname}{Referencias}
-            \renewcommand{\indexname}{Índice}
-            \renewcommand{\abstractname}{Resumen}
-            \renewcommand{\partname}{Parte}
-            \renewcommand{\refname}{Referencias}
-            \renewcommand{\proofname}{Demostración}
-          }
-          % Force Spanish language
-          \def\tablename{Tabla}
-          \def\figurename{Figura}
-          \def\chaptername{Capítulo}
-          % Override babel settings
+          % Spanish language configuration - let Quarto handle babel loading
           \AtBeginDocument{
-            \selectlanguage{spanish}
             \addto\captionsspanish{
               \renewcommand{\contentsname}{Índice de contenidos}
+              \renewcommand{\listfigurename}{Lista de figuras}
+              \renewcommand{\listtablename}{Lista de tablas}
+              \renewcommand{\figurename}{Figura}
+              \renewcommand{\tablename}{Tabla}
               \renewcommand{\chaptername}{Capítulo}
+              \renewcommand{\appendixname}{Apéndice}
+              \renewcommand{\bibname}{Referencias}
+              \renewcommand{\indexname}{Índice}
+              \renewcommand{\abstractname}{Resumen}
+              \renewcommand{\partname}{Parte}
+              \renewcommand{\refname}{Referencias}
+              \renewcommand{\proofname}{Demostración}
             }
+            % Force Spanish language
+            \def\tablename{Tabla}
+            \def\figurename{Figura}
+            \def\chaptername{Capítulo}
+            \selectlanguage{spanish}
           }
