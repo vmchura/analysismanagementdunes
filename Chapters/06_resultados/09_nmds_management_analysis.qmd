@@ -1,4 +1,8 @@
 ```{r 09_01_setup, include=FALSE}
+library(here) # add this if not loaded
+
+
+
 # Global knitr options - controls all code chunks
 knitr::opts_chunk$set(
   warning = FALSE,
@@ -13,12 +17,9 @@ library(vegan)     # For NMDS analysis
 library(gridExtra) # For arranging multiple plots
 library(RColorBrewer) # For color palettes
 
-# Load global configuration
-source("../R/global_config.R")
-
-# Load data
-load("../data/all_observations_split.RData")
-load("../data/all_management_data.RData")
+source(here("R", "global_config.R"))
+load(here("data", "all_observations_split.RData"))
+load(here("data", "all_management_data.RData"))
 
 # --- NMDS Analysis for Management Classification ---
 
@@ -262,7 +263,7 @@ p_nmds_management <- ggplot(nmds_data %>% filter(!is.na(management_simple)),
 print(p_nmds_management)
 
 # Save the plot
-ggsave("../figures/nmds_management_analysis.png", p_nmds_management, width = 12, height = 8)
+ggsave(here("figures", "nmds_management_analysis.png"), p_nmds_management, width = 12, height = 8)
 ```
 
 ```{r}
@@ -310,7 +311,7 @@ management_distribution %>%
   scale_fill_brewer(palette = "Spectral", direction = -1)
 
 # Save the plot
-ggsave("../figures/management_distribution_by_region.png", width = 10, height = 6)
+ggsave(here("figures", "management_distribution_by_region.png"), width = 10, height = 6)
 ```
 
 ```{r}
@@ -374,7 +375,7 @@ ggplot(management_practices, aes(x = Region, y = mean_score, fill = practice)) +
   geom_hline(yintercept = c(1, 2, 3, 4, 5), linetype = "dashed", alpha = 0.3)
 
 # Save the plot
-ggsave("../figures/management_practices_comparison.png", width = 14, height = 8)
+ggsave(here("figures","management_practices_comparison.png"), width = 14, height = 8)
 ```
 
 ```{r}
@@ -440,7 +441,7 @@ ggplot(species_by_management, aes(x = reorder(species, mean_abundance), y = mean
   scale_fill_brewer(palette = "Spectral", direction = -1)
 
 # Save the plot
-ggsave("../figures/species_management_response.png", width = 14, height = 10)
+ggsave(here("figures","species_management_response.png"), width = 14, height = 10)
 ```
 
 ```{r}
@@ -455,14 +456,12 @@ management_summary <- nmds_data %>%
   filter(!is.na(management_simple)) %>%
   group_by(Region, management_simple) %>%
   summarise(
-    n_plots = n(),
     n_beaches = n_distinct(Beach),
-    mean_intensity = round(mean(management_intensity_raw, na.rm = TRUE), 2),
     .groups = "drop"
   ) %>%
   pivot_wider(names_from = management_simple, 
-              values_from = c(n_plots, n_beaches, mean_intensity), 
-              values_fill = list(n_plots = 0, n_beaches = 0, mean_intensity = NA))
+              values_from = c(n_beaches),
+              values_fill = list(n_beaches = 0))
 
 knitr::kable(management_summary,
              caption = "Distribution of plots and beaches by management intensity across regions (ordinal scale 0-5)",
@@ -485,21 +484,8 @@ stress_interpretation <- case_when(
   TRUE ~ "Poor representation"
 )
 
-cat("NMDS Stress value:", stress_value, "\n")
-cat("Interpretation:", stress_interpretation, "\n\n")
-
-# Basic statistics about management distribution
-cat("Management Intensity Distribution (Simplified Categories):\n")
 management_dist <- table(nmds_data$management_simple, useNA = "ifany")
-print(management_dist)
-cat("\nPercentage distribution:\n")
-print(round(prop.table(management_dist) * 100, 1))
-
-cat("\n\nDetailed Management Category Distribution:\n")
 detailed_dist <- table(nmds_data$management_category, useNA = "ifany")
-print(detailed_dist)
-
-cat("\n\nManagement Intensity Statistics:\n")
 intensity_stats <- nmds_data %>%
   filter(!is.na(management_intensity_raw)) %>%
   summarise(
@@ -509,7 +495,6 @@ intensity_stats <- nmds_data %>%
     max_intensity = max(management_intensity_raw),
     sd_intensity = round(sd(management_intensity_raw), 3)
   )
-print(intensity_stats)
 ```
 
 ```{r}
@@ -594,7 +579,7 @@ ggplot(gradient_data, aes(x = management_rounded, y = mean_abundance, color = sp
   scale_color_viridis_d(option = "turbo")
 
 # Save the plot
-ggsave("../figures/management_gradient_analysis.png", width = 14, height = 10)
+ggsave(here("figures","management_gradient_analysis.png"), width = 14, height = 10)
 ```
 
 ```{r}
@@ -652,5 +637,5 @@ ggplot(cor_long, aes(x = var1, y = var2, fill = correlation)) +
   coord_fixed()
 
 # Save the plot
-ggsave("../figures/management_correlation_matrix.png", width = 10, height = 8)
+ggsave(here("figures","management_correlation_matrix.png"), width = 10, height = 8)
 ```

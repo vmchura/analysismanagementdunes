@@ -12,7 +12,9 @@ Esta sección visualiza las especies de plantas más abundantes en las tres regi
 #| fig-cap: "Distribución de observaciones a través de las tres regiones"
 #| echo: false
 #| eval: true
-#| output: false
+#| results: 'hide'
+#| message: false
+#| warning: false
 # Cargar bibliotecas necesarias
 library(tidyverse)
 library(ggplot2)
@@ -98,12 +100,10 @@ plot_data <- bind_rows(
 #| fig-cap: "Distribución de observaciones a través de las tres regiones"
 #| echo: false
 #| eval: true
-#| output: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 #| fig-pos: "H"
-# Ordenar regiones según nuestro orden estándar
-plot_data <- order_provinces(plot_data, column_name = "region")
-
-
 # Ordenar regiones según nuestro orden estándar
 plot_data <- order_provinces(plot_data, column_name = "region")
 
@@ -128,5 +128,4 @@ p
 
 # Guardar el gráfico
 ggsave("../figures/top_species_by_region.png", width = 12, height = 8)
-
 ```

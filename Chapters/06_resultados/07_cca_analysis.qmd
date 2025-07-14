@@ -89,10 +89,13 @@ prepare_env_matrix <- function(land_cover_region_data, region_species_data) {
 }
 ```
 ```{r}
+#| echo: false
+#| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 # Function to run CCA analysis for a region
 run_cca_analysis <- function(region_data, land_cover_region_data, region_name) {
-  cat("Running CCA analysis for", region_name, "...\n")
-  
   # Check if we have enough data
   if(nrow(region_data) < 3) {
     warning(paste("Not enough data for CCA analysis in", region_name))
@@ -109,8 +112,6 @@ run_cca_analysis <- function(region_data, land_cover_region_data, region_name) {
     return(NULL)
   }
   
-  cat("  Species matrix dimensions:", nrow(species_matrix), "beaches x", ncol(species_matrix), "species\n")
-  
   # Prepare environmental matrix
   env_matrix <- prepare_env_matrix(land_cover_region_data, region_data)
   
@@ -118,8 +119,6 @@ run_cca_analysis <- function(region_data, land_cover_region_data, region_name) {
   env_matrix_matched <- env_matrix %>% 
     filter(id_beach %in% species_beach_ids) %>%
     arrange(id_beach)
-  
-  cat("  Environmental matrix dimensions:", nrow(env_matrix_matched), "beaches x", ncol(env_matrix_matched)-1, "variables\n")
   
   # Ensure both datasets have the same beaches in the same order
   common_beaches <- intersect(species_beach_ids, env_matrix_matched$id_beach)
@@ -159,9 +158,6 @@ run_cca_analysis <- function(region_data, land_cover_region_data, region_name) {
     return(NULL)
   }
   
-  cat("  Final matrix dimensions: Species", nrow(species_matrix_final), "x", ncol(species_matrix_final), 
-      ", Environmental", nrow(env_vars), "x", ncol(env_vars), "\n")
-  
   # Run CCA
   tryCatch({
     cca_result <- cca(species_matrix_final ~ ., data = env_vars)
@@ -171,11 +167,6 @@ run_cca_analysis <- function(region_data, land_cover_region_data, region_name) {
     total_inertia <- sum(eigenvals)
     constrained_inertia <- sum(eigenvals[1:min(length(eigenvals), ncol(env_vars))])
     explained_variance <- constrained_inertia / total_inertia * 100
-    
-    cat("  Explained variance:", round(explained_variance, 2), "%\n")
-    cat("  Number of environmental variables:", ncol(env_vars), "\n")
-    cat("  Number of species:", ncol(species_matrix_final), "\n")
-    cat("  Number of beaches (sites):", nrow(species_matrix_final), "\n")
     
     return(list(
       cca = cca_result,
@@ -192,16 +183,17 @@ run_cca_analysis <- function(region_data, land_cover_region_data, region_name) {
 }
 ```
 ```{r}
+#| echo: false
+#| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 # Run CCA for each region
 girona_cca <- run_cca_analysis(beaches_by_region$Girona, land_cover_data$Girona, "Girona")
-```
-```{r}
 barcelona_cca <- run_cca_analysis(beaches_by_region$Barcelona, land_cover_data$Barcelona, "Barcelona")
 tarragona_cca <- run_cca_analysis(beaches_by_region$Tarragona, land_cover_data$Tarragona, "Tarragona")
 
 # Combine all regions for a comprehensive analysis
-cat("Running combined CCA analysis...\n")
-
 # Prepare combined species matrix
 all_species_data <- bind_rows(
   beaches_by_region$Girona %>% mutate(region = "Girona"),
@@ -349,8 +341,6 @@ if(!is.null(combined_cca)) {
   
   # Save the plot
   ggsave("../figures/cca_combined_analysis.png", p_combined, width = 12, height = 8)
-} else {
-  cat("Combined CCA analysis could not be performed.\n")
 }
 ```
 
@@ -359,6 +349,9 @@ if(!is.null(combined_cca)) {
 #| fig-cap: "Regional CCA biplots showing how vegetation-environment relationships vary across the three coastal regions of Catalonia. Each plot shows the specific land cover gradients that structure vegetation communities in each region. Red arrows represent environmental gradients (land cover variables), green points and labels show plant species, and blue points represent sampling sites (beaches). Longer arrows indicate stronger environmental gradients, and species positioned closer to arrow tips are more strongly associated with those environmental conditions."
 #| echo: false
 #| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 #| output: true
 #| fig-width: 15
 #| fig-height: 45
@@ -409,6 +402,9 @@ if(length(regional_plots) > 0) {
 #| tbl-cap: "Summary of CCA results showing the variance explained by land cover variables in each region and the overall significance of the species-environment relationships."
 #| echo: false
 #| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 #| output: true
 
 # Create summary table of CCA results
@@ -464,8 +460,6 @@ if(nrow(cca_summary) > 0) {
                col.names = c("Region", "Explained Variance (%)", "Env. Variables", 
                            "Species", "F-value", "P-value"),
                align = c("l", "c", "c", "c", "c", "c"))
-} else {
-  cat("No CCA results available for summary table.\n")
 }
 ```
 
@@ -474,6 +468,9 @@ if(nrow(cca_summary) > 0) {
 #| tbl-cap: "Significance of individual environmental variables in the combined CCA model, showing which land cover types are most important for explaining vegetation patterns."
 #| echo: false
 #| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 #| output: true
 
 # Create table of environmental variable significance
@@ -508,6 +505,9 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
 #| fig-cap: "Species-environment associations from CCA analysis, showing which species are most strongly associated with specific land cover types. Species positioned closer to environmental arrows are more strongly associated with those land cover variables."
 #| echo: false
 #| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 #| output: true
 #| fig-width: 20
 #| fig-height: 20
