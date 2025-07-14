@@ -1,4 +1,5 @@
 ```{r 10_01_setup, include=FALSE}
+library(here)
 # Global knitr options - controls all code chunks
 knitr::opts_chunk$set(
   warning = FALSE,
@@ -15,11 +16,11 @@ library(RColorBrewer) # For color palettes
 library(patchwork)  # For combining plots
 
 # Load global configuration
-source("../R/global_config.R")
+source(here("R", "global_config.R"))
 
 # Load data
-load("../data/all_observations_split.RData")
-load("../data/all_management_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_management_data.RData"))
 
 # --- Regional NMDS Analysis with Management Integration ---
 
@@ -308,7 +309,7 @@ combined_mgmt_plot <- tarragona_analysis$plot_management /
 print(combined_mgmt_plot)
 
 # Save the plot
-ggsave("../figures/nmds_regional_management_categories.png", combined_mgmt_plot, width = 16, height = 18)
+ggsave(here("figures","nmds_regional_management_categories.png"), combined_mgmt_plot, width = 16, height = 18)
 ```
 
 ```{r}
@@ -338,7 +339,7 @@ combined_gradient_plot <- tarragona_analysis$plot_gradient /
 print(combined_gradient_plot)
 
 # Save the plot
-ggsave("../figures/nmds_regional_management_gradient.png", combined_gradient_plot, width = 16, height = 18)
+ggsave(here("figures","nmds_regional_management_gradient.png"), combined_gradient_plot, width = 16, height = 18)
 ```
 
 ```{r}
@@ -378,7 +379,7 @@ all_management_distribution %>%
   scale_x_discrete(limits = PROVINCE_ORDER)
 
 # Save the plot
-ggsave("../figures/regional_management_distribution.png", width = 12, height = 8)
+ggsave(here("figures","regional_management_distribution.png"), width = 12, height = 8)
 ```
 
 ```{r}
@@ -479,7 +480,7 @@ combined_practices_plot <- p1 / p2 +
 print(combined_practices_plot)
 
 # Save the plot
-ggsave("../figures/management_practices_by_region.png", combined_practices_plot, width = 14, height = 10)
+ggsave(here("figures","management_practices_by_region.png"), combined_practices_plot, width = 14, height = 10)
 ```
 
 ```{r}
@@ -527,7 +528,7 @@ ggplot(habitat_management_interaction, aes(x = Habitat, y = percentage, fill = M
   scale_fill_brewer(palette = "Spectral", direction = -1)
 
 # Save the plot
-ggsave("../figures/habitat_management_interaction.png", width = 12, height = 8)
+ggsave(here("figures","habitat_management_interaction.png"), width = 12, height = 8)
 ```
 
 ```{r}
@@ -542,12 +543,7 @@ regional_summary <- all_regional_data %>%
   filter(!is.na(Management_Category)) %>%
   group_by(Region) %>%
   summarise(
-    n_plots = n(),
     n_beaches = n_distinct(Beach),
-    mean_mgmt_intensity = round(mean(Management_Intensity, na.rm = TRUE), 2),
-    median_mgmt_intensity = round(median(Management_Intensity, na.rm = TRUE), 2),
-    min_mgmt_intensity = round(min(Management_Intensity, na.rm = TRUE), 2),
-    max_mgmt_intensity = round(max(Management_Intensity, na.rm = TRUE), 2),
     pct_unmanaged = round(sum(Management_Category == "Unmanaged", na.rm = TRUE) / n() * 100, 1),
     pct_low_mgmt = round(sum(Management_Category == "Low Management", na.rm = TRUE) / n() * 100, 1),
     pct_mod_mgmt = round(sum(Management_Category == "Moderate Management", na.rm = TRUE) / n() * 100, 1),
@@ -558,44 +554,7 @@ regional_summary <- all_regional_data %>%
 knitr::kable(regional_summary,
              caption = "Regional summary of management practices and intensity distribution",
              format = "markdown",
-             col.names = c("Region", "Plots", "Beaches", "Mean Intensity", "Median Intensity", 
-                          "Min Intensity", "Max Intensity", "% Unmanaged", "% Low Mgmt", 
+             col.names = c("Region", "Beaches", "% Unmanaged", "% Low Mgmt",
                           "% Moderate Mgmt", "% High Mgmt"))
 ```
 
-```{r}
-#| label: regional-stress-interpretation
-#| echo: false
-#| eval: true
-#| output: true
-
-# Calculate and display stress interpretation for each region
-cat("NMDS Stress Values by Region:\n")
-cat("Tarragona:", round(tarragona_analysis$result$stress, 3), "\n")
-cat("Barcelona:", round(barcelona_analysis$result$stress, 3), "\n")
-cat("Girona:", round(girona_analysis$result$stress, 3), "\n\n")
-
-# Regional management statistics
-cat("Regional Management Intensity Statistics:\n\n")
-
-regions <- list("Tarragona" = tarragona_analysis, "Barcelona" = barcelona_analysis, "Girona" = girona_analysis)
-
-for(region_name in names(regions)) {
-  cat(paste("---", region_name, "---\n"))
-  region_data <- regions[[region_name]]$data
-  
-  intensity_stats <- region_data %>%
-    filter(!is.na(Management_Intensity)) %>%
-    summarise(
-      mean_intensity = round(mean(Management_Intensity), 3),
-      median_intensity = round(median(Management_Intensity), 3),
-      min_intensity = min(Management_Intensity),
-      max_intensity = max(Management_Intensity),
-      sd_intensity = round(sd(Management_Intensity), 3),
-      range_intensity = max_intensity - min_intensity
-    )
-  
-  print(intensity_stats)
-  cat("\n")
-}
-```
