@@ -69,7 +69,7 @@ for(region_name in names(beaches_by_region)) {
 }
 ```
 
-# CCA Analysis with Management Variables per Region and Species
+#### CCA Analysis with Management Variables per Region and Species
 
 This chapter presents Canonical Correspondence Analysis (CCA) examining the relationships between coastal dune vegetation composition and beach management practices across the three regions Girona, Barcelona, and Tarragona.
 
