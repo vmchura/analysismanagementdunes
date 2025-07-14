@@ -354,64 +354,6 @@ if(!is.null(combined_cca)) {
 }
 ```
 
-## **How to Interpret CCA Biplots**
-
-Canonical Correspondence Analysis (CCA) biplots are powerful visualization tools that display the relationships between species composition, sampling sites, and environmental variables in a single plot. Understanding the different elements and their colors is crucial for interpreting the ecological patterns revealed by the analysis.
-
-### **Elements of the CCA Biplot**
-
-**Blue Points (Sampling Sites/Beaches):**
-- Each blue point represents a sampling location (beach) in the analysis
-- The position of each point in the biplot space reflects the overall species composition at that site
-- Sites that are close together have similar species compositions
-- Sites that are far apart have different species assemblages
-
-**Red Arrows (Environmental Variables):**
-- Red arrows represent environmental gradients (land cover variables such as urban cover, forest cover, agricultural land, etc.)
-- The **length** of each arrow indicates the **strength** of the environmental gradient - longer arrows represent variables that have stronger relationships with species composition
-- The **direction** of each arrow shows the direction of increasing values for that environmental variable
-- Variables with arrows pointing in similar directions are positively correlated with each other
-- Variables with arrows pointing in opposite directions are negatively correlated
-
-**Green Points and Labels (Plant Species):**
-- Green points represent individual plant species found in the study
-- Only the most ecologically important species (those with the strongest associations with environmental gradients) are labeled to avoid overcrowding
-- Species positioned **closer to the tip of an environmental arrow** are more strongly associated with that environmental condition
-- Species positioned on the **opposite side of the origin** from an arrow are negatively associated with that environmental variable
-
-### **Interpreting Spatial Relationships**
-
-**Species-Environment Associations:**
-- When a species (green) is positioned near the tip of an environmental arrow (red), it indicates that species is favored by high values of that environmental variable
-- Species positioned far from an arrow tip, especially on the opposite side of the plot center, are typically found where that environmental variable has low values
-
-**Site Characterization:**
-- Sampling sites (blue points) positioned near environmental arrows are characterized by high values of those environmental variables
-- Sites positioned in the direction of multiple arrows experience the combined influence of those environmental factors
-- Sites near the center of the biplot have average environmental conditions
-
-**Gradient Interpretation:**
-- The first axis (CCA1, horizontal) represents the primary environmental gradient that best explains species composition patterns
-- The second axis (CCA2, vertical) represents the secondary gradient, independent of the first
-- The percentage values in axis labels indicate how much of the total species-environment relationship each axis explains
-
-### **Practical Example of Interpretation**
-
-If you observe:
-- A **long red arrow** pointing toward "Urban Cover" → Urban development is a strong environmental driver
-- **Green species points** near this arrow tip → These species are adapted to or favored by urban environments
-- **Blue site points** in the same direction → These beaches have high urban development nearby
-- **Green species points** on the opposite side → These species avoid urban areas and prefer more natural conditions
-
-### **Regional Comparison Considerations**
-
-When comparing biplots across regions (Girona, Barcelona, Tarragona):
-- Different arrow lengths indicate that the same environmental variable may have different importance in each region
-- Different arrow directions show that environmental gradients may operate differently across regions
-- Species that appear in multiple regions may show different environmental associations depending on local conditions
-
-This interpretation framework allows you to understand how land cover patterns shape coastal dune vegetation communities and identify the key environmental drivers in each region of Catalonia.
-
 ```{r}
 #| label: fig-cca-regional
 #| fig-cap: "Regional CCA biplots showing how vegetation-environment relationships vary across the three coastal regions of Catalonia. Each plot shows the specific land cover gradients that structure vegetation communities in each region. Red arrows represent environmental gradients (land cover variables), green points and labels show plant species, and blue points represent sampling sites (beaches). Longer arrows indicate stronger environmental gradients, and species positioned closer to arrow tips are more strongly associated with those environmental conditions."

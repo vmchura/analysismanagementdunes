@@ -83,6 +83,66 @@ El trabajo implementa un marco robusto para garantizar la reproducibilidad y esc
 
 Esta estructura facilita la adaptación y extensión de la metodología a nuevos datasets y contextos de estudio.
 
+## Interpretación de Biplots CCA
+
+### Fundamentos del Biplot CCA
+
+El Análisis de Correspondencias Canónicas (CCA) genera biplots que muestran, en un espacio bidimensional, la relación entre la composición de especies, los sitios de muestreo y las variables ambientales. Su interpretación permite extraer información ecológica relevante.
+
+#### Elementos del Biplot
+
+##### Sitios de Muestreo
+- Cada punto representa un sitio.
+- La posición refleja la composición de especies del sitio.
+- Puntos cercanos indican composiciones similares; puntos distantes, composiciones distintas.
+
+##### Variables Ambientales
+- Representadas por flechas desde el origen.
+- La **longitud** indica la fuerza de la correlación con los ejes.
+- La **dirección** señala el gradiente creciente de la variable.
+- Vectores en direcciones similares: correlación positiva; opuestas: negativa.
+
+##### Especies
+- Cada punto representa una especie.
+- La posición indica preferencias ambientales.
+- Especies cercanas comparten requerimientos ambientales.
+- Mayor distancia al origen sugiere mayor especialización.
+
+#### Interpretación Espacial
+
+##### Sitios y Variables Ambientales
+- Para inferir el valor de una variable en un sitio, proyectar el punto del sitio sobre el vector correspondiente.
+- Mayor distancia en dirección del vector: valor alto. Dirección opuesta: valor bajo.
+
+##### Especies y Variables Ambientales
+- Especies en la misma dirección de un vector están asociadas positivamente con esa variable.
+- La distancia proyectada sobre el vector indica la fuerza de la asociación.
+- Posición perpendicular: sin asociación clara.
+
+##### Ejes de Ordenación
+- Representan gradientes ambientales que separan especies.
+- El primer eje (CCA1) explica la mayor varianza en la relación especies-ambiente.
+- Los siguientes ejes son ortogonales y explican menos varianza.
+- Los porcentajes de varianza explicada reflejan la importancia de cada eje.
+
+#### Aspectos Metodológicos
+
+##### Escalado
+- El tipo de escalado afecta la interpretación.
+- Escalado simétrico: equilibra especies y sitios.
+- Escalado asimétrico: prioriza uno según el objetivo.
+
+##### Limitaciones
+- El biplot es una proyección de relaciones multidimensionales.
+- Ejes no incluidos pueden contener información importante.
+- Relaciones no lineales pueden no estar bien representadas.
+
+##### Validación
+- Evaluar la significancia de las variables con pruebas de permutación.
+- La varianza explicada indica la relevancia del modelo.
+- No interpretar variables no significativas como gradientes ecológicos.
+
+
 ## Limitaciones y Consideraciones Metodológicas
 
 Es importante reconocer las limitaciones inherentes a la aproximación desarrollada:
