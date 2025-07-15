@@ -11,13 +11,13 @@ library(tidyverse)
 library(ggplot2)
 library(gridExtra) # for arranging multiple plots
 library(RColorBrewer) # for color palettes
-
+library(here)
 # Load global configuration
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Load data
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
 # Function to reshape land cover data for plotting
 prepare_land_cover <- function(region_data) {
@@ -87,5 +87,5 @@ ggplot(avg_land_cover %>% filter(distance == "50m"),
   theme(legend.position = "right")
 
 # Save the plot
-ggsave("../figures/land_cover_50m_by_region.png", width = 10, height = 6)
+ggsave(here("figures","land_cover_50m_by_region.png"), width = 10, height = 6)
 ```

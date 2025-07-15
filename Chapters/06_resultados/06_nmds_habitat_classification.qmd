@@ -12,13 +12,13 @@ library(ggplot2)
 library(vegan)     # For NMDS analysis
 library(gridExtra) # For arranging multiple plots
 library(RColorBrewer) # For color palettes
-
+library(here)
 # Load global configuration
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Load data
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
 # --- NMDS Analysis for Habitat Classification ---
 
@@ -203,7 +203,7 @@ p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
 print(p_nmds)
 
 # Save the plot
-ggsave("../figures/nmds_habitat_classification.png", p_nmds, width = 12, height = 8)
+ggsave(here("figures","nmds_habitat_classification.png"), p_nmds, width = 12, height = 8)
 ```
 
 ```{r}
@@ -249,7 +249,7 @@ habitat_distribution %>%
   scale_fill_brewer(palette = "Set2")
 
 # Save the plot
-ggsave("../figures/habitat_distribution_by_region.png", width = 10, height = 6)
+ggsave(here("figures","habitat_distribution_by_region.png"), width = 10, height = 6)
 ```
 
 ```{r}
@@ -339,5 +339,5 @@ ggplot(indicator_species, aes(x = reorder(species, mean_bb), y = mean_bb, fill =
   scale_fill_brewer(palette = "Set2")
 
 # Save the plot
-ggsave("../figures/habitat_indicator_species.png", width = 14, height = 8)
+ggsave(here("figures","habitat_indicator_species.png"), width = 14, height = 8)
 ```

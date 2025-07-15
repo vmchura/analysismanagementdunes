@@ -14,11 +14,11 @@ library(gridExtra) # For arranging multiple plots
 library(RColorBrewer) # For color palettes
 
 # Load global configuration
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Load data
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
 # --- NMDS Analysis for Region-based Classification ---
 
@@ -236,7 +236,7 @@ p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
 print(p_nmds)
 
 # Save the plot
-ggsave("../figures/nmds_region_classification.png", p_nmds, width = 12, height = 8)
+ggsave(here("figures","nmds_region_classification.png"), p_nmds, width = 12, height = 8)
 ```
 
 ```{r}
@@ -275,7 +275,7 @@ ggplot(top_species_by_region, aes(x = reorder(species, mean_bb), y = mean_bb, fi
   scale_fill_manual(values = PROVINCE_COLORS)
 
 # Save the plot
-ggsave("../figures/region_characteristic_species.png", width = 14, height = 8)
+ggsave(here("figures","region_characteristic_species.png"), width = 14, height = 8)
 ```
 
 ```{r}
@@ -354,5 +354,5 @@ ggplot(diversity_long, aes(x = Region, y = Value, fill = Region)) +
   )
 
 # Save the plot
-ggsave("../figures/region_diversity_metrics.png", width = 12, height = 6)
+ggsave(here("figures","region_diversity_metrics.png"), width = 12, height = 6)
 ```

@@ -14,13 +14,13 @@ library(gridExtra) # For arranging multiple plots
 library(RColorBrewer) # For color palettes
 library(patchwork)  # For combining plots
 library(ggrepel)   # For non-overlapping text labels
-
+library(here)
 # Load global configuration
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Load data
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
 # --- Canonical Correspondence Analysis (CCA) ---
 
@@ -340,7 +340,7 @@ if(!is.null(combined_cca)) {
   print(p_combined)
   
   # Save the plot
-  ggsave("../figures/cca_combined_analysis.png", p_combined, width = 12, height = 8)
+  ggsave(here("figures","cca_combined_analysis.png"), p_combined, width = 12, height = 8)
 }
 ```
 
@@ -389,7 +389,7 @@ if(length(regional_plots) > 0) {
     print(combined_regional)
     
     # Save the combined regional plot
-    ggsave("../figures/cca_regional_analysis.png", combined_regional,
+    ggsave(here("figures","cca_regional_analysis.png"), combined_regional,
            width = 14, height = 12)
   }
 } else {
@@ -597,7 +597,7 @@ if(!is.null(combined_cca)) {
   print(p_associations)
   
   # Save the plot
-  ggsave("../figures/cca_species_environment_associations.png", p_associations,
+  ggsave(here("figures","cca_species_environment_associations.png"), p_associations,
          width = 12, height = 8)
 } else {
   cat("Species-environment association plot could not be created.\n")

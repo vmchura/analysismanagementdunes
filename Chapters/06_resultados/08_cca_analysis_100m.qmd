@@ -14,13 +14,13 @@ library(gridExtra) # For arranging multiple plots
 library(RColorBrewer) # For color palettes
 library(patchwork)  # For combining plots
 library(ggrepel)   # For non-overlapping text labels
-
+library(here)
 # Load global configuration
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Load data
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
 # --- Canonical Correspondence Analysis (CCA) for 100m Land Cover Data ---
 
@@ -257,7 +257,7 @@ This section presents Canonical Correspondence Analysis (CCA) results using land
 if(!is.null(combined_cca_100m)) {
   p_combined_100m <- create_cca_biplot_100m(combined_cca_100m, "- All Regions")
   print(p_combined_100m)
-  ggsave("../figures/cca_combined_analysis_100m.png", p_combined_100m, width = 12, height = 8)
+  ggsave(here("figures","cca_combined_analysis_100m.png"), p_combined_100m, width = 12, height = 8)
 } else {
   cat("Combined CCA analysis at 100m scale could not be performed.\n")
 }
@@ -294,7 +294,7 @@ if(length(regional_plots_100m) > 0) {
     }
     
     print(combined_regional_100m)
-    ggsave("../figures/cca_regional_analysis_100m.png", combined_regional_100m, width = 14, height = 12)
+    ggsave(here("figures","cca_regional_analysis_100m.png"), combined_regional_100m, width = 14, height = 12)
   }
 }
 ```

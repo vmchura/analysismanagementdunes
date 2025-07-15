@@ -13,13 +13,13 @@ library(vegan)     # Para análisis NMDS
 library(gridExtra) # Para organizar múltiples gráficos
 library(RColorBrewer) # Para paletas de colores
 library(patchwork)  # Para combinar gráficos
-
+library(here)
 # Cargar configuración global
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Cargar datos
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
 # --- Análisis NMDS para Clasificación de Hábitats por Región ---
 
@@ -214,7 +214,7 @@ combined_plot <- tarragona_nmds$plot / barcelona_nmds$plot / girona_nmds$plot +
 print(combined_plot)
 
 # Guardar el gráfico
-ggsave("../figures/nmds_regional_analysis.png", combined_plot, width = 14, height = 16)
+ggsave(here("figures","nmds_regional_analysis.png"), combined_plot, width = 14, height = 16)
 ```
 
 ```{r}
@@ -253,6 +253,6 @@ all_habitat_distribution %>%
   scale_x_discrete(limits = PROVINCE_ORDER)
 
 # Guardar el gráfico
-ggsave("../figures/regional_habitat_distribution.png", width = 12, height = 8)
+ggsave(here("figures","regional_habitat_distribution.png"), width = 12, height = 8)
 ```
 

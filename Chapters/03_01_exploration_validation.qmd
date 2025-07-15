@@ -14,6 +14,7 @@ library(conflicted)
 library(ggplot2)
 library(janitor)
 library(dplyr)
+library(here)
 ```
 
 ```{r}
@@ -22,7 +23,7 @@ library(dplyr)
 #| eval: true
 #| output: false
 ## Cargar el conjunto de datos principal
-main_data <- read_excel("../data/db_species_20250214.xlsx", sheet = "original_data")
+main_data <- read_excel(here("data","db_species_20250214.xlsx", sheet = "original_data"))
 main_data <- main_data %>% select(where(~ !all(is.na(.))))
 
 ## Limpiar nombres de columnas
@@ -61,7 +62,7 @@ ordered_cols <- c("plot", "id_beach", "beach", "id_transect", "id_plot", "transe
 main_data <- main_data %>% select(all_of(ordered_cols), everything())
 
 ## Guardar los datos principales procesados
-save(main_data, file = "../data/processed_data_clean.RData")
+save(main_data, file = here("data","processed_data_clean.RData"))
 ```
 
 ```{r}
@@ -71,7 +72,7 @@ save(main_data, file = "../data/processed_data_clean.RData")
 #| output: false
 ## Función para procesar datos de cobertura del suelo
 process_land_cover <- function(sheet_name) {
-  land_cover_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
+  land_cover_data <- read_excel(here("data","db_species_20250214.xlsx"), sheet = sheet_name)
   land_cover_data <- land_cover_data %>% janitor::clean_names()
   
   ## Identificar columnas relevantes
@@ -107,7 +108,7 @@ land_cover_data <- list(
   "Tarragona" = tarragona_land_cover
 )
 
-save(land_cover_data, file = "../data/all_land_cover_data.RData")
+save(land_cover_data, file = here("data","all_land_cover_data.RData"))
 ```
 
 ```{r}
@@ -117,7 +118,7 @@ save(land_cover_data, file = "../data/all_land_cover_data.RData")
 #| output: false
 ## Función para procesar datos de gestión
 process_management <- function(sheet_name) {
-  management_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
+  management_data <- read_excel(here("data","db_species_20250214.xlsx"), sheet = sheet_name)
   management_data <- management_data %>% janitor::clean_names()
   
   ## Identificar columnas esperadas
@@ -189,7 +190,7 @@ management_data <- list(
   "Tarragona" = tarragona_management
 )
 
-save(management_data, file = "../data/all_management_data.RData")
+save(management_data, file = here("data","all_management_data.RData"))
 ```
 
 ### Validación de Datos
@@ -200,8 +201,8 @@ save(management_data, file = "../data/all_management_data.RData")
 #| eval: true
 #| output: false
 ## Cargar y validar datos principales
-if (file.exists("../data/processed_data_clean.RData")) {
-  load("../data/processed_data_clean.RData")
+if (file.exists(here("data","processed_data_clean.RData"))) {
+  load(here("data","processed_data_clean.RData"))
   
   ## Validaciones básicas
   cat("Validación de datos principales:\n")
@@ -211,8 +212,8 @@ if (file.exists("../data/processed_data_clean.RData")) {
 }
 
 ## Cargar y validar datos de cobertura del suelo
-if (file.exists("../data/all_land_cover_data.RData")) {
-  load("../data/all_land_cover_data.RData")
+if (file.exists(here("data","all_land_cover_data.RData"))) {
+  load(here("data","all_land_cover_data.RData"))
   
   cat("\nValidación de datos de cobertura del suelo:\n")
   for(region in names(land_cover_data)) {
@@ -221,8 +222,8 @@ if (file.exists("../data/all_land_cover_data.RData")) {
 }
 
 ## Cargar y validar datos de gestión
-if (file.exists("../data/all_management_data.RData")) {
-  load("../data/all_management_data.RData")
+if (file.exists(here("data","all_management_data.RData"))) {
+  load(here("data","all_management_data.RData"))
   
   cat("\nValidación de datos de gestión:\n")
   for(region in names(management_data)) {

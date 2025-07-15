@@ -11,13 +11,13 @@ library(tidyverse)
 library(ggplot2)
 library(gridExtra) # para organizar múltiples gráficos
 library(RColorBrewer) # para paletas de colores
-
+library(here)
 # Cargar configuración global
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Cargar datos
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
 # --- Funciones de Análisis de Riqueza de Especies y Cobertura del Suelo ---
 
@@ -153,5 +153,5 @@ ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
   )
 
 # Guardar el gráfico
-ggsave("../figures/richness_vs_land_cover_combined.png", width = 15, height = 8)
+ggsave(here("figures","richness_vs_land_cover_combined.png"), width = 15, height = 8)
 ```

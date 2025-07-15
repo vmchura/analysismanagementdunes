@@ -8,9 +8,10 @@ División del conjunto de datos por zonas biogeográficas (Girona, Barcelona y T
 #| eval: true
 #| output: false
 library(tidyverse)
+library(here)
 conflicted::conflict_prefer("filter", "dplyr")
 conflicted::conflict_prefer("select", "dplyr")
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 ```
 
 ```{r}
@@ -18,7 +19,7 @@ source("../R/global_config.R")
 #| echo: false
 #| eval: true
 #| output: false
-load("../data/processed_data_clean.RData")
+load(here("data","processed_data_clean.RData"))
 str(main_data, max.level = 1)
 ```
 
@@ -97,7 +98,7 @@ ggplot(region_counts, aes(x = Region, y = Observations, fill = Region)) +
 #| echo: false
 #| eval: true
 #| output: false
-save(beaches_by_region, file = "../data/all_observations_split.RData")
+save(beaches_by_region, file = here("data","all_observations_split.RData"))
 cat("Conjuntos de datos regionales guardados en 'data/all_observations_split.RData'\n")
 ```
 
