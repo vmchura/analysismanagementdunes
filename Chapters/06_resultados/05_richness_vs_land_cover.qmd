@@ -6,7 +6,7 @@ knitr::opts_chunk$set(
   echo = FALSE
 )
 
-# Cargar bibliotecas necesarias
+# Cargar librerías necesarias
 library(tidyverse)
 library(ggplot2)
 library(gridExtra) # para organizar múltiples gráficos
@@ -23,7 +23,7 @@ load(here("data","all_land_cover_data.RData"))
 
 # Calcular riqueza de especies (número de especies presentes) para cada playa
 calculate_beach_richness <- function(region_data) {
-  # Obtener columnas de especies - excluir "plot" y "id_beach"
+  # Obtener columnas de especies - excluir "plot" e "id_beach"
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
 
   # Agrupar por playa y calcular presencia de cada especie en toda la playa
@@ -36,7 +36,7 @@ calculate_beach_richness <- function(region_data) {
     mutate(richness = rowSums(across(all_of(species_cols))))
 }
 
-# Función para remodelar datos de cobertura del suelo para visualización
+# Función para reestructurar datos de cobertura del suelo para visualización
 prepare_land_cover <- function(region_data) {
   region_data %>%
     pivot_longer(
@@ -102,19 +102,34 @@ all_richness <- order_provinces(all_richness, column_name = "region")
 # Seleccionar los tipos de cobertura del suelo más relevantes para el análisis
 relevant_cover_types <- c("urban", "forests", "scrubland", "crops", "grassland")
 
+# Crear diccionario de traducción para los tipos de cobertura relevantes
+cover_type_translation <- c(
+  "urban" = "Urbano",
+  "forests" = "Bosques", 
+  "scrubland" = "Matorral",
+  "crops" = "Cultivos",
+  "grassland" = "Pastizal"
+)
+
 richness_vs_land <- richness_land_cover_combined %>%
-  filter(cover_type %in% relevant_cover_types)
+  filter(cover_type %in% relevant_cover_types) %>%
+  # Traducir tipos de cobertura del suelo a español
+  mutate(cover_type_spanish = cover_type_translation[cover_type])
 
 # Asegurar que las regiones mantengan el orden consistente
 richness_vs_land <- order_provinces(richness_vs_land, column_name = "region")
 
-# Reordenar los niveles del factor para cover_type para controlar el orden de las columnas
-richness_vs_land$cover_type <- factor(richness_vs_land$cover_type, 
-                                     levels = relevant_cover_types)
+# Reordenar los niveles del factor para cover_type_spanish para controlar el orden de las columnas
+richness_vs_land$cover_type_spanish <- factor(richness_vs_land$cover_type_spanish, 
+                                              levels = cover_type_translation[relevant_cover_types])
+
+# Traducir etiquetas de distancia a español
+richness_vs_land <- richness_vs_land %>%
+  mutate(distance_spanish = ifelse(distance == "50m", "50m", "100m"))
 ```
 
 ```{r}
-#| label: fig-richness-vs-landcover
+#| label: fig-riqueza-vs-cobertura-suelo
 #| fig-cap: "Relación entre la riqueza de especies y diferentes tipos de cobertura del suelo a distancias de 50m y 100m, comparando cómo el entorno circundante a diferentes escalas impacta la biodiversidad dunar"
 #| echo: false
 #| eval: true
@@ -130,8 +145,8 @@ richness_vs_land$cover_type <- factor(richness_vs_land$cover_type,
 ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
   geom_point(alpha = 0.7, size = 2) +
   geom_smooth(method = "lm", formula = y ~ x, se = TRUE, linetype = "dashed") +
-  # Usar facet_grid para crear filas para distancias y columnas para tipos de cobertura
-  facet_grid(distance ~ cover_type) +
+  # Usar facet_grid para crear filas para distancias y columnas para tipos de cobertura (EN ESPAÑOL)
+  facet_grid(distance_spanish ~ cover_type_spanish) +
   theme_minimal() +
   labs(
     title = "Riqueza de Especies vs. Tipos de Cobertura del Suelo a Diferentes Distancias",
