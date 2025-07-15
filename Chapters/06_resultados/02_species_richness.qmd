@@ -1,4 +1,5 @@
 ```{r 06_02_setup, include=FALSE}
+library(here)
 # Opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
   warning = FALSE,
@@ -6,22 +7,22 @@ knitr::opts_chunk$set(
   echo = FALSE
 )
 
-# Cargar bibliotecas necesarias
+# Cargar librerías necesarias
 library(tidyverse)
 library(ggplot2)
 library(gridExtra) # para organizar múltiples gráficos
 library(RColorBrewer) # para paletas de colores
 
 # Cargar configuración global
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Cargar datos
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 ```
 
 ```{r}
-#| label: fig-species-richness
+#| label: fig-riqueza-especies
 #| fig-cap: "Distribución de la riqueza de especies a nivel de playa en las tres regiones costeras, mostrando variaciones de biodiversidad entre playas de Tarragona, Barcelona y Girona"
 #| echo: false
 #| eval: true
@@ -31,7 +32,7 @@ load("../data/all_land_cover_data.RData")
 
 # Calcular riqueza de especies (número de especies presentes) para cada playa
 calculate_beach_richness <- function(region_data) {
-  # Obtener columnas de especies - excluir "plot" y "id_beach"
+  # Obtener columnas de especies - excluir "plot" e "id_beach"
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
 
   # Agrupar por playa y calcular presencia de cada especie en toda la playa
@@ -62,7 +63,7 @@ all_richness <- order_provinces(all_richness, column_name = "region")
 ggplot(all_richness, aes(x = region, y = richness, fill = region)) +
   geom_boxplot() +
   theme_minimal() +
-  labs(title = "Riqueza de especies a nivel de playa en regiones costeras",
+  labs(title = "Riqueza de Especies a Nivel de Playa en Regiones Costeras",
        x = "Región",
        y = "Número de Especies Presentes por Playa") +
   theme(legend.position = "none") +
@@ -70,6 +71,5 @@ ggplot(all_richness, aes(x = region, y = richness, fill = region)) +
   scale_fill_manual(values = PROVINCE_COLORS)
 
 # Guardar el gráfico
-ggsave("../figures/species_richness_by_region.png", width = 8, height = 6)
-
+ggsave(here("figures","species_richness_by_region.png"), width = 8, height = 6)
 ```
