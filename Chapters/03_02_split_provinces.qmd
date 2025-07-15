@@ -1,6 +1,6 @@
 ### División Regional de Datos {#sec-regional-split}
 
-El conjunto de datos se dividió por las tres zonas biogeográficas (Girona, Barcelona y Tarragona) basándose en los rangos de identificadores de playa para facilitar análisis regionales comparativos.
+División del conjunto de datos por zonas biogeográficas (Girona, Barcelona y Tarragona) basándose en rangos de identificadores de playa para análisis regionales comparativos.
 
 ```{r}
 #| label: load-packages-chapter2
@@ -12,8 +12,6 @@ conflicted::conflict_prefer("filter", "dplyr")
 conflicted::conflict_prefer("select", "dplyr")
 source("../R/global_config.R")
 ```
-
-#### Procesamiento y División de Datos
 
 ```{r}
 #| label: load-data-chapter2
@@ -44,7 +42,6 @@ beaches_by_region[["Barcelona"]] <- main_data_selected %>% filter(id_beach >= 20
 beaches_by_region[["Tarragona"]] <- main_data_selected %>% filter(id_beach >= 24)
 ```
 
-Los rangos utilizados fueron: Girona (IDs 1-19), Barcelona (IDs 20-23), y Tarragona (IDs 24 y superiores).
 
 ```{r}
 #| label: validate-split
@@ -104,4 +101,4 @@ save(beaches_by_region, file = "../data/all_observations_split.RData")
 cat("Conjuntos de datos regionales guardados en 'data/all_observations_split.RData'\n")
 ```
 
-Los conjuntos de datos regionales resultantes se guardaron para su uso en análisis posteriores que exploren variaciones regionales en patrones de vegetación dunar y prácticas de gestión.
+Los conjuntos de datos regionales resultantes se guardan para análisis posteriores de variaciones regionales en vegetación dunar y gestión.

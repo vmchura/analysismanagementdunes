@@ -1,14 +1,6 @@
 ## Preprocesamiento de Datos
 
-El análisis de vegetación dunar requirió un proceso de preprocesamiento para transformar los datos originales en un formato adecuado para el análisis estadístico. Los datos provienen de un libro de Excel (`db_species_20250214.xlsx`) que contiene información sobre presencia y abundancia de especies vegetales en diferentes parcelas de muestreo, así como datos de cobertura del suelo y prácticas de gestión para las provincias de Girona, Barcelona y Tarragona.
-
-### Estructura de los Datos Originales
-
-El conjunto de datos principal incluye 278 observaciones de parcelas distribuidas en diferentes playas y transectos, con registros de abundancia para 147 especies vegetales usando una escala ordinal de 0 a 5. Adicionalmente, se dispone de información sobre porcentajes de cobertura del suelo en radios de 50m y 100m desde los puntos de muestreo, y datos sobre prácticas de gestión y grados de protección para cada área.
-
-### Limpieza y Transformación
-
-El proceso de preprocesamiento se implementó en R utilizando el ecosistema tidyverse. Las principales transformaciones aplicadas fueron:
+Transformación de datos originales de vegetación dunar para análisis estadístico a partir del archivo de datos con 278 observaciones de 147 especies en escala ordinal 0-5.
 
 ```{r}
 #| label: load-packages
@@ -24,8 +16,6 @@ library(janitor)
 library(dplyr)
 ```
 
-**Carga y limpieza inicial**: Se eliminaron columnas completamente vacías y se estandarizaron los nombres de columnas usando el paquete `janitor` para asegurar consistencia en la nomenclatura.
-
 ```{r}
 #| label: load-data
 #| echo: false
@@ -38,8 +28,6 @@ main_data <- main_data %>% select(where(~ !all(is.na(.))))
 ## Limpiar nombres de columnas
 main_data <- main_data %>% janitor::clean_names()
 ```
-
-**Conversión de tipos de datos**: Los valores de abundancia de especies se transformaron a formato numérico, implementando verificaciones para detectar valores problemáticos durante la conversión.
 
 ```{r}
 #| label: numeric-conversion
@@ -75,8 +63,6 @@ main_data <- main_data %>% select(all_of(ordered_cols), everything())
 ## Guardar los datos principales procesados
 save(main_data, file = "../data/processed_data_clean.RData")
 ```
-
-**Procesamiento de datos auxiliares**: Los datos de cobertura del suelo y gestión se procesaron por separado para cada provincia, estandarizando la estructura y convirtiendo variables categóricas a factores cuando fue apropiado.
 
 ```{r}
 #| label: land-cover-processing
@@ -208,8 +194,6 @@ save(management_data, file = "../data/all_management_data.RData")
 
 ### Validación de Datos
 
-Se implementó un sistema de validación para verificar la integridad y calidad de los datos procesados. Este proceso incluyó verificaciones de formato, rangos de valores válidos y consistencia entre variables relacionadas. Para los datos principales, se confirmó que los valores de abundancia de especies estuvieran en el rango esperado (0-5) y que los identificadores de parcelas mantuvieran la estructura correcta. Los datos de cobertura del suelo se validaron verificando que los porcentajes sumaran aproximadamente 100% para cada distancia de medición.
-
 ```{r}
 #| label: validation-execution
 #| echo: false
@@ -249,4 +233,4 @@ if (file.exists("../data/all_management_data.RData")) {
 }
 ```
 
-Como resultado del preprocesamiento, se generaron tres archivos de datos limpios y estructurados: `processed_data_clean.RData` para las observaciones de especies, `all_land_cover_data.RData` para los datos de cobertura del suelo, y `all_management_data.RData` para las prácticas de gestión. Estos archivos constituyen la base para los análisis estadísticos posteriores del proyecto.
+El preprocesamiento genera tres archivos de datos limpios: observaciones de especies, cobertura del suelo y prácticas de gestión por provincia.
