@@ -1,4 +1,5 @@
 ```{r 06_01_setup, include=FALSE}
+library(here)
 # Configurar opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
   warning = FALSE,
@@ -8,6 +9,7 @@ knitr::opts_chunk$set(
 ```
 
 Esta sección visualiza las especies de plantas más abundantes en las tres regiones (Tarragona, Barcelona y Girona). El gráfico muestra la abundancia media de las principales especies de plantas basada en la escala de Braun-Blanquet.
+
 ```{r}
 #| fig-cap: "Distribución de observaciones a través de las tres regiones"
 #| echo: false
@@ -15,25 +17,25 @@ Esta sección visualiza las especies de plantas más abundantes en las tres regi
 #| results: 'hide'
 #| message: false
 #| warning: false
-# Cargar bibliotecas necesarias
+# Cargar librerías necesarias
 library(tidyverse)
 library(ggplot2)
 library(gridExtra) # para organizar múltiples gráficos
 library(RColorBrewer) # para paletas de colores
 
 # Cargar configuración global
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Cargar datos
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
 # --- Análisis de Patrones de Vegetación ---
 
 # Función para calcular la abundancia promedio para cada especie en una región
 # Convirtiendo valores de Braun-Blanquet a su cobertura porcentual máxima
 calculate_avg_abundance <- function(region_data) {
-  # Obtener columnas de especies - excluir "plot" y "id_beach"
+  # Obtener columnas de especies - excluir "plot" e "id_beach"
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
   
   # Crear un nuevo dataframe para almacenar los valores porcentuales
@@ -71,7 +73,7 @@ girona_abundance <- calculate_avg_abundance(beaches_by_region$Girona)
 barcelona_abundance <- calculate_avg_abundance(beaches_by_region$Barcelona)
 tarragona_abundance <- calculate_avg_abundance(beaches_by_region$Tarragona)
 
-# Obtener las 10 especies más abundantes en cada región
+# Obtener las 3 especies más abundantes en cada región
 top_girona <- girona_abundance %>% slice_head(n = 3)
 top_barcelona <- barcelona_abundance %>% slice_head(n = 3)
 top_tarragona <- tarragona_abundance %>% slice_head(n = 3)
@@ -95,9 +97,10 @@ plot_data <- bind_rows(
   prepare_plot_data(tarragona_abundance, "Tarragona", top_species)
 )
 ```
+
 ```{r}
-#| label: fig-regional-distribution
-#| fig-cap: "Distribución de observaciones a través de las tres regiones"
+#| label: fig-distribucion-regional
+#| fig-cap: "Cobertura media de las principales especies vegetales por región"
 #| echo: false
 #| eval: true
 #| results: 'hide'
@@ -127,5 +130,5 @@ p <- apply_percentage_scale(p)
 p
 
 # Guardar el gráfico
-ggsave("../figures/top_species_by_region.png", width = 12, height = 8)
+ggsave(here("figures","top_species_by_region.png"), width = 12, height = 8)
 ```
