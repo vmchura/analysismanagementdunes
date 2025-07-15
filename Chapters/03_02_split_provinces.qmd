@@ -1,4 +1,4 @@
-## División Regional de Datos {#sec-regional-split}
+### División Regional de Datos {#sec-regional-split}
 
 El conjunto de datos se dividió por las tres zonas biogeográficas (Girona, Barcelona y Tarragona) basándose en los rangos de identificadores de playa para facilitar análisis regionales comparativos.
 
@@ -13,7 +13,7 @@ conflicted::conflict_prefer("select", "dplyr")
 source("../R/global_config.R")
 ```
 
-### Procesamiento y División de Datos
+#### Procesamiento y División de Datos
 
 ```{r}
 #| label: load-data-chapter2

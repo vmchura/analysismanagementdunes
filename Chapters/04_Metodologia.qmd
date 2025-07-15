@@ -4,6 +4,9 @@
 
 Este trabajo aplica técnicas de análisis multivariante para el estudio de comunidades vegetales dunares en Cataluña. Se utilizaron métodos estándar de ecología numérica adaptados al contexto específico de ecosistemas dunares, incluyendo estandarización de datos ordinales, análisis de ordenación y clasificación de comunidades.
 
+{{< include 03_01_exploration_validation.qmd >}}
+{{< include 03_02_split_provinces.qmd >}}
+
 ## Preparación de Datos
 
 ### Conversión de Datos Ordinales

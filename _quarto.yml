@@ -13,7 +13,6 @@ book:
     - index.qmd
     - Chapters/01_Introduccio.qmd
     - Chapters/02_Literatura.qmd
-    - Chapters/03_Preliminars.qmd
     - Chapters/04_Metodologia.qmd
     - Chapters/05_Resultados.qmd
     - Chapters/06_Conclusions.qmd
