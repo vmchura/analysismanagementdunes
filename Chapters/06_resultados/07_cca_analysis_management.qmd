@@ -108,10 +108,11 @@ prepare_mgmt_matrix <- function(management_region_data, beach_ids) {
     stop("No matching beaches found between species and management data")
   }
   
-  # Identify potential management variables (numeric columns, excluding id_beach)
+  # Identify potential management variables (numeric columns, excluding all ID columns)
+  id_columns <- c("id_beach", "id_plot", "plot", "id_transect")
   numeric_cols <- mgmt_data %>%
     select(where(is.numeric)) %>%
-    select(-id_beach) %>%
+    select(-any_of(id_columns)) %>%
     names()
   
 
