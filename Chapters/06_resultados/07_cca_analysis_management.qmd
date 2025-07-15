@@ -803,10 +803,11 @@ if(length(valid_results) > 0) {
     knitr::kable(mgmt_effects_summary,
                  col.names = c("Region", "Management Variable", "Importance", "P-value", "Sig."),
                  caption = "Significance codes: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1",
-      format = "latex", booktabs = TRUE) %>%
+                 format = "latex", 
+                 booktabs = TRUE,
+                 row.names = FALSE) %>%
   kable_styling(latex_options = "hold_position") %>%
-  column_spec(1, width = "4cm") %>%
-  column_spec(3, width = "4cm")
+  column_spec(2, width = "8cm")
   } else {
     cat("No management effects summary could be created.\n")
   }
