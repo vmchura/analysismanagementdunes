@@ -127,3 +127,290 @@ bb_to_percentage <- function(bb_values) {
     })
   }
 }
+
+# --- Diccionarios de Traducción ---
+
+# Diccionario para tipos de cobertura del suelo (land cover types)
+LAND_COVER_TRANSLATIONS <- c(
+  # Vegetation types - Tipos de vegetación
+  "forest" = "Bosque",
+  "scrubland" = "Matorral",
+  "grassland" = "Pastizal",
+  "herbaceous" = "Herbáceas",
+  "woody" = "Leñosas",
+  "vegetation" = "Vegetación",
+  "natural vegetation" = "Vegetación Natural",
+  "pine forest" = "Pinar",
+  "oak forest" = "Encinar",
+  "mixed forest" = "Bosque Mixto",
+  
+  # Land use types - Tipos de uso del suelo
+  "agricultural" = "Agrícola",
+  "cropland" = "Cultivos",
+  "crops" = "Cultivos",
+  "urban" = "Urbano",
+  "developed" = "Desarrollado",
+  "residential" = "Residencial",
+  "commercial" = "Comercial",
+  "industrial" = "Industrial",
+  "infrastructure" = "Infraestructura",
+  "transport" = "Transporte",
+  "roads" = "Carreteras",
+  "communication_routes" = "Vías de Comunicación",
+  
+  # Water and coastal features - Agua y características costeras
+  "water" = "Agua",
+  "freshwater" = "Agua Dulce",
+  "saltwater" = "Agua Salada",
+  "wetland" = "Humedal",
+  "lagoon_and_salt_marshes" = "Lagunas y Marismas",
+  "beach" = "Playa",
+  "sand" = "Arena",
+  "dunes" = "Dunas",
+  "coastal" = "Costero",
+  "marine" = "Marino",
+  
+  # Built environment - Entorno construido
+  "buildings" = "Edificios",
+  "parking" = "Aparcamiento",
+  "pavement" = "Pavimento",
+  "concrete" = "Hormigón",
+  "asphalt" = "Asfalto",
+  "impervious" = "Impermeable",
+  
+  # Natural features - Características naturales
+  "rock" = "Roca",
+  "bare soil" = "Suelo Desnudo",
+  "cliff" = "Acantilado",
+  "slope" = "Ladera",
+  
+  # Common compound terms - Términos compuestos comunes
+  "artificial surfaces" = "Superficies Artificiales",
+  "natural areas" = "Áreas Naturales",
+  "semi natural" = "Semi-Natural",
+  "mixed use" = "Uso Mixto"
+)
+
+# Diccionario para variables de gestión (management variables)
+MANAGEMENT_TRANSLATIONS <- c(
+  # Management practices - Prácticas de gestión
+  "managed_paths" = "Senderos Gestionados",
+  "rope_fences" = "Vallado con Cuerdas",
+  "mechanical_cleaning" = "Limpieza Mecánica",
+  "seasonal_services" = "Servicios Estacionales",
+  "fixed_services" = "Servicios Fijos",
+  "surface_area_occupied_by_seasonal_services_and_amenities_on_or_less_than_5_m_from_the_dunes" = "Servicios Estacionales (≤5m de Dunas)",
+  "surface_area_of_parking_or_other_fixed_services_on_or_less_than_5_m_from_the_dunes" = "Servicios Fijos (≤5m de Dunas)",
+  "protection_of_the_system_and_the_immediate_environment" = "Protección del Sistema",
+  "degree_of_protection_according_to_the_iucn_classification" = "Protección IUCN",
+  
+  # Management categories - Categorías de gestión
+  "Unmanaged" = "Sin Gestión",
+  "Low Management" = "Gestión Baja",
+  "Moderate Management" = "Gestión Moderada",
+  "High Management" = "Gestión Alta",
+  "Very High Management" = "Gestión Muy Alta",
+  "No Management (0)" = "Sin Gestión (0)",
+  "Very Low (0-1)" = "Muy Baja (0-1)",
+  "Low (1-2)" = "Baja (1-2)",
+  "Moderate (2-3)" = "Moderada (2-3)",
+  "High (3-4)" = "Alta (3-4)",
+  "Very High (4-5)" = "Muy Alta (4-5)",
+  "Unknown" = "Desconocido",
+  
+  # Management descriptors - Descriptores de gestión
+  "Management Intensity" = "Intensidad de Gestión",
+  "Management Practice" = "Práctica de Gestión",
+  "Management Practices" = "Prácticas de Gestión",
+  "Management Score" = "Puntuación de Gestión",
+  "Overall Intensity" = "Intensidad General"
+)
+
+# Diccionario para términos de análisis (analysis terms)
+ANALYSIS_TRANSLATIONS <- c(
+  # Statistical terms - Términos estadísticos
+  "Species" = "Especies",
+  "Region" = "Región",
+  "Percentage" = "Porcentaje",
+  "Mean" = "Media",
+  "Average" = "Promedio",
+  "Standard Error" = "Error Estándar",
+  "Correlation" = "Correlación",
+  "Abundance" = "Abundancia",
+  "Richness" = "Riqueza",
+  "Diversity" = "Diversidad",
+  "Cover" = "Cobertura",
+  "Coverage" = "Cobertura",
+  "Frequency" = "Frecuencia",
+  "Presence" = "Presencia",
+  
+  # Analysis methods - Métodos de análisis
+  "NMDS" = "NMDS",
+  "CCA" = "CCA",
+  "Ordination" = "Ordenación",
+  "Gradient" = "Gradiente",
+  "Environmental Variables" = "Variables Ambientales",
+  "Environmental Variable" = "Variable Ambiental",
+  "Biplot" = "Biplot",
+  "Species Scores" = "Puntuaciones de Especies",
+  "Site Scores" = "Puntuaciones de Sitios",
+  
+  # Common plot elements - Elementos comunes de gráficos
+  "Land Cover Type" = "Tipo de Cobertura del Suelo",
+  "Land Cover" = "Cobertura del Suelo",
+  "Beach" = "Playa",
+  "Plot" = "Parcela",
+  "Site" = "Sitio",
+  "Sample" = "Muestra",
+  "Observation" = "Observación"
+)
+
+# Función para traducir etiquetas automáticamente
+translate_labels <- function(labels, custom_dict = NULL, debug = FALSE) {
+  strict_mode <- TRUE
+  # Combinar todos los diccionarios
+  all_translations <- c(LAND_COVER_TRANSLATIONS, MANAGEMENT_TRANSLATIONS, ANALYSIS_TRANSLATIONS)
+  
+  # Añadir diccionario personalizado si se proporciona
+  if (!is.null(custom_dict)) {
+    all_translations <- c(all_translations, custom_dict)
+  }
+  
+  # Función para limpiar y normalizar texto
+  clean_text <- function(text) {
+    # Remover prefijos de distancia y porcentaje
+    text <- gsub("^x(50|100)m_", "", text, ignore.case = TRUE)
+    text <- gsub("_percent$", "", text, ignore.case = TRUE)
+    text <- gsub("_", " ", text)
+    text <- tools::toTitleCase(text)
+    return(text)
+  }
+  
+  # Almacenar etiquetas no encontradas para reporte de errores
+  untranslated_labels <- character(0)
+  
+  # Traducir cada etiqueta
+  translated <- sapply(labels, function(label) {
+    original_label <- label
+    
+    # Primero buscar traducción directa
+    if (label %in% names(all_translations)) {
+      if (debug) cat("✓ Traducción directa encontrada:", label, "→", all_translations[label], "\n")
+      return(all_translations[label])
+    }
+    
+    # Limpiar el texto y buscar nuevamente
+    cleaned_label <- clean_text(label)
+    cleaned_key <- tolower(cleaned_label)
+    
+    # Buscar en versiones en minúsculas de las claves
+    lower_keys <- tolower(names(all_translations))
+    match_idx <- match(cleaned_key, lower_keys)
+    
+    if (!is.na(match_idx)) {
+      if (debug) cat("✓ Traducción por limpieza encontrada:", label, "→", all_translations[match_idx], "\n")
+      return(all_translations[match_idx])
+    }
+    
+    # Buscar coincidencias parciales para términos compuestos
+    for (key in names(all_translations)) {
+      if (grepl(tolower(key), tolower(label), fixed = TRUE) || 
+          grepl(tolower(label), tolower(key), fixed = TRUE)) {
+        if (debug) cat("✓ Traducción parcial encontrada:", label, "→", all_translations[key], "\n")
+        return(all_translations[key])
+      }
+    }
+    
+    # Si llegamos aquí, no se encontró traducción
+    untranslated_labels <<- c(untranslated_labels, original_label)
+    
+    if (debug) cat("✗ NO ENCONTRADA:", original_label, "\n")
+    
+    # En modo estricto, almacenar para error crítico
+    if (strict_mode) {
+      return(paste0("MISSING_TRANSLATION: ", original_label))
+    } else {
+      # En modo no estricto, devolver el texto limpio con advertencia
+      warning(paste("Traducción no encontrada para:", original_label, "- usando texto limpio"))
+      return(cleaned_label)
+    }
+  })
+  
+  # Si hay etiquetas no traducidas en modo estricto, lanzar error crítico
+  if (strict_mode && length(untranslated_labels) > 0) {
+    error_message <- paste0(
+      "❌ ERROR CRÍTICO: TRADUCCIONES FALTANTES\n",
+      "\n",
+      "Las siguientes etiquetas NO tienen traducción al español:\n\n",
+      paste("  ➤", unique(untranslated_labels), collapse = "\n"), "\n\n",
+      "ACCIONES REQUERIDAS:\n",
+      "1. Añadir las traducciones faltantes a los diccionarios en global_config.R\n",
+      "2. O usar strict_mode = FALSE para permitir etiquetas sin traducir\n\n",
+      "UBICACIÓN: Función translate_labels() en R/global_config.R\n",
+      "="
+    )
+    stop(error_message, call. = FALSE)
+  }
+  
+  # Reporte de debug si está activado
+  if (debug) {
+    cat("\n📊 REPORTE DE TRADUCCIÓN:\n")
+    cat("Total etiquetas:", length(labels), "\n")
+    cat("Traducidas exitosamente:", length(labels) - length(untranslated_labels), "\n")
+    cat("Sin traducción:", length(untranslated_labels), "\n")
+    if (length(untranslated_labels) > 0) {
+      cat("Etiquetas sin traducir:", paste(unique(untranslated_labels), collapse = ", "), "\n")
+    }
+    cat("\n")
+  }
+  
+  return(as.character(translated))
+}
+
+# Función auxiliar para agregar traducciones faltantes rápidamente
+add_missing_translations <- function(missing_labels, translations) {
+  if (length(missing_labels) != length(translations)) {
+    stop("El número de etiquetas faltantes debe coincidir con el número de traducciones")
+  }
+  
+  cat("Agregando las siguientes traducciones:\n")
+  for (i in seq_along(missing_labels)) {
+    cat("  ", missing_labels[i], " → ", translations[i], "\n")
+  }
+  
+  # Crear código R para agregar al diccionario
+  new_entries <- paste0('"', missing_labels, '" = "', translations, '"')
+  cat("\nCódigo para agregar a LAND_COVER_TRANSLATIONS, MANAGEMENT_TRANSLATIONS o ANALYSIS_TRANSLATIONS:\n")
+  cat(paste(new_entries, collapse = ",\n"), "\n")
+}
+
+# Función para aplicar traducciones a elementos de ggplot
+apply_spanish_labels <- function(gg_plot, 
+                                title = NULL, 
+                                subtitle = NULL, 
+                                x_label = NULL, 
+                                y_label = NULL, 
+                                legend_title = NULL,
+                                caption = NULL) {
+  
+  if (!is.null(title)) {
+    gg_plot <- gg_plot + labs(title = title)
+  }
+  if (!is.null(subtitle)) {
+    gg_plot <- gg_plot + labs(subtitle = subtitle)
+  }
+  if (!is.null(x_label)) {
+    gg_plot <- gg_plot + labs(x = x_label)
+  }
+  if (!is.null(y_label)) {
+    gg_plot <- gg_plot + labs(y = y_label)
+  }
+  if (!is.null(legend_title)) {
+    gg_plot <- gg_plot + labs(fill = legend_title, color = legend_title, shape = legend_title)
+  }
+  if (!is.null(caption)) {
+    gg_plot <- gg_plot + labs(caption = caption)
+  }
+  
+  return(gg_plot)
+}
