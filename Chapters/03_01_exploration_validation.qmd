@@ -23,7 +23,7 @@ library(here)
 #| eval: true
 #| output: false
 ## Cargar el conjunto de datos principal
-main_data <- read_excel(here("data","db_species_20250214.xlsx", sheet = "original_data"))
+main_data <- read_excel(here("data","db_species_20250214.xlsx"), sheet = "original_data")
 main_data <- main_data %>% select(where(~ !all(is.na(.))))
 
 ## Limpiar nombres de columnas
