@@ -165,31 +165,31 @@ nmds_data <- nmds_data %>%
     
     # Create management categories based on average intensity
     management_category = case_when(
-      management_intensity_raw == 0 ~ "No Management (0)",
-      management_intensity_raw > 0 & management_intensity_raw <= 1 ~ "Very Low (0-1)",
-      management_intensity_raw > 1 & management_intensity_raw <= 2 ~ "Low (1-2)",
-      management_intensity_raw > 2 & management_intensity_raw <= 3 ~ "Moderate (2-3)",
-      management_intensity_raw > 3 & management_intensity_raw <= 4 ~ "High (3-4)",
-      management_intensity_raw > 4 ~ "Very High (4-5)",
-      TRUE ~ "Unknown"
+      management_intensity_raw == 0 ~ "Sin Gestión (0)",
+      management_intensity_raw > 0 & management_intensity_raw <= 1 ~ "Muy Baja (0-1)",
+      management_intensity_raw > 1 & management_intensity_raw <= 2 ~ "Baja (1-2)",
+      management_intensity_raw > 2 & management_intensity_raw <= 3 ~ "Moderada (2-3)",
+      management_intensity_raw > 3 & management_intensity_raw <= 4 ~ "Alta (3-4)",
+      management_intensity_raw > 4 ~ "Muy Alta (4-5)",
+      TRUE ~ "Desconocido"
     ),
     
     # Create simplified management categories for visualization
     management_simple = case_when(
-      management_intensity_raw == 0 ~ "Unmanaged",
-      management_intensity_raw > 0 & management_intensity_raw <= 2 ~ "Low Management",
-      management_intensity_raw > 2 & management_intensity_raw <= 4 ~ "Moderate Management",
-      management_intensity_raw > 4 ~ "High Management",
-      TRUE ~ "Unknown"
+      management_intensity_raw == 0 ~ "Sin Gestión",
+      management_intensity_raw > 0 & management_intensity_raw <= 2 ~ "Gestión Baja",
+      management_intensity_raw > 2 & management_intensity_raw <= 4 ~ "Gestión Moderada",
+      management_intensity_raw > 4 ~ "Gestión Alta",
+      TRUE ~ "Desconocido"
     )
   ) %>%
   # Ensure factor ordering
   mutate(
     management_category = factor(management_category, 
-                                levels = c("No Management (0)", "Very Low (0-1)", "Low (1-2)", 
-                                          "Moderate (2-3)", "High (3-4)", "Very High (4-5)", "Unknown")),
+                                levels = c("Sin Gestión (0)", "Muy Baja (0-1)", "Baja (1-2)", 
+                                          "Moderada (2-3)", "Alta (3-4)", "Muy Alta (4-5)", "Desconocido")),
     management_simple = factor(management_simple,
-                              levels = c("Unmanaged", "Low Management", "Moderate Management", "High Management", "Unknown"))
+                              levels = c("Sin Gestión", "Gestión Baja", "Gestión Moderada", "Gestión Alta", "Desconocido"))
   )
 
 # Order regions according to our standard order
@@ -209,11 +209,11 @@ top_species <- species_scores %>%
   slice_head(n = 10)
 ```
 
-This section presents the results of a Non-metric Multidimensional Scaling (NMDS) analysis to examine how beach management practices influence coastal dune vegetation composition.
+Esta sección presenta los resultados de un análisis de Escalamiento Multidimensional No Métrico (NMDS) para examinar cómo las prácticas de gestión de playas influyen en la composición de vegetación de dunas costeras.
 
 ```{r}
 #| label: fig-nmds-management-plot
-#| fig-cap: "NMDS ordination plot showing the relationship between vegetation composition and beach management practices. Points represent individual plots colored by region and shaped by management intensity category."
+#| fig-cap: "Gráfico de ordenación NMDS mostrando la relación entre la composición de vegetación y las prácticas de gestión de playas. Los puntos representan parcelas individuales coloreadas por región y con formas según la categoría de intensidad de gestión."
 #| echo: false
 #| eval: true
 #| output: true
@@ -236,15 +236,17 @@ p_nmds_management <- ggplot(nmds_data %>% filter(!is.na(management_simple)),
   # Customize appearance
   theme_minimal() +
   labs(
-    title = "NMDS Ordination: Vegetation Response to Management Intensity",
-    subtitle = paste("Stress =", round(nmds_result$stress, 3), "| Management Scale: 0 (none) to 5 (high quality)"),
+    title = "Ordenación NMDS: Respuesta de la Vegetación a la Intensidad de Gestión",
+    subtitle = paste("Estrés =", round(nmds_result$stress, 3), "| Escala de Gestión: 0 (ninguna) a 5 (alta calidad)"),
     x = "NMDS1",
     y = "NMDS2",
-    color = "Region",
-    shape = "Management Intensity"
+    color = "Región",
+    shape = "Intensidad de Gestión"
   ) +
   # Use consistent region colors
   scale_color_manual(values = PROVINCE_COLORS) +
+  # Override shape legend title
+  scale_shape_discrete(name = "Intensidad de Gestión") +
   # Add arrows for top species
   geom_segment(data = top_species,
                aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2),
@@ -258,6 +260,12 @@ p_nmds_management <- ggplot(nmds_data %>% filter(!is.na(management_simple)),
     legend.title = element_text(face = "bold"),
     panel.grid.minor = element_blank(),
     plot.title = element_text(face = "bold")
+  ) +
+  # Specify legend titles explicitly
+  guides(
+    color = guide_legend(title = "Región"),
+    shape = guide_legend(title = "Intensidad de Gestión"),
+    linetype = guide_legend(title = "Tipo de Gestión")
   )
 
 print(p_nmds_management)
@@ -268,7 +276,7 @@ ggsave(here("figures", "nmds_management_analysis.png"), p_nmds_management, width
 
 ```{r}
 #| label: fig-management-region-distribution
-#| fig-cap: "Distribution of management practices across the three regions of Catalonia, showing the proportion of plots under different management intensities within each region."
+#| fig-cap: "Distribución de prácticas de gestión en las tres regiones de Cataluña, mostrando la proporción de parcelas bajo diferentes intensidades de gestión dentro de cada región."
 #| echo: false
 #| eval: true
 #| output: true
@@ -278,7 +286,7 @@ ggsave(here("figures", "nmds_management_analysis.png"), p_nmds_management, width
 
 # Calculate the distribution of management categories by region
 management_distribution <- nmds_data %>%
-  filter(!is.na(management_simple) & management_simple != "Unknown") %>%
+  filter(!is.na(management_simple) & management_simple != "Desconocido") %>%
   group_by(Region, management_simple) %>%
   summarise(Count = n(), .groups = "drop") %>%
   group_by(Region) %>%
@@ -294,11 +302,11 @@ management_distribution %>%
             color = "white", fontface = "bold", size = 3) +
   theme_minimal() +
   labs(
-    title = "Distribution of Management Intensity by Region",
-    subtitle = "Based on ordinal scale: 0 (no management) to 5 (high quality management)",
-    x = "Region",
-    y = "Percentage of Plots",
-    fill = "Management Intensity"
+    title = "Distribución de Intensidad de Gestión por Región",
+    subtitle = "Basado en escala ordinal: 0 (sin gestión) a 5 (gestión de alta calidad)",
+    x = "Región",
+    y = "Porcentaje de Parcelas",
+    fill = "Intensidad de Gestión"
   ) +
   # Apply custom theme
   theme(
@@ -316,7 +324,7 @@ ggsave(here("figures", "management_distribution_by_region.png"), width = 10, hei
 
 ```{r}
 #| label: fig-management-practices-comparison
-#| fig-cap: "Comparison of individual management practice scores across regions, showing the average intensity (0-5 scale) of managed paths, rope fences, mechanical cleaning, and service impacts."
+#| fig-cap: "Comparación de puntuaciones de prácticas de gestión individuales entre regiones, mostrando la intensidad promedio (escala 0-5) de senderos gestionados, vallados con cuerdas, limpieza mecánica e impactos de servicios."
 #| echo: false
 #| eval: true
 #| output: true
@@ -334,11 +342,11 @@ management_practices <- nmds_data %>%
                values_to = "score") %>%
   mutate(
     practice = case_when(
-      practice == "managed_paths_score" ~ "Managed Paths",
-      practice == "rope_fences_score" ~ "Rope Fences", 
-      practice == "mechanical_cleaning_score" ~ "Mechanical Cleaning",
-      practice == "seasonal_services_score" ~ "Seasonal Services",
-      practice == "fixed_services_score" ~ "Fixed Services"
+      practice == "managed_paths_score" ~ "Senderos Gestionados",
+      practice == "rope_fences_score" ~ "Vallado con Cuerdas", 
+      practice == "mechanical_cleaning_score" ~ "Limpieza Mecánica",
+      practice == "seasonal_services_score" ~ "Servicios Estacionales",
+      practice == "fixed_services_score" ~ "Servicios Fijos"
     )
   ) %>%
   group_by(Region, practice) %>%
@@ -358,11 +366,11 @@ ggplot(management_practices, aes(x = Region, y = mean_score, fill = practice)) +
             vjust = -0.5, fontface = "bold", size = 3) +
   theme_minimal() +
   labs(
-    title = "Average Management Practice Intensity by Region",
-    subtitle = "Mean scores on 0-5 scale with standard error bars",
-    x = "Region",
-    y = "Average Management Score (0-5)",
-    fill = "Management Practice"
+    title = "Intensidad Promedio de Prácticas de Gestión por Región",
+    subtitle = "Puntuaciones medias en escala 0-5 con barras de error estándar",
+    x = "Región",
+    y = "Puntuación Promedio de Gestión (0-5)",
+    fill = "Práctica de Gestión"
   ) +
   theme(
     axis.text.x = element_text(face = "bold"),
@@ -380,7 +388,7 @@ ggsave(here("figures","management_practices_comparison.png"), width = 14, height
 
 ```{r}
 #| label: fig-species-management-response
-#| fig-cap: "Species composition response to different management intensities, showing how plant communities vary across unmanaged to highly managed coastal dune areas."
+#| fig-cap: "Respuesta de la composición de especies a diferentes intensidades de gestión, mostrando cómo varían las comunidades vegetales entre áreas de dunas costeras no gestionadas y altamente gestionadas."
 #| echo: false
 #| eval: true
 #| output: true
@@ -400,7 +408,7 @@ species_management_data <- data.frame(
             mutate(matrix_row = 1:nrow(nmds_data)) %>%
             select(matrix_row, management_simple, management_intensity_raw),
             by = "matrix_row") %>%
-  filter(!is.na(management_simple) & management_simple != "Unknown")
+  filter(!is.na(management_simple) & management_simple != "Desconocido")
 
 # Calculate mean abundance for each species in each management category
 species_by_management <- species_management_data %>%
@@ -425,11 +433,11 @@ ggplot(species_by_management, aes(x = reorder(species, mean_abundance), y = mean
   coord_flip() +
   theme_minimal() +
   labs(
-    title = "Top Species by Management Intensity Category",
-    subtitle = "Species with highest mean abundance in each management category (0-5 scale)",
-    x = "Species",
-    y = "Mean Abundance (%)",
-    fill = "Management Intensity"
+    title = "Principales Especies por Categoría de Intensidad de Gestión",
+    subtitle = "Especies con mayor abundancia media en cada categoría de gestión (escala 0-5)",
+    x = "Especies",
+    y = "Abundancia Media (%)",
+    fill = "Intensidad de Gestión"
   ) +
   theme(
     legend.position = "none",
@@ -446,7 +454,7 @@ ggsave(here("figures","species_management_response.png"), width = 14, height = 1
 
 ```{r}
 #| label: tbl-management-summary
-#| tbl-cap: "Summary of management practices and their distribution across regions and plots."
+#| tbl-cap: "Resumen de prácticas de gestión y su distribución entre regiones y parcelas."
 #| echo: false
 #| eval: true
 #| output: true
@@ -464,7 +472,7 @@ management_summary <- nmds_data %>%
               values_fill = list(n_beaches = 0))
 
 knitr::kable(management_summary,
-             caption = "Distribution of plots and beaches by management intensity across regions (ordinal scale 0-5)",
+             caption = "Distribución de parcelas y playas por intensidad de gestión entre regiones (escala ordinal 0-5)",
              format = "markdown")
 ```
 
@@ -477,11 +485,11 @@ knitr::kable(management_summary,
 # Calculate and display stress interpretation
 stress_value <- round(nmds_result$stress, 3)
 stress_interpretation <- case_when(
-  stress_value < 0.1 ~ "Excellent representation",
-  stress_value < 0.15 ~ "Good representation", 
-  stress_value < 0.2 ~ "Acceptable representation",
-  stress_value < 0.25 ~ "Suspect representation",
-  TRUE ~ "Poor representation"
+  stress_value < 0.1 ~ "Representación excelente",
+  stress_value < 0.15 ~ "Representación buena", 
+  stress_value < 0.2 ~ "Representación aceptable",
+  stress_value < 0.25 ~ "Representación sospechosa",
+  TRUE ~ "Representación pobre"
 )
 
 management_dist <- table(nmds_data$management_simple, useNA = "ifany")
@@ -499,7 +507,7 @@ intensity_stats <- nmds_data %>%
 
 ```{r}
 #| label: fig-management-gradient-analysis
-#| fig-cap: "Analysis of vegetation composition along the management intensity gradient, showing how species respond to increasing management levels from 0 (unmanaged) to 5 (high quality management)."
+#| fig-cap: "Análisis de la composición de vegetación a lo largo del gradiente de intensidad de gestión, mostrando cómo las especies responden a niveles crecientes de gestión desde 0 (sin gestión) hasta 5 (gestión de alta calidad)."
 #| echo: false
 #| eval: true
 #| output: true
@@ -561,11 +569,11 @@ ggplot(gradient_data, aes(x = management_rounded, y = mean_abundance, color = sp
   facet_wrap(~ species, scales = "free_y", ncol = 3) +
   theme_minimal() +
   labs(
-    title = "Species Response Curves Along Management Intensity Gradient",
-    subtitle = "Species abundance response to ordinal management scale (0-5)",
-    x = "Management Intensity (0 = unmanaged, 5 = high quality management)",
-    y = "Mean Abundance (%)",
-    color = "Species"
+    title = "Curvas de Respuesta de Especies a lo largo del Gradiente de Intensidad de Gestión",
+    subtitle = "Respuesta de abundancia de especies a la escala ordinal de gestión (0-5)",
+    x = "Intensidad de Gestión (0 = sin gestión, 5 = gestión de alta calidad)",
+    y = "Abundancia Media (%)",
+    color = "Especies"
   ) +
   theme(
     legend.position = "none",
@@ -584,7 +592,7 @@ ggsave(here("figures","management_gradient_analysis.png"), width = 14, height = 
 
 ```{r}
 #| label: fig-management-correlation-matrix
-#| fig-cap: "Correlation matrix showing relationships between different management practice variables and overall management intensity."
+#| fig-cap: "Matriz de correlación mostrando relaciones entre diferentes variables de prácticas de gestión e intensidad general de gestión."
 #| echo: false
 #| eval: true
 #| output: true
@@ -597,12 +605,12 @@ management_cor_data <- nmds_data %>%
   select(managed_paths_score, rope_fences_score, mechanical_cleaning_score, 
          seasonal_services_score, fixed_services_score, management_intensity_raw) %>%
   rename(
-    "Managed Paths" = managed_paths_score,
-    "Rope Fences" = rope_fences_score,
-    "Mechanical Cleaning" = mechanical_cleaning_score,
-    "Seasonal Services" = seasonal_services_score,
-    "Fixed Services" = fixed_services_score,
-    "Overall Intensity" = management_intensity_raw
+    "Senderos Gestionados" = managed_paths_score,
+    "Vallado con Cuerdas" = rope_fences_score,
+    "Limpieza Mecánica" = mechanical_cleaning_score,
+    "Servicios Estacionales" = seasonal_services_score,
+    "Servicios Fijos" = fixed_services_score,
+    "Intensidad General" = management_intensity_raw
   ) %>%
   filter(complete.cases(.))
 
@@ -630,8 +638,8 @@ ggplot(cor_long, aes(x = var1, y = var2, fill = correlation)) +
     panel.grid = element_blank()
   ) +
   labs(
-    title = "Correlation Matrix of Management Practice Variables",
-    subtitle = "Pearson correlations between ordinal management scores (0-5)",
+    title = "Matriz de Correlación de Variables de Prácticas de Gestión",
+    subtitle = "Correlaciones de Pearson entre puntuaciones ordinales de gestión (0-5)",
     x = "", y = ""
   ) +
   coord_fixed()
