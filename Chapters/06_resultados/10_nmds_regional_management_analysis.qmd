@@ -68,17 +68,17 @@ combine_regional_management <- function(region_data, region_management, region_n
       
       # Create management categories based on average intensity
       management_category = case_when(
-        management_intensity_raw == 0 ~ "Unmanaged",
-        management_intensity_raw > 0 & management_intensity_raw <= 2 ~ "Low Management",
-        management_intensity_raw > 2 & management_intensity_raw <= 4 ~ "Moderate Management",
-        management_intensity_raw > 4 ~ "High Management",
-        TRUE ~ "Unknown"
+        management_intensity_raw == 0 ~ "Sin Gestión",
+        management_intensity_raw > 0 & management_intensity_raw <= 2 ~ "Gestión Baja",
+        management_intensity_raw > 2 & management_intensity_raw <= 4 ~ "Gestión Moderada",
+        management_intensity_raw > 4 ~ "Gestión Alta",
+        TRUE ~ "Desconocido"
       )
     ) %>%
     # Ensure factor ordering
     mutate(
       management_category = factor(management_category,
-                                  levels = c("Unmanaged", "Low Management", "Moderate Management", "High Management", "Unknown"))
+                                  levels = c("Sin Gestión", "Gestión Baja", "Gestión Moderada", "Gestión Alta", "Desconocido"))
     )
   
   return(combined_data)
@@ -122,10 +122,10 @@ run_regional_management_nmds <- function(region_data, region_management, region_
   
   # Define habitat type labels based on clusters
   habitat_labels <- c(
-    "1" = "Front-dune",
-    "2" = "Back-dune", 
-    "3" = "Mixed",
-    "4" = "Disturbed"
+    "1" = "Hábitat 1",
+    "2" = "Hábitat 2", 
+    "3" = "Hábitat 3",
+    "4" = "Hábitat 4"
   )
   
   # Map cluster numbers to habitat labels
@@ -159,12 +159,12 @@ run_regional_management_nmds <- function(region_data, region_management, region_
     # Customize appearance
     theme_minimal() +
     labs(
-      title = paste("NMDS: Management vs Vegetation -", region_name),
-      subtitle = paste("Stress =", round(nmds_result$stress, 3), "| Management Scale: 0-5"),
+      title = paste("NMDS: Gestión vs Vegetación -", region_name),
+      subtitle = paste("Estrés =", round(nmds_result$stress, 3), "| Escala de Gestión: 0-5"),
       x = "NMDS1",
       y = "NMDS2",
-      color = "Management Intensity",
-      shape = "Habitat Type"
+      color = "Intensidad de Gestión",
+      shape = "Tipo de Hábitat"
     ) +
     # Use color-blind friendly palette
     scale_color_brewer(palette = "Spectral", direction = -1) +
@@ -183,7 +183,13 @@ run_regional_management_nmds <- function(region_data, region_management, region_
       panel.grid.minor = element_blank(),
       plot.title = element_text(face = "bold", size = 11),
       plot.subtitle = element_text(size = 9)
-    )
+    ) +
+  # Specify legend titles explicitly
+  guides(
+    color = guide_legend(title = "Tipo de Gestión"),
+    shape = guide_legend(title = "Hábitat"),
+    linetype = guide_legend(title = "Intensidad de Gestión")
+  )
   
   # Create NMDS plot with management intensity as continuous gradient
   p_nmds_gradient <- ggplot(nmds_data %>% filter(!is.na(Management_Intensity)), 
@@ -197,12 +203,12 @@ run_regional_management_nmds <- function(region_data, region_management, region_
     # Customize appearance
     theme_minimal() +
     labs(
-      title = paste("NMDS: Management Gradient -", region_name),
-      subtitle = paste("Stress =", round(nmds_result$stress, 3), "| Continuous Scale"),
+      title = paste("NMDS: Gradiente de Gestión -", region_name),
+      subtitle = paste("Estrés =", round(nmds_result$stress, 3), "| Escala Continua"),
       x = "NMDS1",
       y = "NMDS2",
-      color = "Management\nIntensity (0-5)",
-      shape = "Habitat Type"
+      color = "Intensidad de\nGestión (0-5)",
+      shape = "Tipo de Hábitat"
     ) +
     # Use viridis color scale for continuous variable
     scale_color_viridis_c(option = "plasma", direction = -1) +
@@ -255,7 +261,7 @@ girona_analysis <- run_regional_management_nmds(
 # Calculate management distribution by region
 calculate_management_distribution <- function(analysis_data, region_name) {
   analysis_data$data %>%
-    filter(!is.na(Management_Category) & Management_Category != "Unknown") %>%
+    filter(!is.na(Management_Category) & Management_Category != "Desconocido") %>%
     group_by(Management_Category) %>%
     summarise(Count = n(), .groups = "drop") %>%
     mutate(
@@ -280,11 +286,11 @@ all_management_distribution <- all_management_distribution %>%
   mutate(Region = factor(Region, levels = PROVINCE_ORDER))
 ```
 
-This section presents a comprehensive regional analysis combining Non-metric Multidimensional Scaling (NMDS) of coastal dune vegetation with management practices for each of the three Catalan regions: Tarragona, Barcelona, and Girona. This integrated approach allows us to understand how management intensity (measured on a 0-5 ordinal scale) affects vegetation patterns within each biogeographical region.
+Esta sección presenta un análisis regional comprensivo que combina el Escalamiento Multidimensional No Métrico (NMDS) de vegetación de dunas costeras con las prácticas de gestión para cada una de las tres regiones catalanas: Tarragona, Barcelona y Girona. Este enfoque integrado nos permite entender cómo la intensidad de gestión (medida en una escala ordinal de 0-5) afecta los patrones de vegetación dentro de cada región biogeográfica.
 
 ```{r}
 #| label: fig-regional-management-categories
-#| fig-cap: "NMDS plots showing vegetation composition patterns overlaid with management intensity categories for each region. Points represent individual plots colored by management category and shaped by habitat type."
+#| fig-cap: "Gráficos NMDS mostrando patrones de composición de vegetación superpuestos con categorías de intensidad de gestión para cada región. Los puntos representan parcelas individuales coloreadas por categoría de gestión y con formas según el tipo de hábitat."
 #| echo: false
 #| eval: true
 #| output: true
@@ -298,8 +304,8 @@ combined_mgmt_plot <- tarragona_analysis$plot_management /
                      girona_analysis$plot_management +
   plot_layout(ncol = 1, heights = c(1, 1, 1)) +
   plot_annotation(
-    title = "Regional NMDS Analysis: Vegetation Response to Management Categories",
-    subtitle = "Management intensity based on ordinal scores (0-5) for paths, fences, cleaning, and services",
+    title = "Análisis NMDS Regional: Respuesta de la Vegetación a Categorías de Gestión",
+    subtitle = "Intensidad de gestión basada en puntuaciones ordinales (0-5) para senderos, vallas, limpieza y servicios",
     theme = theme(
       plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
       plot.subtitle = element_text(hjust = 0.5, size = 12)
@@ -314,7 +320,7 @@ ggsave(here("figures","nmds_regional_management_categories.png"), combined_mgmt_
 
 ```{r}
 #| label: fig-regional-management-gradient
-#| fig-cap: "NMDS plots showing vegetation composition with management intensity as a continuous gradient (0-5 scale) for each region. Color intensity represents the level of management from unmanaged (dark) to highly managed (bright)."
+#| fig-cap: "Gráficos NMDS mostrando la composición de vegetación con la intensidad de gestión como un gradiente continuo (escala 0-5) para cada región. La intensidad del color representa el nivel de gestión desde no gestionado (oscuro) hasta altamente gestionado (brillante)."
 #| echo: false
 #| eval: true
 #| output: true
@@ -328,8 +334,8 @@ combined_gradient_plot <- tarragona_analysis$plot_gradient /
                          girona_analysis$plot_gradient +
   plot_layout(ncol = 1, heights = c(1, 1, 1)) +
   plot_annotation(
-    title = "Regional NMDS Analysis: Vegetation Response to Management Intensity Gradient",
-    subtitle = "Continuous management scale showing cumulative effect of all management practices",
+    title = "Análisis NMDS Regional: Respuesta de la Vegetación al Gradiente de Intensidad de Gestión",
+    subtitle = "Escala continua de gestión mostrando el efecto acumulativo de todas las prácticas de gestión",
     theme = theme(
       plot.title = element_text(face = "bold", hjust = 0.5, size = 14),
       plot.subtitle = element_text(hjust = 0.5, size = 12)
@@ -344,7 +350,7 @@ ggsave(here("figures","nmds_regional_management_gradient.png"), combined_gradien
 
 ```{r}
 #| label: fig-regional-management-distribution
-#| fig-cap: "Distribution of management intensity categories within each region, showing the relative proportion of unmanaged, low, moderate, and high management areas across Tarragona, Barcelona, and Girona."
+#| fig-cap: "Distribución de categorías de intensidad de gestión dentro de cada región, mostrando la proporción relativa de áreas sin gestión, con gestión baja, moderada y alta en Tarragona, Barcelona y Girona."
 #| echo: false
 #| eval: true
 #| output: true
@@ -361,11 +367,11 @@ all_management_distribution %>%
             color = "white", fontface = "bold", size = 3) +
   theme_minimal() +
   labs(
-    title = "Distribution of Management Intensity Categories by Region",
-    subtitle = "Based on ordinal management scores (0-5) across multiple practices",
-    x = "Region",
-    y = "Percentage of Plots",
-    fill = "Management Category"
+    title = "Distribución de Categorías de Intensidad de Gestión por Región",
+    subtitle = "Basado en puntuaciones ordinales de gestión (0-5) en múltiples prácticas",
+    x = "Región",
+    y = "Porcentaje de Parcelas",
+    fill = "Categoría de Gestión"
   ) +
   # Apply custom theme
   theme(
@@ -384,7 +390,7 @@ ggsave(here("figures","regional_management_distribution.png"), width = 12, heigh
 
 ```{r}
 #| label: fig-management-practices-by-region
-#| fig-cap: "Comparison of individual management practice scores across regions, showing the average intensity of managed paths, rope fences, mechanical cleaning, seasonal services, and fixed services for each region."
+#| fig-cap: "Comparación de puntuaciones de prácticas de gestión individuales entre regiones, mostrando la intensidad promedio de senderos gestionados, vallados con cuerdas, limpieza mecánica, servicios estacionales y servicios fijos para cada región."
 #| echo: false
 #| eval: true
 #| output: true
@@ -409,9 +415,9 @@ mgmt_practices_regional <- all_regional_data %>%
                values_to = "score") %>%
   mutate(
     practice = case_when(
-      practice == "Managed_Paths" ~ "Managed Paths",
-      practice == "Rope_Fences" ~ "Rope Fences", 
-      practice == "Mechanical_Cleaning" ~ "Mechanical Cleaning"
+      practice == "Managed_Paths" ~ "Senderos Gestionados",
+      practice == "Rope_Fences" ~ "Vallado con Cuerdas", 
+      practice == "Mechanical_Cleaning" ~ "Limpieza Mecánica"
     )
   ) %>%
   group_by(Region, practice) %>%
@@ -432,11 +438,11 @@ p1 <- ggplot(mgmt_practices_regional, aes(x = Region, y = mean_score, fill = pra
             vjust = -0.5, fontface = "bold", size = 3) +
   theme_minimal() +
   labs(
-    title = "Average Management Practice Intensity by Region",
-    subtitle = "Mean scores with standard error bars (0-5 scale)",
-    x = "Region",
-    y = "Average Management Score (0-5)",
-    fill = "Management Practice"
+    title = "Intensidad Promedio de Prácticas de Gestión por Región",
+    subtitle = "Puntuaciones medias con barras de error estándar (escala 0-5)",
+    x = "Región",
+    y = "Puntuación Promedio de Gestión (0-5)",
+    fill = "Práctica de Gestión"
   ) +
   theme(
     axis.text.x = element_text(face = "bold"),
@@ -457,11 +463,11 @@ p2 <- all_regional_data %>%
   geom_jitter(width = 0.2, alpha = 0.5) +
   theme_minimal() +
   labs(
-    title = "Distribution of Overall Management Intensity by Region",
-    subtitle = "Boxplots showing median, quartiles, and individual plot values",
-    x = "Region",
-    y = "Overall Management Intensity (0-5)",
-    fill = "Region"
+    title = "Distribución de Intensidad General de Gestión por Región",
+    subtitle = "Diagramas de caja mostrando mediana, cuartiles y valores de parcelas individuales",
+    x = "Región",
+    y = "Intensidad General de Gestión (0-5)",
+    fill = "Región"
   ) +
   theme(
     axis.text.x = element_text(face = "bold"),
@@ -485,7 +491,7 @@ ggsave(here("figures","management_practices_by_region.png"), combined_practices_
 
 ```{r}
 #| label: fig-habitat-management-interaction
-#| fig-cap: "Cross-tabulation showing the relationship between habitat types and management intensity categories across all regions, revealing how management practices interact with natural habitat classification."
+#| fig-cap: "Tabulación cruzada mostrando la relación entre tipos de hábitat y categorías de intensidad de gestión en todas las regiones, revelando cómo las prácticas de gestión interactúan con la clasificación natural de hábitats."
 #| echo: false
 #| eval: true
 #| output: true
@@ -495,7 +501,7 @@ ggsave(here("figures","management_practices_by_region.png"), combined_practices_
 
 # Create habitat-management interaction analysis
 habitat_management_interaction <- all_regional_data %>%
-  filter(!is.na(Management_Category) & Management_Category != "Unknown" & !is.na(Habitat)) %>%
+  filter(!is.na(Management_Category) & Management_Category != "Desconocido" & !is.na(Habitat)) %>%
   group_by(Region, Habitat, Management_Category) %>%
   summarise(count = n(), .groups = "drop") %>%
   group_by(Region, Habitat) %>%
@@ -511,11 +517,11 @@ ggplot(habitat_management_interaction, aes(x = Habitat, y = percentage, fill = M
   facet_wrap(~ Region, ncol = 3) +
   theme_minimal() +
   labs(
-    title = "Habitat Type vs Management Intensity Interaction by Region",
-    subtitle = "Percentage distribution showing how management practices vary across habitat types",
-    x = "Habitat Type",
-    y = "Percentage within Habitat",
-    fill = "Management Category"
+    title = "Interacción Tipo de Hábitat vs Intensidad de Gestión por Región",
+    subtitle = "Distribución porcentual mostrando cómo varían las prácticas de gestión entre tipos de hábitat",
+    x = "Tipo de Hábitat",
+    y = "Porcentaje dentro del Hábitat",
+    fill = "Categoría de Gestión"
   ) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, face = "bold"),
@@ -533,7 +539,7 @@ ggsave(here("figures","habitat_management_interaction.png"), width = 12, height 
 
 ```{r}
 #| label: tbl-regional-management-summary
-#| tbl-cap: "Summary statistics of management practices and habitat distribution across regions."
+#| tbl-cap: "Estadísticas resumen de prácticas de gestión y distribución de hábitats entre regiones."
 #| echo: false
 #| eval: true
 #| output: true
@@ -544,17 +550,17 @@ regional_summary <- all_regional_data %>%
   group_by(Region) %>%
   summarise(
     n_beaches = n_distinct(Beach),
-    pct_unmanaged = round(sum(Management_Category == "Unmanaged", na.rm = TRUE) / n() * 100, 1),
-    pct_low_mgmt = round(sum(Management_Category == "Low Management", na.rm = TRUE) / n() * 100, 1),
-    pct_mod_mgmt = round(sum(Management_Category == "Moderate Management", na.rm = TRUE) / n() * 100, 1),
-    pct_high_mgmt = round(sum(Management_Category == "High Management", na.rm = TRUE) / n() * 100, 1),
+    pct_unmanaged = round(sum(Management_Category == "Sin Gestión", na.rm = TRUE) / n() * 100, 1),
+    pct_low_mgmt = round(sum(Management_Category == "Gestión Baja", na.rm = TRUE) / n() * 100, 1),
+    pct_mod_mgmt = round(sum(Management_Category == "Gestión Moderada", na.rm = TRUE) / n() * 100, 1),
+    pct_high_mgmt = round(sum(Management_Category == "Gestión Alta", na.rm = TRUE) / n() * 100, 1),
     .groups = "drop"
   )
 
 knitr::kable(regional_summary,
-             caption = "Regional summary of management practices and intensity distribution",
+             caption = "Resumen regional de prácticas de gestión y distribución de intensidad",
              format = "markdown",
-             col.names = c("Region", "Beaches", "% Unmanaged", "% Low Mgmt",
-                          "% Moderate Mgmt", "% High Mgmt"))
+             col.names = c("Región", "Playas", "% Sin Gestión", "% Gestión Baja",
+                          "% Gestión Moderada", "% Gestión Alta"))
 ```
 
