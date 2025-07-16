@@ -134,6 +134,7 @@ bb_to_percentage <- function(bb_values) {
 LAND_COVER_TRANSLATIONS <- c(
   # Vegetation types - Tipos de vegetación
   "forest" = "Bosque",
+  "forests" = "Bosques",
   "scrubland" = "Matorral",
   "grassland" = "Pastizal",
   "herbaceous" = "Herbáceas",
@@ -156,6 +157,7 @@ LAND_COVER_TRANSLATIONS <- c(
   "infrastructure" = "Infraestructura",
   "transport" = "Transporte",
   "roads" = "Carreteras",
+  "communication routes" = "Vías de Comunicación",
   "communication_routes" = "Vías de Comunicación",
   
   # Water and coastal features - Agua y características costeras
@@ -163,6 +165,7 @@ LAND_COVER_TRANSLATIONS <- c(
   "freshwater" = "Agua Dulce",
   "saltwater" = "Agua Salada",
   "wetland" = "Humedal",
+  "lagoon and salt marshes" = "Lagunas y Marismas",
   "lagoon_and_salt_marshes" = "Lagunas y Marismas",
   "beach" = "Playa",
   "sand" = "Arena",
@@ -181,6 +184,7 @@ LAND_COVER_TRANSLATIONS <- c(
   # Natural features - Características naturales
   "rock" = "Roca",
   "bare soil" = "Suelo Desnudo",
+  "forestry bare soil" = "Suelo Desnudo Forestal",
   "cliff" = "Acantilado",
   "slope" = "Ladera",
   
