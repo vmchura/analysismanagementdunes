@@ -143,28 +143,50 @@ prepare_mgmt_matrix <- function(management_region_data, beach_ids) {
   mgmt_matrix_final <- mgmt_matrix %>%
     select(id_beach, all_of(valid_vars))
   
-  # Clean up column names for better readability
+  # Clean up column names for better readability using global translation dictionary
   clean_names <- valid_vars
   
   # Apply name cleaning only if the original names match expected patterns
   name_mappings <- c(
-    "surface area occupied by seasonal services and amenities on or less than 5 m from the dunes" = "Servicios Estacionales",
-    "surface area of parking or other fixed services on or less than 5 m from the dunes" = "Servicios Fijos",
+    "surface area occupied by seasonal services and amenities on or less than 5 m from the dunes" = "Servicios Estacionales (≤5m de Dunas)",
+    "surface area of parking or other fixed services on or less than 5 m from the dunes" = "Servicios Fijos (≤5m de Dunas)",
     "managed paths" = "Senderos Gestionados",
     "rope fences" = "Vallado con Cuerdas",
-    "mechanical cleaning" = "Limpieza Mecánica"
+    "mechanical cleaning" = "Limpieza Mecánica",
+    "protection of the system and the immediate environment" = "Protección del Sistema",
+    "degree of protection according to the iucn classification" = "Protección IUCN"
   )
   
+  # Apply translations for known variables
   for(old_name in names(name_mappings)) {
     if(old_name %in% clean_names) {
       clean_names[clean_names == old_name] <- name_mappings[old_name]
     }
   }
   
-  # General cleaning
-  clean_names <- clean_names %>%
-    str_replace_all("_", " ") %>%
-    tools::toTitleCase()
+  # For any remaining untranslated variables, use the global translation system
+  # but only if they haven't been translated already
+  remaining_vars <- clean_names[!clean_names %in% name_mappings]
+  if(length(remaining_vars) > 0) {
+    # Check if any variables are still in English (contain common English words)
+    english_pattern <- "(surface|area|occupied|seasonal|services|amenities|parking|fixed|managed|paths|rope|fences|mechanical|cleaning|protection|system|environment|degree|classification)"
+    english_vars <- remaining_vars[grepl(english_pattern, remaining_vars, ignore.case = TRUE)]
+    
+    if(length(english_vars) > 0) {
+      # Try to translate English variables using the global system
+      tryCatch({
+        translated_english <- translate_labels(english_vars, debug = FALSE)
+        # Replace the English variables with their translations
+        for(i in seq_along(english_vars)) {
+          clean_names[clean_names == english_vars[i]] <- translated_english[i]
+        }
+      }, error = function(e) {
+        # If translation fails, use cleaned version
+        warning(paste("Could not translate some management variables:", paste(english_vars, collapse = ", ")))
+        clean_names[clean_names %in% english_vars] <- tools::toTitleCase(gsub("_", " ", english_vars))
+      })
+    }
+  }
   
   # Update column names
   names(mgmt_matrix_final)[names(mgmt_matrix_final) %in% valid_vars] <- clean_names
@@ -514,7 +536,7 @@ if(!is.null(combinado_cca_mgmt)) {
   print(p_combinado_mgmt)
   
   # Save the plot
-  ggsave(here("figures","cca_combinado_management_analysis.png"), p_combinado_mgmt, width = 12, height = 10)
+  ggsave(here("figures","cca_combined_management_analysis.png"), p_combinado_mgmt, width = 12, height = 10)
 } else {
   cat("No se pudo realizar el análisis CCA combinado con variables de gestión.\n")
   cat("Posibles razones:\n")

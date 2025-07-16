@@ -199,14 +199,65 @@ LAND_COVER_TRANSLATIONS <- c(
 MANAGEMENT_TRANSLATIONS <- c(
   # Management practices - Prácticas de gestión
   "managed_paths" = "Senderos Gestionados",
+  "managed paths" = "Senderos Gestionados",
   "rope_fences" = "Vallado con Cuerdas",
+  "rope fences" = "Vallado con Cuerdas",
   "mechanical_cleaning" = "Limpieza Mecánica",
+  "mechanical cleaning" = "Limpieza Mecánica",
   "seasonal_services" = "Servicios Estacionales",
+  "seasonal services" = "Servicios Estacionales",
   "fixed_services" = "Servicios Fijos",
+  "fixed services" = "Servicios Fijos",
   "surface_area_occupied_by_seasonal_services_and_amenities_on_or_less_than_5_m_from_the_dunes" = "Servicios Estacionales (≤5m de Dunas)",
+  "surface area occupied by seasonal services and amenities on or less than 5 m from the dunes" = "Servicios Estacionales (≤5m de Dunas)",
   "surface_area_of_parking_or_other_fixed_services_on_or_less_than_5_m_from_the_dunes" = "Servicios Fijos (≤5m de Dunas)",
+  "surface area of parking or other fixed services on or less than 5 m from the dunes" = "Servicios Fijos (≤5m de Dunas)",
   "protection_of_the_system_and_the_immediate_environment" = "Protección del Sistema",
+  "protection of the system and the immediate environment" = "Protección del Sistema",
   "degree_of_protection_according_to_the_iucn_classification" = "Protección IUCN",
+  "degree of protection according to the iucn classification" = "Protección IUCN",
+  
+  # Spanish terms that should remain unchanged (identity mapping)
+  "Senderos Gestionados" = "Senderos Gestionados",
+  "Vallado con Cuerdas" = "Vallado con Cuerdas", 
+  "Limpieza Mecánica" = "Limpieza Mecánica",
+  "Servicios Estacionales (≤5m de Dunas)" = "Servicios Estacionales (≤5m de Dunas)",
+  "Servicios Fijos (≤5m de Dunas)" = "Servicios Fijos (≤5m de Dunas)",
+  "Protección del Sistema" = "Protección del Sistema",
+  "Protección IUCN" = "Protección IUCN",
+  "Servicios Estacionales" = "Servicios Estacionales",
+  "Servicios Fijos" = "Servicios Fijos",
+  
+  # Additional management variables that might appear
+  "visitor_management" = "Gestión de Visitantes",
+  "visitor management" = "Gestión de Visitantes",
+  "access_control" = "Control de Acceso",
+  "access control" = "Control de Acceso",
+  "infrastructure_management" = "Gestión de Infraestructura",
+  "infrastructure management" = "Gestión de Infraestructura",
+  "beach_cleaning" = "Limpieza de Playa",
+  "beach cleaning" = "Limpieza de Playa",
+  "vegetation_management" = "Gestión de Vegetación",
+  "vegetation management" = "Gestión de Vegetación",
+  "erosion_control" = "Control de Erosión",
+  "erosion control" = "Control de Erosión",
+  "restoration_activities" = "Actividades de Restauración",
+  "restoration activities" = "Actividades de Restauración",
+  "monitoring_programs" = "Programas de Monitoreo",
+  "monitoring programs" = "Programas de Monitoreo",
+  "education_programs" = "Programas Educativos",
+  "education programs" = "Programas Educativos",
+  "signage" = "Señalización",
+  "interpretive_signs" = "Señales Interpretativas",
+  "interpretive signs" = "Señales Interpretativas",
+  "barriers" = "Barreras",
+  "fencing" = "Vallado",
+  "boardwalks" = "Pasarelas",
+  "pathways" = "Senderos",
+  "designated_areas" = "Áreas Designadas",
+  "designated areas" = "Áreas Designadas",
+  "restricted_areas" = "Áreas Restringidas",
+  "restricted areas" = "Áreas Restringidas",
   
   # Management categories - Categorías de gestión
   "Unmanaged" = "Sin Gestión",
@@ -227,7 +278,10 @@ MANAGEMENT_TRANSLATIONS <- c(
   "Management Practice" = "Práctica de Gestión",
   "Management Practices" = "Prácticas de Gestión",
   "Management Score" = "Puntuación de Gestión",
-  "Overall Intensity" = "Intensidad General"
+  "Overall Intensity" = "Intensidad General",
+  "Variable de Gestión" = "Variable de Gestión",
+  "Variables de Gestión" = "Variables de Gestión",
+  "Variables descriptivas para CCA" = "Variables Descriptivas para CCA"
 )
 
 # Diccionario para términos de análisis (analysis terms)
