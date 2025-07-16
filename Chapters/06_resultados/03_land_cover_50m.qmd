@@ -71,7 +71,7 @@ names(land_cover_colors) <- unique(avg_land_cover$cover_type_spanish)
 
 ## Cobertura del Suelo en 50m de las Playas
 
-Análisis de la composición de cobertura del suelo a 50m alrededor de cada playa.
+Análisis de la composición de cobertura del suelo a 50m de cada playa.
 
 ```{r}
 #| label: fig-cobertura-suelo-50m
