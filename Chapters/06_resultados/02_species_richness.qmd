@@ -21,6 +21,10 @@ load(here("data","all_observations_split.RData"))
 load(here("data","all_land_cover_data.RData"))
 ```
 
+## Riqueza de Especies por Región
+
+La riqueza de especies se calcula como el número total de especies presentes en cada playa. Este análisis compara la biodiversidad entre las tres regiones costeras catalanas.
+
 ```{r}
 #| label: fig-riqueza-especies
 #| fig-cap: "Distribución de la riqueza de especies a nivel de playa en las tres regiones costeras, mostrando variaciones de biodiversidad entre playas de Tarragona, Barcelona y Girona"
@@ -73,3 +77,5 @@ ggplot(all_richness, aes(x = region, y = richness, fill = region)) +
 # Guardar el gráfico
 ggsave(here("figures","species_richness_by_region.png"), width = 8, height = 6)
 ```
+
+La @fig-riqueza-especies muestra diferencias en la riqueza de especies entre regiones. Tarragona presenta valores entre 15 y 55 especies por playa (mediana: 30 especies). Barcelona muestra 30-40 especies por playa. Girona presenta la menor riqueza, con valores generalmente inferiores a 35 especies por playa (mediana: 25 especies).
