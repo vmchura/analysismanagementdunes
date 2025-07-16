@@ -1,6 +1,6 @@
 ### División Regional de Datos {#sec-regional-split}
 
-División del conjunto de datos por zonas biogeográficas (Girona, Barcelona y Tarragona) basándose en rangos de identificadores de playa para análisis regionales comparativos.
+División del conjunto de datos por zonas biogeográficas (Girona, Barcelona y Tarragona) basándose en rangos de identificadores de playa para análisis regionales comparativos. Esta división permite examinar patrones de vegetación dunar específicos de cada región costera catalana.
 
 ```{r}
 #| label: load-packages-chapter2
@@ -102,4 +102,4 @@ save(beaches_by_region, file = here("data","all_observations_split.RData"))
 cat("Conjuntos de datos regionales guardados en 'data/all_observations_split.RData'\n")
 ```
 
-Los conjuntos de datos regionales resultantes se guardan para análisis posteriores de variaciones regionales en vegetación dunar y gestión.
+Los conjuntos de datos regionales resultantes se guardan para análisis posteriores de variaciones regionales en vegetación dunar y gestión. Como se muestra en la @fig-regional-distribution, la distribución de observaciones no es uniforme entre las tres regiones: Tarragona presenta el mayor número de observaciones (126), seguida por Girona (118), mientras que Barcelona cuenta con significativamente menos observaciones (34). Esta distribución refleja la disponibilidad de datos relevados en cada región costera.
