@@ -128,6 +128,10 @@ richness_vs_land <- richness_vs_land %>%
   mutate(distance_spanish = ifelse(distance == "50m", "50m", "100m"))
 ```
 
+## Riqueza de Especies vs Cobertura del Suelo
+
+Relación entre la riqueza de especies y los tipos de cobertura del suelo a 50m y 100m de las playas.
+
 ```{r}
 #| label: fig-riqueza-vs-cobertura-suelo
 #| fig-cap: "Relación entre la riqueza de especies y diferentes tipos de cobertura del suelo a distancias de 50m y 100m, comparando cómo el entorno circundante a diferentes escalas impacta la biodiversidad dunar"
@@ -149,7 +153,7 @@ ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
   facet_grid(distance_spanish ~ cover_type_spanish) +
   theme_minimal() +
   labs(
-    title = "Riqueza de Especies vs. Tipos de Cobertura del Suelo a Diferentes Distancias",
+    title = "Riqueza de Especies vs Tipos de Cobertura del Suelo\na Diferentes Distancias",
     x = "Porcentaje de Cobertura del Suelo (%)",
     y = "Número de Especies Presentes",
     color = "Región"
@@ -164,9 +168,13 @@ ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
     strip.text = element_text(face = "bold"),
     axis.text.x = element_text(angle = 0),
     panel.spacing = unit(1, "lines"),
-    panel.border = element_rect(color = "gray80", fill = NA)
+    panel.border = element_rect(color = "gray80", fill = NA),
+    plot.title = element_text(hjust = 0.5, size = 12)
   )
 
 # Guardar el gráfico
 ggsave(here("figures","richness_vs_land_cover_combined.png"), width = 15, height = 8)
 ```
+
+La @fig-riqueza-vs-cobertura-suelo muestra las relaciones entre riqueza y cobertura del suelo. Se visualiza que en el tipo de cobertura de suelo de Urbano, Bosques, Cultivos y Pastizal, la región de Girona tiene menos diversidad vegetal que la región de Tarragona.
+Las tendencias son similares a 50m y 100m, con variabilidad regional en las respuestas.
