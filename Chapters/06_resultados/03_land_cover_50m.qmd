@@ -69,6 +69,10 @@ land_cover_colors <- colorRampPalette(brewer.pal(8, "Set3"))(length(unique(avg_l
 names(land_cover_colors) <- unique(avg_land_cover$cover_type_spanish)
 ```
 
+## Cobertura del Suelo en 50m de las Playas
+
+Análisis de la composición de cobertura del suelo a 50m alrededor de cada playa.
+
 ```{r}
 #| label: fig-cobertura-suelo-50m
 #| fig-cap: "Distribución de tipos de cobertura del suelo dentro de 50m de las playas en las tres regiones costeras, mostrando el contexto ambiental de la vegetación dunar"
@@ -82,14 +86,19 @@ ggplot(avg_land_cover %>% filter(distance == "50m"),
   geom_bar(stat = "identity", position = "stack") +
   theme_minimal() +
   labs(
-    title = "Composición de Cobertura del Suelo dentro de 50m de las Playas",
+    title = "Composición de Cobertura del Suelo\ndentro de 50m de las Playas",
     x = "Región",
     y = "Porcentaje (%)",
     fill = "Tipo de Cobertura del Suelo"
   ) +
   scale_fill_manual(values = land_cover_colors) +
-  theme(legend.position = "right")
+  theme(legend.position = "right",
+        plot.title = element_text(hjust = 0.5, size = 12))
 
 # Guardar el gráfico
 ggsave(here("figures","land_cover_50m_by_region.png"), width = 10, height = 6)
 ```
+
+La @fig-cobertura-suelo-50m muestra la composición por región. Tarragona: urbano (45%), matorral (25%). Barcelona: urbano (60%), pastizal (20%). Girona: urbano (40%), matorral (25%).
+
+Otros tipos de cobertura representan menos del 15% en cada región.
