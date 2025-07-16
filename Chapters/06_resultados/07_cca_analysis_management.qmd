@@ -26,26 +26,26 @@ load(here("data","all_management_data.RData"))
 
 ```
 
-#### CCA Analysis with Management Variables per Region and Species
+#### Análisis CCA con Variables de Gestión por Región y Especies
 
-This chapter presents Canonical Correspondence Analysis (CCA) examining the relationships between coastal dune vegetation composition and beach management practices across the three regions Girona, Barcelona, and Tarragona.
+Este capítulo presenta el Análisis de Correspondencia Canónica (CCA) examinando las relaciones entre la composición de vegetación de dunas costeras y las prácticas de gestión de playas en las tres regiones: Girona, Barcelona y Tarragona.
 
-**Key aspects of this analysis:**
+**Aspectos clave de este análisis:**
 
-1. **Management Variables**: Ordinal scale variables (0-5) representing management quality:
-   - 0 = No management / Poor quality
-   - 5 = Good quality management
+1. **Variables de Gestión**: Variables de escala ordinal (0-5) que representan la calidad de gestión:
+   - 0 = Sin gestión / Calidad pobre
+   - 5 = Gestión de buena calidad
 
-2. **Regional Analysis**: Separate analysis for each region to understand local management effectiveness
+2. **Análisis Regional**: Análisis separado para cada región para entender la efectividad de gestión local
 
-3. **Species Response**: How different plant species respond to various management interventions
+3. **Respuesta de Especies**: Cómo diferentes especies de plantas responden a varias intervenciones de gestión
 
-**Management Variables Analyzed:**
-- Managed paths (controlling trampling)
-- Rope fences (protecting vegetation)
-- Mechanical cleaning (beach maintenance)
-- Seasonal services impact
-- Fixed infrastructure impact
+**Variables de Gestión Analizadas:**
+- Senderos gestionados (control del pisoteo)
+- Vallados con cuerdas (protección de vegetación)
+- Limpieza mecánica (mantenimiento de playa)
+- Impacto de servicios estacionales
+- Impacto de infraestructura fija
 
 ```{r}
 # --- Function Definitions for CCA with Management Variables ---
@@ -148,11 +148,11 @@ prepare_mgmt_matrix <- function(management_region_data, beach_ids) {
   
   # Apply name cleaning only if the original names match expected patterns
   name_mappings <- c(
-    "surface area occupied by seasonal services and amenities on or less than 5 m from the dunes" = "Seasonal Services",
-    "surface area of parking or other fixed services on or less than 5 m from the dunes" = "Fixed Services",
-    "managed paths" = "Managed Paths",
-    "rope fences" = "Rope Fences",
-    "mechanical cleaning" = "Mechanical Cleaning"
+    "surface area occupied by seasonal services and amenities on or less than 5 m from the dunes" = "Servicios Estacionales",
+    "surface area of parking or other fixed services on or less than 5 m from the dunes" = "Servicios Fijos",
+    "managed paths" = "Senderos Gestionados",
+    "rope fences" = "Vallado con Cuerdas",
+    "mechanical cleaning" = "Limpieza Mecánica"
   )
   
   for(old_name in names(name_mappings)) {
@@ -296,9 +296,9 @@ if("Tarragona" %in% names(management_data) && "Tarragona" %in% names(beaches_by_
   )
 }
 
-# Combined analysis
+# Análisis combinado
 
-# Prepare combined datasets
+# Prepare combinado datasets
 all_species_mgmt_data <- bind_rows(
   beaches_by_region$Girona %>% mutate(region = "Girona"),
   beaches_by_region$Barcelona %>% mutate(region = "Barcelona"),
@@ -311,7 +311,7 @@ all_mgmt_data <- bind_rows(
   management_data$Tarragona %>% mutate(region = "Tarragona")
 )
 
-cca_mgmt_results$combined <- run_cca_mgmt_analysis(all_species_mgmt_data, all_mgmt_data, "Combined")
+cca_mgmt_results$combinado <- run_cca_mgmt_analysis(all_species_mgmt_data, all_mgmt_data, "Combinado")
 
 # Filter out NULL results for summary
 valid_results <- cca_mgmt_results[!sapply(cca_mgmt_results, is.null)]
@@ -320,7 +320,7 @@ valid_results <- cca_mgmt_results[!sapply(cca_mgmt_results, is.null)]
 girona_cca_mgmt <- cca_mgmt_results$girona
 barcelona_cca_mgmt <- cca_mgmt_results$barcelona
 tarragona_cca_mgmt <- cca_mgmt_results$tarragona
-combined_cca_mgmt <- cca_mgmt_results$combined
+combinado_cca_mgmt <- cca_mgmt_results$combinado
 ```
 
 ```{r}
@@ -398,8 +398,8 @@ create_cca_mgmt_biplot <- function(cca_analysis, title_suffix = "") {
     # Customize appearance
     theme_minimal() +
     labs(
-      title = paste("CCA Biplot - Management Variables:", cca_analysis$region, title_suffix),
-      subtitle = paste("Explained variance:", round(cca_analysis$explained_variance, 1), "% | Management scale: 0 (none) to 5 (good)"),
+      title = paste("Biplot CCA - Variables de Gestión:", cca_analysis$region, title_suffix),
+      subtitle = paste("Varianza explicada:", round(cca_analysis$explained_variance, 1), "% | Escala de gestión: 0 (ninguna) a 5 (buena)"),
       x = paste("CCA1 (", round(100 * eigenvals(cca_result)[1] / sum(eigenvals(cca_result)), 1), "%)", sep = ""),
       y = paste("CCA2 (", round(100 * eigenvals(cca_result)[2] / sum(eigenvals(cca_result)), 1), "%)", sep = "")
     ) +
@@ -478,11 +478,11 @@ create_mgmt_importance_plot <- function(cca_results) {
     coord_flip() +
     scale_fill_brewer(type = "qual", palette = "Set2") +
     labs(
-      title = "Management Variable Importance in CCA Analysis",
-      subtitle = "Length of CCA biplot arrows indicates importance",
-      x = "Management Variables",
-      y = "Importance (Arrow Length)",
-      fill = "Region"
+      title = "Importancia de Variables de Gestión en el Análisis CCA",
+      subtitle = "La longitud de las flechas del biplot CCA indica importancia",
+      x = "Variables de Gestión",
+      y = "Importancia (Longitud de Flecha)",
+      fill = "Región"
     ) +
     theme_minimal() +
     theme(
@@ -499,8 +499,8 @@ create_mgmt_importance_plot <- function(cca_results) {
 ```
 
 ```{r}
-#| label: fig-cca-mgmt-combined
-#| fig-cap: "CCA biplot showing relationships between coastal dune vegetation and management practices across all regions. Blue points represent beaches, red arrows show management gradients (0=no management, 5=good management), green points indicate key species."
+#| label: fig-cca-mgmt-combinado
+#| fig-cap: "Biplot CCA mostrando relaciones entre vegetación de dunas costeras y prácticas de gestión en todas las regiones. Los puntos azules representan playas, las flechas rojas muestran gradientes de gestión (0=sin gestión, 5=buena gestión), los puntos verdes indican especies clave."
 #| echo: false
 #| eval: true
 #| output: true
@@ -508,25 +508,25 @@ create_mgmt_importance_plot <- function(cca_results) {
 #| fig-height: 15
 #| fig-pos: "H"
 
-# Create and display the combined CCA biplot with management variables
-if(!is.null(combined_cca_mgmt)) {
-  p_combined_mgmt <- create_cca_mgmt_biplot(combined_cca_mgmt, "- All Regions")
-  print(p_combined_mgmt)
+# Create and display the combinado CCA biplot with management variables
+if(!is.null(combinado_cca_mgmt)) {
+  p_combinado_mgmt <- create_cca_mgmt_biplot(combinado_cca_mgmt, "- Todas las Regiones")
+  print(p_combinado_mgmt)
   
   # Save the plot
-  ggsave(here("figures","cca_combined_management_analysis.png"), p_combined_mgmt, width = 12, height = 10)
+  ggsave(here("figures","cca_combinado_management_analysis.png"), p_combinado_mgmt, width = 12, height = 10)
 } else {
-  cat("Combined CCA analysis with management variables could not be performed.\n")
-  cat("Possible reasons:\n")
-  cat("- Insufficient matching data between species and management datasets\n")
-  cat("- No management variables with sufficient variation\n")
-  cat("- Technical issues with data preparation\n")
+  cat("No se pudo realizar el análisis CCA combinado con variables de gestión.\n")
+  cat("Posibles razones:\n")
+  cat("- Datos insuficientes coincidentes entre conjuntos de datos de especies y gestión\n")
+  cat("- No hay variables de gestión con variación suficiente\n")
+  cat("- Problemas técnicos con la preparación de datos\n")
 }
 ```
 
 ```{r}
 #| label: fig-cca-mgmt-regional
-#| fig-cap: "Regional CCA biplots showing how vegetation responds to management practices in each region of Catalonia. Each plot reveals which management practices are most effective for conserving coastal dune vegetation in different regional contexts."
+#| fig-cap: "Biplots CCA regionales mostrando cómo responde la vegetación a las prácticas de gestión en cada región de Cataluña. Cada gráfico revela qué prácticas de gestión son más efectivas para conservar la vegetación de dunas costeras en diferentes contextos regionales."
 #| echo: false
 #| eval: true
 #| output: true
@@ -556,29 +556,29 @@ if(length(regional_mgmt_plots) > 0) {
   
   if(length(valid_mgmt_plots) > 0) {
     if(length(valid_mgmt_plots) == 3) {
-      combined_regional_mgmt <- valid_mgmt_plots$girona / valid_mgmt_plots$barcelona / valid_mgmt_plots$tarragona
+      combinado_regional_mgmt <- valid_mgmt_plots$girona / valid_mgmt_plots$barcelona / valid_mgmt_plots$tarragona
     } else if(length(valid_mgmt_plots) == 2) {
-      combined_regional_mgmt <- valid_mgmt_plots[[1]] / valid_mgmt_plots[[2]]
+      combinado_regional_mgmt <- valid_mgmt_plots[[1]] / valid_mgmt_plots[[2]]
     } else {
-      combined_regional_mgmt <- valid_mgmt_plots[[1]]
+      combinado_regional_mgmt <- valid_mgmt_plots[[1]]
     }
     
-    print(combined_regional_mgmt)
+    print(combinado_regional_mgmt)
     
-    # Save the combined regional plot
-    ggsave(here("figures","cca_regional_management_analysis.png"), combined_regional_mgmt,
+    # Save the combinado regional plot
+    ggsave(here("figures","cca_regional_management_analysis.png"), combinado_regional_mgmt,
            width = 14, height = 16)
   } else {
-    cat("No valid regional CCA plots could be created.\n")
+    cat("No se pudieron crear gráficos CCA regionales válidos.\n")
   }
 } else {
-  cat("No regional CCA analyses with management variables could be performed.\n")
+  cat("No se pudieron realizar análisis CCA regionales con variables de gestión.\n")
 }
 ```
 
 ```{r}
 #| label: fig-mgmt-importance
-#| fig-cap: "Management variable importance across regions, showing which management practices have the strongest influence on vegetation composition. Longer bars indicate more influential management practices."
+#| fig-cap: "Importancia de variables de gestión entre regiones, mostrando qué prácticas de gestión tienen la mayor influencia en la composición de vegetación. Barras más largas indican prácticas de gestión más influyentes."
 #| echo: false
 #| eval: true
 #| output: true
@@ -595,10 +595,10 @@ if(length(valid_results) > 0) {
     # Save the plot
     ggsave(here("figures","management_variable_importance.png"), p_importance, width = 12, height = 8)
   } else {
-    cat("Management importance plot could not be created.\n")
+    cat("No se pudo crear el gráfico de importancia de gestión.\n")
   }
 } else {
-  cat("No valid CCA results available for importance analysis.\n")
+  cat("No hay resultados CCA válidos disponibles para el análisis de importancia.\n")
 }
 ```
 
@@ -623,8 +623,8 @@ results_summary <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Check each region and combined analysis
-all_regions <- c("girona", "barcelona", "tarragona", "combined")
+# Check each region and combinado analysis
+all_regions <- c("girona", "barcelona", "tarragona", "combinado")
 
 for(region_name in all_regions) {
   region_display <- str_to_title(region_name)
@@ -651,13 +651,13 @@ for(region_name in all_regions) {
   }
 }
 knitr::kable(setNames(results_summary[, c("Region", "Explained_Variance", "Species_Count", "Beach_Count")],
-c("Region", "Explained Variance (%)", "Species Count", "Beach Count")),
-      caption = "CCA Summary: Explained Variance, Species and Beach Counts",
+c("Región", "Varianza Explicada (%)", "Número de Especies", "Número de Playas")),
+      caption = "Resumen CCA: Varianza Explicada, Número de Especies y Playas",
       format = "latex", booktabs = TRUE) %>%
   kable_styling(latex_options = "hold_position")
 
-knitr::kable(setNames(results_summary[, c("Region", "Management_Variables")], c("Region", "Variables descriptivas para CCA")),
-      caption = "Management Variables by Region",
+knitr::kable(setNames(results_summary[, c("Region", "Management_Variables")], c("Región", "Variables descriptivas para CCA")),
+      caption = "Variables de Gestión por Región",
       format = "latex", booktabs = TRUE) %>%
   kable_styling(latex_options = "hold_position") %>%
   column_spec(2, width = "10cm")
@@ -672,7 +672,7 @@ knitr::kable(setNames(results_summary[, c("Region", "Management_Variables")], c(
 #| output: false
 # Count successful analyses
 successful_analyses <- sum(results_summary$Status == "SUCCESS")
-cat("\nSuccessful analyses:", successful_analyses, "out of", nrow(results_summary), "\n")
+cat("\nAnálisis exitosos:", successful_analyses, "de", nrow(results_summary), "\n")
 ```
 
 ```{r}
@@ -690,7 +690,7 @@ significance_results <- list()
 
 for(region_name in names(valid_results)) {
   if(!is.null(valid_results[[region_name]])) {
-    cat("Testing significance for", str_to_title(region_name), "region:\n")
+    cat("Probando significancia para la región", str_to_title(region_name), ":\n")
 
     sig_test <- test_mgmt_significance(valid_results[[region_name]])
     significance_results[[region_name]] <- sig_test
@@ -698,23 +698,23 @@ for(region_name in names(valid_results)) {
     if(!is.null(sig_test$model)) {
       # Check if F and p values exist and are not NA
       if(!is.na(sig_test$model$F[1]) && !is.na(sig_test$model$`Pr(>F)`[1])) {
-        cat("  Overall model F =", round(sig_test$model$F[1], 3),
+        cat("  Modelo general F =", round(sig_test$model$F[1], 3),
             ", p =", round(sig_test$model$`Pr(>F)`[1], 4), "\n")
 
         if(sig_test$model$`Pr(>F)`[1] < 0.05) {
-          cat("  Model is statistically significant (p < 0.05)\n")
+          cat("  El modelo es estadísticamente significativo (p < 0.05)\n")
         } else {
-          cat("  Model is not statistically significant (p >= 0.05)\n")
+          cat("  El modelo no es estadísticamente significativo (p >= 0.05)\n")
         }
       } else {
-        cat("  Overall model significance test could not be completed\n")
+        cat("  No se pudo completar la prueba de significancia del modelo general\n")
       }
     } else {
-      cat("  Overall model significance test failed\n")
+      cat("  Falló la prueba de significancia del modelo general\n")
     }
     
     if(!is.null(sig_test$variables)) {
-      cat("  Individual variable significance:\n")
+      cat("  Significancia de variables individuales:\n")
       for(i in 1:nrow(sig_test$variables)) {
         if(!is.na(sig_test$variables$F[i]) && !is.na(sig_test$variables$`Pr(>F)`[i])) {
           var_name <- rownames(sig_test$variables)[i]
@@ -726,11 +726,11 @@ for(region_name in names(valid_results)) {
           cat("    ", var_name, ": F =", f_val, ", p =", p_val, significance, "\n")
         } else {
           var_name <- rownames(sig_test$variables)[i]
-          cat("    ", var_name, ": significance test failed\n")
+          cat("    ", var_name, ": falló la prueba de significancia\n")
         }
       }
     } else {
-      cat("  Individual variable significance tests failed\n")
+      cat("  Fallaron las pruebas de significancia de variables individuales\n")
     }
     cat("\n")
   }
@@ -739,7 +739,7 @@ for(region_name in names(valid_results)) {
 
 ```{r}
 #| label: tbl-mgmt-summary
-#| tbl-cap: "Summary of management variable effects across regions, showing which management practices are most important for vegetation conservation."
+#| tbl-cap: "Resumen de efectos de variables de gestión entre regiones, mostrando qué prácticas de gestión son más importantes para la conservación de vegetación."
 #| echo: false
 #| eval: true
 #| output: true
@@ -802,18 +802,18 @@ if(length(valid_results) > 0) {
     mgmt_effects_summary$P_Value <- ifelse(is.na(mgmt_effects_summary$P_Value), "N/A", as.character(mgmt_effects_summary$P_Value))
     
     knitr::kable(mgmt_effects_summary,
-                 col.names = c("Region", "Management Variable", "Importance", "P-value", "Sig."),
-                 caption = "Significance codes: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1",
+                 col.names = c("Región", "Variable de Gestión", "Importancia", "Valor P", "Sig."),
+                 caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1",
                  format = "latex", 
                  booktabs = TRUE,
                  row.names = FALSE) %>%
   kable_styling(latex_options = "hold_position") %>%
   column_spec(2, width = "8cm")
   } else {
-    cat("No management effects summary could be created.\n")
+    cat("No se pudo crear el resumen de efectos de gestión.\n")
   }
 } else {
-  cat("No valid results available for management effects summary.\n")
+  cat("No hay resultados válidos disponibles para el resumen de efectos de gestión.\n")
 }
 ```
 
