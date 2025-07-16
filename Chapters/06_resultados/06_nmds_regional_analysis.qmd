@@ -91,10 +91,10 @@ run_region_nmds <- function(region_data, region_name) {
   
   # Definir etiquetas de tipo de hábitat basadas en clústeres
   habitat_labels <- c(
-    "1" = "Front-dune",
-    "2" = "Back-dune",
-    "3" = "Mixed",
-    "4" = "Disturbed"
+    "1" = "Hábitat 1",
+    "2" = "Hábitat 2",
+    "3" = "Hábitat 3", 
+    "4" = "Hábitat 4"
   )
   
   # Mapear números de clúster a etiquetas de hábitat
