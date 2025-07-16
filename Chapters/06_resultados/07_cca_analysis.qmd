@@ -209,7 +209,7 @@ all_land_cover <- bind_rows(
 )
 
 # Ejecutar CCA combinado
-combined_cca <- run_cca_analysis(all_species_data, all_land_cover, "Combined")
+combined_cca <- run_cca_analysis(all_species_data, all_land_cover, "Combinado")
 
 # Función para crear biplot CCA
 create_cca_biplot <- function(cca_analysis, title_suffix = "") {
@@ -336,7 +336,7 @@ Esta sección presenta los resultados del Análisis de Correspondencia Canónica
 
 # Create and display the combined CCA biplot
 if(!is.null(combined_cca)) {
-  p_combined <- create_cca_biplot(combined_cca, "- All Regions")
+  p_combined <- create_cca_biplot(combined_cca, "- Todas las Regiones")
   print(p_combined)
   
   # Guardar el gráfico
@@ -435,7 +435,7 @@ regions <- list(
   list(name = "Girona", cca = girona_cca, sig = girona_sig),
   list(name = "Barcelona", cca = barcelona_cca, sig = barcelona_sig),
   list(name = "Tarragona", cca = tarragona_cca, sig = tarragona_sig),
-  list(name = "Combined", cca = combined_cca, sig = combined_sig)
+  list(name = "Combinado", cca = combined_cca, sig = combined_sig)
 )
 
 for(region in regions) {
