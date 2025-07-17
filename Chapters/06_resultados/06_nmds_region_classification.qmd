@@ -187,8 +187,6 @@ top_species_by_region <- species_by_region %>%
 
 Esta sección presenta un análisis de **Escalamiento Multidimensional No Métrico (NMDS)** que compara las comunidades vegetales entre las tres regiones catalanas. 
 
-El NMDS es una técnica de ordenación que reduce datos complejos de composición florística a un espacio visual bidimensional, preservando las relaciones de similitud entre comunidades sin asumir relaciones lineales.
-
 La @fig-nmds-region-plot muestra la distribución espacial de las parcelas según su composición florística, revelando patrones regionales en las comunidades de dunas costeras.
 
 ```{r}
@@ -304,10 +302,14 @@ ggsave(here("figures","region_characteristic_species.png"), width = 14, height =
 ```
 
 
-La @fig-region-species-indicators identifica las especies más representativas de cada región basándose en su abundancia media según la escala de Braun-Blanquet. Este análisis permite reconocer los elementos florísticos distintivos que caracterizan las dunas costeras de cada provincia catalana.
+La @fig-region-species-indicators identifica las especies más representativas de cada región basándose en su abundancia media según la escala de Braun-Blanquet. Este análisis permite reconocer las especies distintivasde las dunas costeras de cada provincia catalana.
+
+### Diversidad de Especies por Región
+
+Las diferencias florísticas entre regiones se complementan con un análisis cuantitativo de la diversidad específica. La @fig-region-species-diversity presenta tres métricas fundamentales: la diversidad vegetal (número total de especies), el índice de Shannon (que considera tanto el número de especies como su abundancia relativa) y la equitatividad (distribución uniforme de las especies). Estas métricas revelan patrones regionales distintivos en la estructura comunitaria de las dunas costeras catalanas.
 ```{r}
 #| label: fig-region-species-diversity
-#| fig-cap: "Métricas de diversidad de especies por región, mostrando riqueza, índice de diversidad de Shannon y equitatividad en Tarragona, Barcelona y Girona."
+#| fig-cap: "Métricas de diversidad de especies por región. La diversidad vegetal indica el número total de especies presentes, el índice de Shannon mide la diversidad considerando abundancia relativa, y la equitatividad evalúa la distribución uniforme de las especies. Tarragona presenta la mayor diversidad vegetal, Barcelona muestra alta diversidad de Shannon, y Girona tiene la mayor equitatividad."
 #| echo: false
 #| eval: true
 #| output: true
@@ -330,7 +332,7 @@ calculate_diversity <- function(matrix_data) {
 
   # Return a data frame with diversity metrics
   return(data.frame(
-    Riqueza = richness,
+    Diversidad_vegetal = richness,
     Shannon = shannon,
     Equitatividad = evenness
   ))
@@ -355,10 +357,14 @@ diversity_data <- diversity_data %>%
 # Convert to long format for plotting
 diversity_long <- diversity_data %>%
   pivot_longer(
-    cols = c(Riqueza, Shannon, Equitatividad),
+    cols = c(Diversidad_vegetal, Shannon, Equitatividad),
     names_to = "Métrica",
     values_to = "Valor"
-  )
+  ) %>%
+  mutate(Métrica = case_when(
+    Métrica == "Diversidad_vegetal" ~ "Diversidad vegetal",
+    TRUE ~ Métrica
+  ))
 
 # Plot diversity metrics
 ggplot(diversity_long, aes(x = Region, y = Valor, fill = Region)) +
@@ -366,7 +372,7 @@ ggplot(diversity_long, aes(x = Region, y = Valor, fill = Region)) +
   facet_wrap(~ Métrica, scales = "free_y") +
   theme_minimal() +
   labs(
-    title = "Métricas de Diversidad por Región",
+    title = "Métricas de Diversidad de Especies por Región",
     y = "Valor",
     x = "Región"
   ) +
@@ -377,7 +383,8 @@ ggplot(diversity_long, aes(x = Region, y = Valor, fill = Region)) +
     strip.background = element_rect(fill = "gray90"),
     strip.text = element_text(face = "bold"),
     axis.text.x = element_text(face = "bold"),
-    plot.title = element_text(face = "bold")
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.title.position = "plot"
   )
 
 # Save the plot
