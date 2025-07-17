@@ -1,3 +1,9 @@
+#### CCA Analysis 50m
+
+Esta sección presenta los resultados del Análisis de Correspondencia Canónica (CCA) para explorar las relaciones entre la composición de vegetación de dunas costeras y las variables de cobertura del suelo por región. El CCA es una técnica de ordenación restringida que relaciona directamente la composición de especies con gradientes ambientales, ayudándonos a entender qué factores de cobertura del suelo explican mejor los patrones de vegetación en cada región (Girona, Barcelona y Tarragona).
+
+
+
 ```{r 07_07_setup, include=FALSE}
 # Opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
@@ -323,10 +329,9 @@ tarragona_sig <- test_env_significance(tarragona_cca)
 combined_sig <- test_env_significance(combined_cca)
 ```
 
-Esta sección presenta los resultados del Análisis de Correspondencia Canónica (CCA) para explorar las relaciones entre la composición de vegetación de dunas costeras y las variables de cobertura del suelo por región. El CCA es una técnica de ordenación restringida que relaciona directamente la composición de especies con gradientes ambientales, ayudándonos a entender qué factores de cobertura del suelo explican mejor los patrones de vegetación en cada región (Girona, Barcelona y Tarragona).
 
 
-### Análisis CCA Combinado para Todas las Regiones
+##### Análisis CCA Combinado para Todas las Regiones
 
 El análisis CCA combinado incluye 45 playas de las tres regiones catalanas, explicando el 23.4% de la varianza en composición de especies.
 La @fig-cca-combined identifica principalmente el eje Urbano-Natural; las flechas de "Urbano" y "Vías de Comunicación" se oponen a "Agua Dulce", "Pastizal" y "Matorral", indicando el contraste fundamental entre desarrollo humano y hábitats naturales.
@@ -405,7 +410,7 @@ if(length(regional_plots) > 0) {
 }
 ```
 
-#### Patrones Regionales Específicos
+##### Patrones Regionales Específicos
 
 **Girona** (47.4% varianza explicada): Dominan gradientes naturales con fuertes ejes de bosques y urbano. Las especies se distribuyen principalmente según la proximidad a bosques y otros tipo de suelos naturales.
 
