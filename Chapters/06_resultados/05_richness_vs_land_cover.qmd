@@ -1,3 +1,5 @@
+Relación entre la diversidad vegetal y los tipos de cobertura del suelo a 50m y 100m de las playas.
+
 ```{r 06_05_setup, include=FALSE}
 # Opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
@@ -128,9 +130,6 @@ richness_vs_land <- richness_vs_land %>%
   mutate(distance_spanish = ifelse(distance == "50m", "50m", "100m"))
 ```
 
-## Diversidad Vegetal vs Cobertura del Suelo
-
-Relación entre la diversidad vegetal y los tipos de cobertura del suelo a 50m y 100m de las playas.
 
 ```{r}
 #| label: fig-diversidad-vegetal-vs-cobertura-suelo
