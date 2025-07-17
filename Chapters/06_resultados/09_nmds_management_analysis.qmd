@@ -211,9 +211,11 @@ top_species <- species_scores %>%
 
 Esta sección presenta los resultados de un análisis de Escalamiento Multidimensional No Métrico (NMDS) para examinar cómo las prácticas de gestión de playas influyen en la composición de vegetación de dunas costeras.
 
+El análisis NMDS (@fig-nmds-management-plot) muestra una considerable superposición entre las comunidades vegetales de diferentes intensidades de gestión, indicando que las prácticas de manejo tienen un efecto relativamente débil sobre la composición específica. Las elipses de los tres tipos de gestión se solapan ampliamente en el espacio de ordenación, sugiriendo que otros factores ambientales pueden tener mayor influencia que la intensidad de gestión en la estructuración de las comunidades dunares.
+
 ```{r}
 #| label: fig-nmds-management-plot
-#| fig-cap: "Gráfico de ordenación NMDS mostrando la relación entre la composición de vegetación y las prácticas de gestión de playas. Los puntos representan parcelas individuales coloreadas por región y con formas según la categoría de intensidad de gestión."
+#| fig-cap: "Ordenación NMDS de la respuesta de vegetación dunar a prácticas de gestión. Las elipses delimitan grupos de intensidad de gestión, con vectores indicando especies características de cada gradiente de perturbación."
 #| echo: false
 #| eval: true
 #| output: true
@@ -236,7 +238,7 @@ p_nmds_management <- ggplot(nmds_data %>% filter(!is.na(management_simple)),
   # Customize appearance
   theme_minimal() +
   labs(
-    title = "Ordenación NMDS: Respuesta de la Vegetación a la Intensidad de Gestión",
+    title = "Ordenación NMDS: Respuesta de la Vegetación\na la Intensidad de Gestión",
     subtitle = paste("Estrés =", round(nmds_result$stress, 3), "| Escala de Gestión: 0 (ninguna) a 5 (alta calidad)"),
     x = "NMDS1",
     y = "NMDS2",
@@ -246,7 +248,7 @@ p_nmds_management <- ggplot(nmds_data %>% filter(!is.na(management_simple)),
   # Use consistent region colors
   scale_color_manual(values = PROVINCE_COLORS) +
   # Override shape legend title
-  scale_shape_discrete(name = "Intensidad de Gestión") +
+  scale_shape_discrete(name = "Tipo de Gestión") +
   # Add arrows for top species
   geom_segment(data = top_species,
                aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2),
@@ -264,7 +266,7 @@ p_nmds_management <- ggplot(nmds_data %>% filter(!is.na(management_simple)),
   # Specify legend titles explicitly
   guides(
     color = guide_legend(title = "Región"),
-    shape = guide_legend(title = "Intensidad de Gestión"),
+    shape = guide_legend(title = "Tipo de Gestión"),
     linetype = guide_legend(title = "Tipo de Gestión")
   )
 
