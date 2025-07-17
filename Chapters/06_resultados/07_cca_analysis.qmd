@@ -328,8 +328,8 @@ Esta sección presenta los resultados del Análisis de Correspondencia Canónica
 
 ### Análisis CCA Combinado para Todas las Regiones
 
-El análisis combinado de todas las regiones catalanas revela los gradientes ambientales principales que estructuran las comunidades de vegetación en el conjunto de dunas costeras mediterráneas. La @fig-cca-combined muestra la ordenación CCA integrando datos de Girona, Barcelona y Tarragona para identificar los patrones ambientales generales que influyen en la distribución de especies a escala regional.
-De la misma figura las flechas de "Urbano" y "Vías de Comunicación" se oponen a "Agua Dulce", "Pastizal" y "Matorral", indicando el contraste fundamental entre desarrollo humano y hábitats naturales.
+El análisis CCA combinado incluye 45 playas de las tres regiones catalanas, explicando el 23.4% de la varianza en composición de especies.
+La @fig-cca-combined identifica principalmente el eje Urbano-Natural; las flechas de "Urbano" y "Vías de Comunicación" se oponen a "Agua Dulce", "Pastizal" y "Matorral", indicando el contraste fundamental entre desarrollo humano y hábitats naturales.
 ```{r}
 #| label: fig-cca-combined
 #| fig-cap: "Biplot CCA combinado mostrando las relaciones especies-ambiente en todas las regiones catalanas. Los puntos azules representan playas individuales, las flechas rojas indican gradientes de cobertura del suelo (mayor longitud = mayor influencia), y los puntos verdes muestran especies clave posicionadas según su afinidad ambiental."
@@ -354,7 +354,7 @@ if(!is.null(combined_cca)) {
 
 ```{r}
 #| label: fig-cca-regional
-#| fig-cap: "Biplots CCA regionales mostrando cómo varían las relaciones vegetación-ambiente entre las tres regiones costeras de Cataluña. Cada gráfico muestra los gradientes específicos de cobertura del suelo que estructuran las comunidades de vegetación en cada región. Las flechas rojas representan gradientes ambientales (variables de cobertura del suelo), los puntos y etiquetas verdes muestran especies de plantas, y los puntos azules representan sitios de muestreo (playas). Las flechas más largas indican gradientes ambientales más fuertes, y las especies posicionadas más cerca de las puntas de las flechas están más fuertemente asociadas con esas condiciones ambientales."
+#| fig-cap: "Biplots CCA regionales mostrando los gradientes ambientales específicos en Girona, Barcelona y Tarragona. Las diferencias entre regiones reflejan distintas presiones de uso del suelo: gradientes naturales en Girona, presión urbana en Barcelona, y influencia agrícola en Tarragona."
 #| echo: false
 #| eval: true
 #| results: 'hide'
@@ -404,6 +404,14 @@ if(length(regional_plots) > 0) {
   cat("No se pudieron realizar análisis CCA regionales.\n")
 }
 ```
+
+#### Patrones Regionales Específicos
+
+**Girona** (47.4% varianza explicada): Dominan gradientes naturales con fuertes ejes de bosques y urbano. Las especies se distribuyen principalmente según la proximidad a bosques y otros tipo de suelos naturales.
+
+**Barcelona** (100.0% varianza explicada): El gradiente urbano es el factor dominante, con "Urbano" y "Vías de Comunicación" como vectores más largos. Existen especies que se posicionan en dirección opuesta a la  influencia metropolitana.
+
+**Tarragona** (52.9% varianza explicada): Muestra un patrón mixto con gradientes de humedad ("Lagunas y Marismas") y "Matorral" como principales estructuradores.
 
 ```{r}
 #| label: tbl-cca-summary
