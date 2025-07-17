@@ -191,11 +191,14 @@ all_habitat_distribution <- all_habitat_distribution %>%
   mutate(Region = factor(Region, levels = PROVINCE_ORDER))
 ```
 
-Esta sección presenta un análisis detallado de Escalamiento Multidimensional No-métrico (NMDS) de vegetación dunar costera para cada una de las tres regiones catalanas: Tarragona, Barcelona y Girona. Al analizar cada región por separado, podemos identificar patrones de hábitat específicos para cada región y ensamblajes característicos de especies.
+## NMDS por Región
+
+Análisis NMDS separado para cada región, mostrando la clasificación de hábitats específica de Tarragona, Barcelona y
+Girona.
 
 ```{r}
 #| label: fig-region-nmds-plots
-#| fig-cap: "Gráficos de NMDS mostrando la clasificación de parcelas de vegetación en tipos de hábitats para cada región: Tarragona, Barcelona y Girona. Los puntos representan parcelas individuales y están coloreados por tipo de hábitat identificado, mientras que las flechas y texto indican especies influyentes."
+#| fig-cap: "Ordenación NMDS por región mostrando tipos de hábitat y especies características"
 #| echo: false
 #| eval: true
 #| output: true
@@ -207,7 +210,7 @@ Esta sección presenta un análisis detallado de Escalamiento Multidimensional N
 combined_plot <- tarragona_nmds$plot / barcelona_nmds$plot / girona_nmds$plot +
   plot_layout(ncol = 1, heights = c(1, 1, 1)) +
   plot_annotation(
-    title = "NMDS Específica por Región de Vegetación Dunar Costera",
+    title = "NMDS Específica por Región\nde Vegetación Dunar Costera",
     theme = theme(plot.title = element_text(face = "bold", hjust = 0.5, size = 14))
   )
 
@@ -216,6 +219,10 @@ print(combined_plot)
 # Guardar el gráfico
 ggsave(here("figures","nmds_regional_analysis.png"), combined_plot, width = 14, height = 16)
 ```
+
+La @fig-region-nmds-plots muestra patrones de hábitat específicos por región. Tarragona (estrés = 0.24) presenta separación clara entre los 4 tipos de hábitat con distribución equilibrada. Barcelona (estrés = 0.19) muestra agrupación más compacta con menor variabilidad entre hábitats. Girona (estrés = 0.23) exhibe distribución amplia con mayor solapamiento entre grupos.
+
+Los valores de estrés indican representaciones aceptables para las tres regiones. Cada región presenta patrones de agrupación distintos, sugiriendo diferencias en la estructura de comunidades vegetales entre las zonas costeras catalanas.
 
 ```{r}
 #| label: fig-region-habitat-distribution
