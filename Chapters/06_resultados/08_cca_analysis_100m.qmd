@@ -1,4 +1,4 @@
-#### CCA 100m
+#### Análisis de CCA con variables ambientales a 100 metros de la playa
 Esta sección presenta los resultados del Análisis de Correspondencia Canónica (CCA) usando variables de cobertura del suelo medidas a **100m de distancia** de los sitios de dunas costeras.
 
 ```{r 08_07_setup, include=FALSE}
