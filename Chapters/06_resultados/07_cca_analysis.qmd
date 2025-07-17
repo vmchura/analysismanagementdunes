@@ -238,6 +238,9 @@ create_cca_biplot <- function(cca_analysis, title_suffix = "") {
     Variable = rownames(scores(cca_result, display = "bp"))
   )
   
+  # Traducir nombres de variables ambientales usando la función global
+  env_scores$Variable <- translate_labels(env_scores$Variable)
+  
   # Seleccionar principales especies por distancia desde el origen para etiquetado
   species_scores$distance <- sqrt(species_scores$CCA1^2 + species_scores$CCA2^2)
   top_species <- species_scores %>%
@@ -322,11 +325,14 @@ combined_sig <- test_env_significance(combined_cca)
 
 Esta sección presenta los resultados del Análisis de Correspondencia Canónica (CCA) para explorar las relaciones entre la composición de vegetación de dunas costeras y las variables de cobertura del suelo por región. El CCA es una técnica de ordenación restringida que relaciona directamente la composición de especies con gradientes ambientales, ayudándonos a entender qué factores de cobertura del suelo explican mejor los patrones de vegetación en cada región (Girona, Barcelona y Tarragona).
 
-**Nota Metodológica**: El análisis agrega los datos de especies a nivel de parcela a nivel de playa calculando la cobertura media de especies por playa. Este enfoque asegura que la matriz de especies coincida con la escala de los datos ambientales (una observación por playa) y evita problemas de pseudorreplicación que surgirían al duplicar valores ambientales para múltiples parcelas dentro de la misma playa.
 
+### Análisis CCA Combinado para Todas las Regiones
+
+El análisis combinado de todas las regiones catalanas revela los gradientes ambientales principales que estructuran las comunidades de vegetación en el conjunto de dunas costeras mediterráneas. La @fig-cca-combined muestra la ordenación CCA integrando datos de Girona, Barcelona y Tarragona para identificar los patrones ambientales generales que influyen en la distribución de especies a escala regional.
+De la misma figura las flechas de "Urbano" y "Vías de Comunicación" se oponen a "Agua Dulce", "Pastizal" y "Matorral", indicando el contraste fundamental entre desarrollo humano y hábitats naturales.
 ```{r}
 #| label: fig-cca-combined
-#| fig-cap: "Biplot CCA mostrando la relación entre la composición de vegetación y las variables de cobertura del suelo en todos los sitios de dunas costeras. Los puntos azules representan parcelas de muestreo, las flechas rojas muestran gradientes ambientales, y los puntos verdes indican especies clave. La longitud de las flechas indica la intensidad del gradiente ambiental."
+#| fig-cap: "Biplot CCA combinado mostrando las relaciones especies-ambiente en todas las regiones catalanas. Los puntos azules representan playas individuales, las flechas rojas indican gradientes de cobertura del suelo (mayor longitud = mayor influencia), y los puntos verdes muestran especies clave posicionadas según su afinidad ambiental."
 #| echo: false
 #| eval: true
 #| output: true
@@ -343,6 +349,8 @@ if(!is.null(combined_cca)) {
   ggsave(here("figures","cca_combined_analysis.png"), p_combined, width = 12, height = 8)
 }
 ```
+
+
 
 ```{r}
 #| label: fig-cca-regional
@@ -569,6 +577,9 @@ if(!is.null(combined_cca)) {
     CCA2 = scores(cca_result, display = "bp")[, 2],
     Variable = rownames(scores(cca_result, display = "bp"))
   )
+  
+  # Traducir nombres de variables ambientales usando la función global
+  env_scores_detailed$Variable <- translate_labels(env_scores_detailed$Variable)
   
   # Crear gráfico detallado de asociaciones
   p_associations <- ggplot() +

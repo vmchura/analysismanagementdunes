@@ -185,6 +185,7 @@ LAND_COVER_TRANSLATIONS <- c(
   "rock" = "Roca",
   "bare soil" = "Suelo Desnudo",
   "forestry bare soil" = "Suelo Desnudo Forestal",
+  "forestry_bare_soil" = "Suelo Desnudo Forestal",
   "cliff" = "Acantilado",
   "slope" = "Ladera",
   
