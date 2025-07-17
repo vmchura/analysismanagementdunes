@@ -263,3 +263,7 @@ all_habitat_distribution %>%
 ggsave(here("figures","regional_habitat_distribution.png"), width = 12, height = 8)
 ```
 
+La @fig-region-habitat-distribution confirma las diferencias regionales observadas en las ordenaciones. Tarragona muestra distribución relativamente equilibrada: Hábitat 2 (38%), Hábitat 1 (27%), Hábitat 3 (17%), Hábitat 4 (18%). Barcelona presenta concentración en dos hábitats principales: Hábitat 4 (47%) y Hábitat 3 (24%), con menor representación de Hábitat 1 (23%) y Hábitat 2 (6%). Girona se caracteriza por predominio del Hábitat 4 (44%) y Hábitat 1 (32%), con baja presencia de Hábitat 2 (12%) y Hábitat 3 (12%).
+
+La variación en la distribución de hábitats entre regiones refleja diferentes condiciones ambientales y estructuras de comunidades vegetales a lo largo de la costa catalana.
+
