@@ -150,7 +150,9 @@ top_species <- species_scores %>%
   slice_head(n = 10)
 ```
 
-Esta sección presenta los resultados de un análisis de Escalamiento Multidimensional No Métrico (NMDS) para clasificar las parcelas de vegetación de dunas costeras en tipos de hábitat distintos. El NMDS es una técnica de ordenación poderosa que representa las muestras en un espacio de baja dimensión mientras preserva las distancias ecológicas entre ellas.
+## Clasificación de Hábitats mediante NMDS
+
+Análisis de ordenación NMDS para clasificar parcelas de vegetación en 4 tipos de hábitat basados en la composición de especies. Se utilizan 4 grupos para capturar la variabilidad principal de las comunidades dunares.
 
 ```{r}
 #| label: fig-nmds-plot
@@ -176,7 +178,7 @@ p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
   # Personalizar apariencia
   theme_minimal() +
   labs(
-    title = "Ordenación NMDS de Vegetación de Dunas Costeras",
+    title = "Ordenación NMDS de Vegetación\nde Dunas Costeras",
     subtitle = paste("Estrés =", round(nmds_result$stress, 3)),
     x = "NMDS1",
     y = "NMDS2",
@@ -197,7 +199,8 @@ p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
     legend.box = "vertical",
     legend.title = element_text(face = "bold"),
     panel.grid.minor = element_blank(),
-    plot.title = element_text(face = "bold")
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 12),
+    plot.subtitle = element_text(hjust = 0.5)
   )
 
 print(p_nmds)
@@ -205,6 +208,9 @@ print(p_nmds)
 # Guardar el gráfico
 ggsave(here("figures","nmds_habitat_classification.png"), p_nmds, width = 12, height = 8)
 ```
+
+La @fig-nmds-plot muestra la clasificación de parcelas en 4 tipos de hábitat. Los hábitats muestran separación espacial clara, con diferentes
+especies características en cada grupo.
 
 ```{r}
 #| label: fig-habitat-region-distribution
@@ -251,6 +257,8 @@ habitat_distribution %>%
 # Guardar el gráfico
 ggsave(here("figures","habitat_distribution_by_region.png"), width = 10, height = 6)
 ```
+
+La @fig-habitat-region-distribution muestra diferencias en la composición de hábitats entre regiones. Tarragona presenta distribución equilibrada entre los 4 hábitats (23-28% cada uno). Barcelona muestra predominio del Hábitat 2 (38%) y menor presencia del Hábitat 3 (18%). Girona se caracteriza por alta concentración del Hábitat 4 (53%) y baja representación del Hábitat 3 (4%).
 
 ```{r}
 #| label: fig-species-indicators
@@ -341,3 +349,7 @@ ggplot(indicator_species, aes(x = reorder(species, mean_bb), y = mean_bb, fill =
 # Guardar el gráfico
 ggsave(here("figures","habitat_indicator_species.png"), width = 14, height = 8)
 ```
+
+La @fig-species-indicators identifica las especies características de cada hábitat. Hábitat 1: *Lotus creticus* (cuernecillo marino), *Parapholis filiformis*. Hábitat 2: *Ononis natrix* (melgó), *Asphodelus aestivus* (gamón). Hábitat 3: *Juncus acutus* (junco marino), *Eryngium barrelieri*. Hábitat 4: *Taraxacum officinale* (diente de león), *Medicago marina* (alfalfa marina).
+
+Las especies indicadoras muestran valores de Braun-Blanquet entre 2-4, indicando coberturas medias a altas en sus hábitats respectivos.
