@@ -46,13 +46,13 @@
 {{< include 06_resultados/06_nmds_regional_analysis.qmd >}}
 :::
 
-### CCA por Región {#sec-cca-region}
+## Análisis de Correspondencia Canónica (CCA) {#sec-analisis-cca}
 
-::: {#sec-cca-region-content}
+::: {#sec-cca-50m-content}
 {{< include 06_resultados/07_cca_analysis.qmd >}}
 :::
 
-::: {#sec-cca-region-100-content}
+::: {#sec-cca-100m-content}
 {{< include 06_resultados/08_cca_analysis_100m.qmd >}}
 :::
 
