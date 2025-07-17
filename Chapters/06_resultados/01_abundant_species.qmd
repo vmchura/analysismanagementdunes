@@ -1,3 +1,7 @@
+Esta sección analiza las especies de plantas más abundantes en las tres regiones costeras catalanas (Tarragona,
+Barcelona y Girona). El análisis identifica las especies dominantes en cada región y compara sus patrones de cobertura,
+y la composición vegetal de los sistemas dunares.
+
 ```{r 06_01_setup, include=FALSE}
 library(here)
 # Configurar opciones globales de knitr - controla todos los fragmentos de código
@@ -8,9 +12,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-Esta sección analiza las especies de plantas más abundantes en las tres regiones costeras catalanas (Tarragona,
-Barcelona y Girona). El análisis identifica las especies dominantes en cada región y compara sus patrones de cobertura,
-y la composición vegetal de los sistemas dunares.
+
 
 ```{r}
 #| fig-cap: "Distribución del número total de observaciones de vegetación dunar a través de las tres regiones costeras catalanas. Los datos muestran la intensidad de muestreo en cada región del estudio."

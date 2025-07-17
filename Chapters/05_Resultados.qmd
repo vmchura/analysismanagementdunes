@@ -2,7 +2,7 @@
 
 ## Análisis de Patrones de Vegetación {#sec-patrones-vegetacion}
 
-### Especies Más Abundantes {#sec-especies-abundantes}
+### Comparación de las especies vegetales más abundantes{#sec-especies-abundantes}
 
 ::: {#sec-especies-abundantes-content}
 {{< include 06_resultados/01_abundant_species.qmd >}}

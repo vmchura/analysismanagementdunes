@@ -21,7 +21,7 @@ load(here("data","all_observations_split.RData"))
 load(here("data","all_land_cover_data.RData"))
 ```
 
-## Diversidad Vegetal por Región
+#### Diversidad Vegetal por Región
 
 En este análisis se calcula la diversidad vegetal a nivel de playa, considerando todas las especies registradas en los transectos de cada localidad costera.
 
@@ -80,7 +80,7 @@ ggsave(here("figures","species_richness_by_region.png"), width = 8, height = 6)
 
 La @fig-diversidad-vegetal muestra diferencias en la diversidad vegetal entre regiones. Tarragona presenta valores entre 15 y 55 especies por playa (mediana: 30 especies). Barcelona muestra 30-40 especies por playa. Girona presenta la menor diversidad vegetal, con valores generalmente inferiores a 35 especies por playa (mediana: 25 especies).
 
-## Índices de Diversidad
+###### Índices de Diversidad
 
 Los índices de diversidad se calculan a nivel de playa considerando las especies registradas en los transectos de cada localidad costera.
 
