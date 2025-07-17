@@ -32,15 +32,11 @@
 {{< include 06_resultados/05_richness_vs_land_cover.qmd >}}
 :::
 
-### Clasificación de Hábitats Mediante NMDS {#sec-clasificacion-habitats}
+## Análisis de Clasificación mediante NMDS {#sec-analisis-nmds}
 
 ::: {#sec-clasificacion-habitats-content}
 {{< include 06_resultados/06_nmds_habitat_classification.qmd >}}
 :::
-
-
-
-### Clasificación NMDS por Región {#sec-clasificacion-region}
 
 ::: {#sec-clasificacion-region-content}
 {{< include 06_resultados/06_nmds_region_classification.qmd >}}

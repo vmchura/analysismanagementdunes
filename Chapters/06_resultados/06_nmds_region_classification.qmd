@@ -1,4 +1,5 @@
-#### Section name in Spanish
+#### Comparación NMDS entre Regiones
+
 Esta sección presenta un análisis de **Escalamiento Multidimensional No Métrico (NMDS)** que compara las comunidades vegetales entre las tres regiones catalanas.
 
 La @fig-nmds-region-plot muestra la distribución espacial de las parcelas según su composición florística, revelando patrones regionales en las comunidades de dunas costeras.
