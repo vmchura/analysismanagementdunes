@@ -1,3 +1,8 @@
+#### Section name in Spanish
+Esta sección presenta un análisis de **Escalamiento Multidimensional No Métrico (NMDS)** que compara las comunidades vegetales entre las tres regiones catalanas.
+
+La @fig-nmds-region-plot muestra la distribución espacial de las parcelas según su composición florística, revelando patrones regionales en las comunidades de dunas costeras.
+
 ```{r 06_07_setup, include=FALSE}
 # Global knitr options - controls all code chunks
 knitr::opts_chunk$set(
@@ -185,9 +190,6 @@ top_species_by_region <- species_by_region %>%
   mutate(region = factor(region, levels = PROVINCE_ORDER))
 ```
 
-Esta sección presenta un análisis de **Escalamiento Multidimensional No Métrico (NMDS)** que compara las comunidades vegetales entre las tres regiones catalanas. 
-
-La @fig-nmds-region-plot muestra la distribución espacial de las parcelas según su composición florística, revelando patrones regionales en las comunidades de dunas costeras.
 
 ```{r}
 #| label: fig-nmds-region-plot
@@ -241,11 +243,11 @@ print(p_nmds)
 # Save the plot
 ggsave(here("figures","nmds_region_classification.png"), p_nmds, width = 12, height = 8)
 ```
-## Interpretación de la Ordenación NMDS
+##### Interpretación de la Ordenación NMDS
 
 La ordenación NMDS muestra patrones de variación en la composición florística entre las tres regiones costeras de Cataluña, aunque con considerable solapamiento entre ellas.
 
-### Patrones Regionales
+###### Patrones Regionales
 
 La distribución de las parcelas revela tendencias regionales con cierta diferenciación, pero no una separación clara:
 
@@ -255,12 +257,12 @@ La distribución de las parcelas revela tendencias regionales con cierta diferen
 
 - **Girona** (puntos verdes): Tiende hacia la parte superior e izquierda, pero mantiene solapamiento significativo especialmente con Barcelona.
 
-### Especies Indicadoras
+##### Especies Indicadoras
 
 Las flechas representan las especies con mayor influencia en la ordenación. Las especies situadas en las direcciones de mayor separación entre regiones son indicativas de las diferencias florísticas observadas. La longitud de cada flecha refleja la fuerza de la correlación de la especie con los ejes de ordenación.
 
 
-### Especies Características por Región
+##### Especies Características por Región
 
 ```{r}
 #| label: fig-region-species-indicators
@@ -304,7 +306,7 @@ ggsave(here("figures","region_characteristic_species.png"), width = 14, height =
 
 La @fig-region-species-indicators identifica las especies más representativas de cada región basándose en su abundancia media según la escala de Braun-Blanquet. Este análisis permite reconocer las especies distintivasde las dunas costeras de cada provincia catalana.
 
-### Diversidad de Especies por Región
+##### Diversidad de Especies por Región
 
 Las diferencias florísticas entre regiones se complementan con un análisis cuantitativo de la diversidad específica. La @fig-region-species-diversity presenta tres métricas fundamentales: la diversidad vegetal (número total de especies), el índice de Shannon (que considera tanto el número de especies como su abundancia relativa) y la equitatividad (distribución uniforme de las especies). Estas métricas revelan patrones regionales distintivos en la estructura comunitaria de las dunas costeras catalanas.
 ```{r}

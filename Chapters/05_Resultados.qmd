@@ -38,14 +38,16 @@
 {{< include 06_resultados/06_nmds_habitat_classification.qmd >}}
 :::
 
-::: {#sec-clasificacion-habitats-regional}
-{{< include 06_resultados/06_nmds_regional_analysis.qmd >}}
-:::
+
 
 ### Clasificación NMDS por Región {#sec-clasificacion-region}
 
 ::: {#sec-clasificacion-region-content}
 {{< include 06_resultados/06_nmds_region_classification.qmd >}}
+:::
+
+::: {#sec-clasificacion-habitats-regional}
+{{< include 06_resultados/06_nmds_regional_analysis.qmd >}}
 :::
 
 ### CCA por Región {#sec-cca-region}
