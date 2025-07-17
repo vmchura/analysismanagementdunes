@@ -185,12 +185,11 @@ top_species_by_region <- species_by_region %>%
   mutate(region = factor(region, levels = PROVINCE_ORDER))
 ```
 
-Esta sección presenta un análisis de NMDS que compara las comunidades
-vegetales entre las tres regiones de Cataluña: Tarragona, Barcelona y Girona. Este análisis explora cómo los patrones de
-vegetación de dunas costeras difieren entre estas regiones e identifica las especies características de cada área.
+Esta sección presenta un análisis de **Escalamiento Multidimensional No Métrico (NMDS)** que compara las comunidades vegetales entre las tres regiones catalanas. 
 
-La @fig-nmds-region-plot muestra la distribución espacial de las parcelas de vegetación según su composición florística,
-revelando patrones regionales distintivos en las comunidades de dunas costeras catalanas.
+El NMDS es una técnica de ordenación que reduce datos complejos de composición florística a un espacio visual bidimensional, preservando las relaciones de similitud entre comunidades sin asumir relaciones lineales.
+
+La @fig-nmds-region-plot muestra la distribución espacial de las parcelas según su composición florística, revelando patrones regionales en las comunidades de dunas costeras.
 
 ```{r}
 #| label: fig-nmds-region-plot
@@ -263,6 +262,8 @@ La distribución de las parcelas revela tendencias regionales con cierta diferen
 Las flechas representan las especies con mayor influencia en la ordenación. Las especies situadas en las direcciones de mayor separación entre regiones son indicativas de las diferencias florísticas observadas. La longitud de cada flecha refleja la fuerza de la correlación de la especie con los ejes de ordenación.
 
 
+### Especies Características por Región
+
 ```{r}
 #| label: fig-region-species-indicators
 #| fig-cap: "Especies características por región, mostrando las principales especies según el valor medio de Braun-Blanquet en Tarragona, Barcelona y Girona."
@@ -302,7 +303,6 @@ ggplot(top_species_by_region, aes(x = reorder(species, mean_bb), y = mean_bb, fi
 ggsave(here("figures","region_characteristic_species.png"), width = 14, height = 8)
 ```
 
-### Especies Características por Región
 
 La @fig-region-species-indicators identifica las especies más representativas de cada región basándose en su abundancia media según la escala de Braun-Blanquet. Este análisis permite reconocer los elementos florísticos distintivos que caracterizan las dunas costeras de cada provincia catalana.
 ```{r}
@@ -384,22 +384,5 @@ ggplot(diversity_long, aes(x = Region, y = Valor, fill = Region)) +
 ggsave(here("figures","region_diversity_metrics.png"), width = 12, height = 6)
 ```
 
-### Diversidad Florística Regional
 
-La @fig-region-species-diversity presenta tres métricas complementarias de diversidad que caracterizan la riqueza florística de las dunas costeras en cada región:
-
-- **Riqueza**: Número total de especies presentes en cada región
-- **Índice de Shannon**: Medida que incorpora tanto la riqueza como la abundancia relativa de especies
-- **Equitatividad**: Grado de uniformidad en la distribución de abundancias entre especies
-
-Estas métricas proporcionan una visión integral de la complejidad florística regional y permiten identificar áreas de particular valor para la conservación de la biodiversidad dunar catalana.
-
-## Conclusiones del Análisis Regional
-
-El análisis NMDS revela una clara diferenciación florística entre las tres regiones costeras de Cataluña, con patrones que reflejan tanto gradientes ambientales naturales como el impacto de diferentes presiones antrópicas. Esta diferenciación regional tiene importantes implicaciones para:
-
-1. **Conservación**: Identificación de especies y comunidades prioritarias en cada región
-2. **Gestión**: Desarrollo de estrategias de manejo adaptadas a las características florísticas locales  
-3. **Restauración**: Selección de especies apropiadas para proyectos de rehabilitación dunar
-4. **Monitoreo**: Establecimiento de indicadores regionales específicos para el seguimiento de la biodiversidad
-```
+El análisis NMDS muestra tendencias de diferenciación florística entre las tres regiones costeras catalanas, con solapamiento considerable.

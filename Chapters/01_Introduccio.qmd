@@ -46,7 +46,7 @@ Analizar la relación entre las prácticas de gestión de playas y la diversidad
 
 ## Resultados Principales
 
-**Diversidad Regional**: Girona presenta mayor riqueza de especies (35-45 especies/playa), seguida de Tarragona (25-35) y Barcelona (15-25), reflejando un gradiente de presión antrópica.
+**Diversidad Regional**: Girona presenta mayor diversidad vegetal (35-45 especies/playa), seguida de Tarragona (25-35) y Barcelona (15-25), reflejando un gradiente de presión antrópica.
 
 **Clasificación de Hábitats**: Identificación de cuatro tipos mediante NMDS: dunas frontales (25%), dunas traseras (35%), áreas mixtas (30%) y zonas perturbadas (10%), cada uno con especies indicadoras específicas.
 

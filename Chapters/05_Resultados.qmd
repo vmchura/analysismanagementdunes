@@ -8,9 +8,9 @@
 {{< include 06_resultados/01_abundant_species.qmd >}}
 :::
 
-### Riqueza y Diversidad de Especies {#sec-riqueza-diversidad}
+### Diversidad Vegetal y Diversidad de Especies {#sec-diversidad-vegetal-diversidad}
 
-::: {#sec-riqueza-diversidad-content}
+::: {#sec-diversidad-vegetal-diversidad-content}
 {{< include 06_resultados/02_species_richness.qmd >}}
 :::
 
@@ -26,9 +26,9 @@
 {{< include 06_resultados/04_land_cover_100m.qmd >}}
 :::
 
-### Relación Entre Riqueza de Especies y Cobertura del Suelo {#sec-relacion-riqueza-cobertura}
+### Relación Entre Diversidad Vegetal y Cobertura del Suelo {#sec-relacion-diversidad-vegetal-cobertura}
 
-::: {#sec-relacion-riqueza-cobertura-content}
+::: {#sec-relacion-diversidad-vegetal-cobertura-content}
 {{< include 06_resultados/05_richness_vs_land_cover.qmd >}}
 :::
 

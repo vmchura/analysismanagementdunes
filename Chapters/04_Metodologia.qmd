@@ -63,6 +63,24 @@ El Análisis de Similaridad Porcentual (SIMPER) se utilizó para identificar las
 - Cuantificación de la contribución de cada especie a las disimilitudes
 - Selección de especies indicadoras para cada tipo de hábitat
 
+### Análisis de Diversidad
+
+Se calcularon múltiples índices de diversidad para caracterizar las comunidades vegetales:
+
+**Diversidad vegetal** se define como el número total de especies diferentes presentes en una comunidad o área determinada. Es la medida más básica de diversidad biológica y proporciona información fundamental sobre la complejidad florística de los ecosistemas dunares.
+
+**Índice de Shannon** (H') incorpora tanto la diversidad vegetal como la abundancia relativa de especies:
+
+H' = -Σ(pi × ln(pi))
+
+donde pi es la proporción de cada especie en la comunidad. Valores altos indican mayor diversidad.
+
+**Equitatividad de Pielou** (J') mide qué tan uniformemente están distribuidas las abundancias entre especies:
+
+J' = H' / ln(S)
+
+donde S es el número de especies. Valores cercanos a 1 indican distribución uniforme de abundancias.
+
 ## Análisis de Clasificación
 
 ### Agrupamiento de Sitios

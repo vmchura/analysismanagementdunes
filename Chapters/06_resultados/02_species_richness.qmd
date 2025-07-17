@@ -21,13 +21,13 @@ load(here("data","all_observations_split.RData"))
 load(here("data","all_land_cover_data.RData"))
 ```
 
-## Riqueza de Especies por Región
+## Diversidad Vegetal por Región
 
-La riqueza de especies se calcula como el número total de especies presentes en cada playa. Este análisis compara la biodiversidad entre las tres regiones costeras catalanas.
+En este análisis se calcula la diversidad vegetal a nivel de playa, considerando todas las especies registradas en los transectos de cada localidad costera.
 
 ```{r}
-#| label: fig-riqueza-especies
-#| fig-cap: "Distribución de la riqueza de especies a nivel de playa en las tres regiones costeras, mostrando variaciones de biodiversidad entre playas de Tarragona, Barcelona y Girona"
+#| label: fig-diversidad-vegetal
+#| fig-cap: "Distribución de la diversidad vegetal a nivel de playa en las tres regiones costeras, mostrando variaciones de biodiversidad entre playas de Tarragona, Barcelona y Girona"
 #| echo: false
 #| eval: true
 #| output: true
@@ -67,7 +67,7 @@ all_richness <- order_provinces(all_richness, column_name = "region")
 ggplot(all_richness, aes(x = region, y = richness, fill = region)) +
   geom_boxplot() +
   theme_minimal() +
-  labs(title = "Riqueza de Especies a Nivel de Playa en Regiones Costeras",
+  labs(title = "Diversidad Vegetal a Nivel de Playa en Regiones Costeras",
        x = "Región",
        y = "Número de Especies Presentes por Playa") +
   theme(legend.position = "none") +
@@ -78,4 +78,87 @@ ggplot(all_richness, aes(x = region, y = richness, fill = region)) +
 ggsave(here("figures","species_richness_by_region.png"), width = 8, height = 6)
 ```
 
-La @fig-riqueza-especies muestra diferencias en la riqueza de especies entre regiones. Tarragona presenta valores entre 15 y 55 especies por playa (mediana: 30 especies). Barcelona muestra 30-40 especies por playa. Girona presenta la menor riqueza, con valores generalmente inferiores a 35 especies por playa (mediana: 25 especies).
+La @fig-diversidad-vegetal muestra diferencias en la diversidad vegetal entre regiones. Tarragona presenta valores entre 15 y 55 especies por playa (mediana: 30 especies). Barcelona muestra 30-40 especies por playa. Girona presenta la menor diversidad vegetal, con valores generalmente inferiores a 35 especies por playa (mediana: 25 especies).
+
+## Índices de Diversidad
+
+Los índices de diversidad se calculan a nivel de playa considerando las especies registradas en los transectos de cada localidad costera.
+
+```{r}
+#| label: fig-diversidad-indices
+#| fig-cap: "Índices de diversidad por región: diversidad vegetal, diversidad de Shannon y equitatividad de Pielou"
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 6
+#| fig-pos: "H"
+
+library(vegan)
+
+# Función para calcular diversidad a nivel de playa
+calculate_beach_diversity <- function(region_data) {
+  species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
+
+  # Convertir a matriz de especies por playa
+  diversity_matrix <- region_data %>%
+    # Convertir valores BB a porcentajes
+    mutate(across(all_of(species_cols), bb_to_percentage)) %>%
+    # Agrupar por playa y promediar
+    group_by(id_beach) %>%
+    summarise(across(all_of(species_cols), ~ mean(., na.rm = TRUE))) %>%
+    select(all_of(species_cols)) %>%
+    as.matrix()
+
+  # Calcular índices
+  riqueza <- rowSums(diversity_matrix > 0)
+  shannon <- diversity(diversity_matrix, index = "shannon")
+  equitatividad <- shannon / log(riqueza)
+
+  data.frame(
+    id_beach = region_data$id_beach[!duplicated(region_data$id_beach)],
+    riqueza = riqueza,
+    shannon = shannon,
+    equitatividad = equitatividad
+  )
+}
+
+# Calcular para cada región
+girona_div <- calculate_beach_diversity(beaches_by_region$Girona) %>% mutate(region = "Girona")
+barcelona_div <- calculate_beach_diversity(beaches_by_region$Barcelona) %>% mutate(region = "Barcelona")
+tarragona_div <- calculate_beach_diversity(beaches_by_region$Tarragona) %>% mutate(region = "Tarragona")
+
+# Combinar datos
+diversidad_regiones <- bind_rows(girona_div, barcelona_div, tarragona_div) %>%
+  order_provinces(column_name = "region")
+
+# Formato largo para visualización
+diversidad_long <- diversidad_regiones %>%
+  pivot_longer(cols = c(riqueza, shannon, equitatividad),
+               names_to = "indice", values_to = "valor") %>%
+  mutate(indice = case_when(
+    indice == "riqueza" ~ "Diversidad Vegetal",
+    indice == "shannon" ~ "Shannon (H')",
+    indice == "equitatividad" ~ "Equitatividad (J')"
+  ))
+
+# Gráfico de índices de diversidad
+ggplot(diversidad_long, aes(x = region, y = valor, fill = region)) +
+  geom_boxplot() +
+  facet_wrap(~ indice, scales = "free_y") +
+  theme_minimal() +
+  labs(title = "Índices de Diversidad por Región",
+       x = "Región", y = "Valor del Índice") +
+  scale_fill_manual(values = PROVINCE_COLORS) +
+  theme(legend.position = "none",
+        strip.background = element_rect(fill = "gray90"),
+        strip.text = element_text(face = "bold"))
+
+ggsave(here("figures","diversity_indices_by_region.png"), width = 12, height = 6)
+```
+
+La @fig-diversidad-indices muestra que:
+
+- **Diversidad Vegetal**: Tarragona presenta mayor variabilidad, Barcelona valores intermedios consistentes, Girona menor diversidad vegetal general
+- **Shannon**: Sigue patrones similares a riqueza pero incorpora abundancias relativas
+- **Equitatividad**: Indica qué tan equilibradas están las comunidades; valores bajos sugieren dominancia de pocas especies

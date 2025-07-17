@@ -21,7 +21,7 @@ load(here("data","all_land_cover_data.RData"))
 
 # --- Funciones de Análisis de Riqueza de Especies y Cobertura del Suelo ---
 
-# Calcular riqueza de especies (número de especies presentes) para cada playa
+# Calcular diversidad vegetal de especies (número de especies presentes) para cada playa
 calculate_beach_richness <- function(region_data) {
   # Obtener columnas de especies - excluir "plot" e "id_beach"
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
@@ -52,7 +52,7 @@ prepare_land_cover <- function(region_data) {
     )
 }
 
-# Calcular riqueza para cada región a nivel de playa
+# Calcular diversidad vegetal para cada región a nivel de playa
 girona_richness <- calculate_beach_richness(beaches_by_region$Girona) %>%
   mutate(region = "Girona")
 barcelona_richness <- calculate_beach_richness(beaches_by_region$Barcelona) %>%
@@ -128,13 +128,13 @@ richness_vs_land <- richness_vs_land %>%
   mutate(distance_spanish = ifelse(distance == "50m", "50m", "100m"))
 ```
 
-## Riqueza de Especies vs Cobertura del Suelo
+## Diversidad Vegetal vs Cobertura del Suelo
 
-Relación entre la riqueza de especies y los tipos de cobertura del suelo a 50m y 100m de las playas.
+Relación entre la diversidad vegetal y los tipos de cobertura del suelo a 50m y 100m de las playas.
 
 ```{r}
-#| label: fig-riqueza-vs-cobertura-suelo
-#| fig-cap: "Relación entre la riqueza de especies y diferentes tipos de cobertura del suelo a distancias de 50m y 100m, comparando cómo el entorno circundante a diferentes escalas impacta la biodiversidad dunar"
+#| label: fig-diversidad-vegetal-vs-cobertura-suelo
+#| fig-cap: "Relación entre la diversidad vegetal y diferentes tipos de cobertura del suelo a distancias de 50m y 100m, comparando cómo el entorno circundante a diferentes escalas impacta la biodiversidad dunar"
 #| echo: false
 #| eval: true
 #| output: true
@@ -153,7 +153,7 @@ ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
   facet_grid(distance_spanish ~ cover_type_spanish) +
   theme_minimal() +
   labs(
-    title = "Riqueza de Especies vs Tipos de Cobertura del Suelo\na Diferentes Distancias",
+    title = "Diversidad Vegetal vs Tipos de Cobertura del Suelo\na Diferentes Distancias",
     x = "Porcentaje de Cobertura del Suelo (%)",
     y = "Número de Especies Presentes",
     color = "Región"
@@ -176,5 +176,5 @@ ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
 ggsave(here("figures","richness_vs_land_cover_combined.png"), width = 15, height = 8)
 ```
 
-La @fig-riqueza-vs-cobertura-suelo muestra las relaciones entre riqueza y cobertura del suelo. Se visualiza que en el tipo de cobertura de suelo de Urbano, Bosques, Cultivos y Pastizal, la región de Girona tiene menos diversidad vegetal que la región de Tarragona.
+La @fig-diversidad-vegetal-vs-cobertura-suelo muestra las relaciones entre diversidad vegetal y cobertura del suelo. Se visualiza que en el tipo de cobertura de suelo de Urbano, Bosques, Cultivos y Pastizal, la región de Girona tiene menos diversidad vegetal que la región de Tarragona.
 Las tendencias son similares a 50m y 100m, con variabilidad regional en las respuestas.
