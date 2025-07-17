@@ -12,7 +12,7 @@ library(ggplot2)
 library(vegan)     # For NMDS analysis
 library(gridExtra) # For arranging multiple plots
 library(RColorBrewer) # For color palettes
-
+library(here)
 # Load global configuration
 source(here("R","global_config.R"))
 
@@ -185,11 +185,16 @@ top_species_by_region <- species_by_region %>%
   mutate(region = factor(region, levels = PROVINCE_ORDER))
 ```
 
-This section presents a Non-metric Multidimensional Scaling (NMDS) analysis comparing vegetation communities across the three regions of Catalonia: Tarragona, Barcelona, and Girona. This analysis explores how coastal dune vegetation patterns differ between these regions and identifies characteristic species for each area.
+Esta sección presenta un análisis de NMDS que compara las comunidades
+vegetales entre las tres regiones de Cataluña: Tarragona, Barcelona y Girona. Este análisis explora cómo los patrones de
+vegetación de dunas costeras difieren entre estas regiones e identifica las especies características de cada área.
+
+La @fig-nmds-region-plot muestra la distribución espacial de las parcelas de vegetación según su composición florística,
+revelando patrones regionales distintivos en las comunidades de dunas costeras catalanas.
 
 ```{r}
 #| label: fig-nmds-region-plot
-#| fig-cap: "NMDS ordination plot showing the distribution of vegetation plots by region. Points represent individual plots colored by region (Tarragona, Barcelona, Girona). Arrows indicate the influence of key species on the ordination."
+#| fig-cap: "Ordenación NMDS mostrando la distribución de parcelas de vegetación por región. Los puntos representan parcelas individuales coloreadas por región (Tarragona, Barcelona, Girona). Las flechas indican la influencia de especies clave en la ordenación. Las elipses delimitan las áreas de distribución típica de cada región."
 #| echo: false
 #| eval: true
 #| output: true
@@ -211,11 +216,11 @@ p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
   # Customize appearance
   theme_minimal() +
   labs(
-    title = "NMDS Ordination of Coastal Dune Vegetation by Region",
-    subtitle = paste("Stress =", round(nmds_result$stress, 3)),
+    title = "Ordenación NMDS de Vegetación de Dunas Costeras\npor Región",
+    subtitle = paste("Estrés =", round(nmds_result$stress, 3)),
     x = "NMDS1",
     y = "NMDS2",
-    color = "Region"
+    color = "Región"
   ) +
   # Use consistent region colors
   scale_color_manual(values = PROVINCE_COLORS) +
@@ -230,7 +235,8 @@ p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
     legend.position = "right",
     legend.title = element_text(face = "bold"),
     panel.grid.minor = element_blank(),
-    plot.title = element_text(face = "bold")
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
   )
 
 print(p_nmds)
@@ -238,10 +244,28 @@ print(p_nmds)
 # Save the plot
 ggsave(here("figures","nmds_region_classification.png"), p_nmds, width = 12, height = 8)
 ```
+## Interpretación de la Ordenación NMDS
+
+La ordenación NMDS muestra patrones de variación en la composición florística entre las tres regiones costeras de Cataluña, aunque con considerable solapamiento entre ellas.
+
+### Patrones Regionales
+
+La distribución de las parcelas revela tendencias regionales con cierta diferenciación, pero no una separación clara:
+
+- **Tarragona** (puntos rojos): Muestra una tendencia hacia el lado derecho de la ordenación, aunque con amplia dispersión y solapamiento con otras regiones.
+
+- **Barcelona** (puntos azules): Presenta una distribución central con alta variabilidad, indicando heterogeneidad en las comunidades vegetales y solapamiento considerable con ambas regiones vecinas.
+
+- **Girona** (puntos verdes): Tiende hacia la parte superior e izquierda, pero mantiene solapamiento significativo especialmente con Barcelona.
+
+### Especies Indicadoras
+
+Las flechas representan las especies con mayor influencia en la ordenación. Las especies situadas en las direcciones de mayor separación entre regiones son indicativas de las diferencias florísticas observadas. La longitud de cada flecha refleja la fuerza de la correlación de la especie con los ejes de ordenación.
+
 
 ```{r}
 #| label: fig-region-species-indicators
-#| fig-cap: "Characteristic species for each region, showing the top species by mean Braun-Blanquet value in Tarragona, Barcelona, and Girona."
+#| fig-cap: "Especies características por región, mostrando las principales especies según el valor medio de Braun-Blanquet en Tarragona, Barcelona y Girona."
 #| echo: false
 #| eval: true
 #| output: true
@@ -256,11 +280,11 @@ ggplot(top_species_by_region, aes(x = reorder(species, mean_bb), y = mean_bb, fi
   coord_flip() +
   theme_minimal() +
   labs(
-    title = "Characteristic Species by Region",
-    subtitle = "Based on mean species abundance",
-    x = "Species",
-    y = "Mean Braun-Blanquet Value",
-    fill = "Region"
+    title = "Especies Características por Región",
+    subtitle = "Basado en la abundancia media de especies",
+    x = "Especies",
+    y = "Valor Medio Braun-Blanquet",
+    fill = "Región"
   ) +
   # Apply Braun-Blanquet scale
   apply_braun_blanquet_scale() +
@@ -278,9 +302,12 @@ ggplot(top_species_by_region, aes(x = reorder(species, mean_bb), y = mean_bb, fi
 ggsave(here("figures","region_characteristic_species.png"), width = 14, height = 8)
 ```
 
+### Especies Características por Región
+
+La @fig-region-species-indicators identifica las especies más representativas de cada región basándose en su abundancia media según la escala de Braun-Blanquet. Este análisis permite reconocer los elementos florísticos distintivos que caracterizan las dunas costeras de cada provincia catalana.
 ```{r}
 #| label: fig-region-species-diversity
-#| fig-cap: "Species diversity metrics by region, showing richness, Shannon diversity index, and evenness across Tarragona, Barcelona, and Girona."
+#| fig-cap: "Métricas de diversidad de especies por región, mostrando riqueza, índice de diversidad de Shannon y equitatividad en Tarragona, Barcelona y Girona."
 #| echo: false
 #| eval: true
 #| output: true
@@ -303,9 +330,9 @@ calculate_diversity <- function(matrix_data) {
 
   # Return a data frame with diversity metrics
   return(data.frame(
-    Richness = richness,
+    Riqueza = richness,
     Shannon = shannon,
-    Evenness = evenness
+    Equitatividad = evenness
   ))
 }
 
@@ -328,20 +355,20 @@ diversity_data <- diversity_data %>%
 # Convert to long format for plotting
 diversity_long <- diversity_data %>%
   pivot_longer(
-    cols = c(Richness, Shannon, Evenness),
-    names_to = "Metric",
-    values_to = "Value"
+    cols = c(Riqueza, Shannon, Equitatividad),
+    names_to = "Métrica",
+    values_to = "Valor"
   )
 
 # Plot diversity metrics
-ggplot(diversity_long, aes(x = Region, y = Value, fill = Region)) +
+ggplot(diversity_long, aes(x = Region, y = Valor, fill = Region)) +
   geom_bar(stat = "identity") +
-  facet_wrap(~ Metric, scales = "free_y") +
+  facet_wrap(~ Métrica, scales = "free_y") +
   theme_minimal() +
   labs(
-    title = "Diversity Metrics by Region",
-    y = "Value",
-    x = "Region"
+    title = "Métricas de Diversidad por Región",
+    y = "Valor",
+    x = "Región"
   ) +
   # Use consistent region colors
   scale_fill_manual(values = PROVINCE_COLORS) +
@@ -355,4 +382,24 @@ ggplot(diversity_long, aes(x = Region, y = Value, fill = Region)) +
 
 # Save the plot
 ggsave(here("figures","region_diversity_metrics.png"), width = 12, height = 6)
+```
+
+### Diversidad Florística Regional
+
+La @fig-region-species-diversity presenta tres métricas complementarias de diversidad que caracterizan la riqueza florística de las dunas costeras en cada región:
+
+- **Riqueza**: Número total de especies presentes en cada región
+- **Índice de Shannon**: Medida que incorpora tanto la riqueza como la abundancia relativa de especies
+- **Equitatividad**: Grado de uniformidad en la distribución de abundancias entre especies
+
+Estas métricas proporcionan una visión integral de la complejidad florística regional y permiten identificar áreas de particular valor para la conservación de la biodiversidad dunar catalana.
+
+## Conclusiones del Análisis Regional
+
+El análisis NMDS revela una clara diferenciación florística entre las tres regiones costeras de Cataluña, con patrones que reflejan tanto gradientes ambientales naturales como el impacto de diferentes presiones antrópicas. Esta diferenciación regional tiene importantes implicaciones para:
+
+1. **Conservación**: Identificación de especies y comunidades prioritarias en cada región
+2. **Gestión**: Desarrollo de estrategias de manejo adaptadas a las características florísticas locales  
+3. **Restauración**: Selección de especies apropiadas para proyectos de rehabilitación dunar
+4. **Monitoreo**: Establecimiento de indicadores regionales específicos para el seguimiento de la biodiversidad
 ```
