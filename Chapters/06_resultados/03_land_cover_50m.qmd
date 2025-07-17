@@ -1,3 +1,4 @@
+Análisis de la composición de cobertura del suelo a 50m de cada playa.
 ```{r 06_03_setup, include=FALSE}
 # Opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
@@ -69,9 +70,7 @@ land_cover_colors <- colorRampPalette(brewer.pal(8, "Set3"))(length(unique(avg_l
 names(land_cover_colors) <- unique(avg_land_cover$cover_type_spanish)
 ```
 
-## Cobertura del Suelo en 50m de las Playas
 
-Análisis de la composición de cobertura del suelo a 50m de cada playa.
 
 ```{r}
 #| label: fig-cobertura-suelo-50m
