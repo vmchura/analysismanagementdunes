@@ -391,5 +391,3 @@ ggplot(diversity_long, aes(x = Region, y = Valor, fill = Region)) +
 ggsave(here("figures","region_diversity_metrics.png"), width = 12, height = 6)
 ```
 
-
-El análisis NMDS muestra tendencias de diferenciación florística entre las tres regiones costeras catalanas, con solapamiento considerable.
