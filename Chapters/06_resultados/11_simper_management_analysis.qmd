@@ -892,6 +892,17 @@ if(nrow(simper_summary) > 0) {
 }
 ```
 
+### Análisis Detallado de Contribuciones por Especie
+
+La @tbl-simper-species muestra las especies que más contribuyen a caracterizar cada región, destacando su importancia relativa en la diferenciación de las comunidades vegetales según el nivel de gestión aplicado en las playas.
+
+Los resultados del análisis SIMPER (@tbl-simper-summary) indican una disimilitud muy baja entre los grupos de gestión (0.1%), lo que sugiere diferencias poco significativas en la composición vegetal asociada a las distintas prácticas de manejo.
+
+La @fig-simper-contributions detalla las contribuciones específicas de cada especie discriminante, tanto por región como por comparación entre grupos.
+
+A pesar del bajo nivel de disimilitud general, el análisis SIMPER revela que ciertas especies responden de manera diferencial a la intensidad de gestión, lo que las convierte en indicadores biológicos potenciales para evaluar el impacto de las prácticas de manejo costero.
+
+Las muestras de Barcelona no se consideraron en este análisis porque no existen suficientes muestras con variedad de intensidad de prácticas de gestión.
 
 ```{r}
 #| label: tbl-simper-species
