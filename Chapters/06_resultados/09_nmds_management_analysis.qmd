@@ -599,9 +599,11 @@ ggplot(gradient_data, aes(x = management_rounded, y = mean_abundance, color = sp
 ggsave(here("figures","management_gradient_analysis.png"), width = 14, height = 10)
 ```
 
+La matriz de correlación revela patrones de asociación entre prácticas de gestión (@fig-management-correlation-matrix). Senderos gestionados muestra las correlaciones más altas con vallado con cuerdas (0.78) y limpieza mecánica (0.77), indicando que estas prácticas tienden a implementarse conjuntamente. Los servicios estacionales presentan correlaciones débiles con otras prácticas, sugiriendo independencia en su aplicación.
+
 ```{r}
 #| label: fig-management-correlation-matrix
-#| fig-cap: "Matriz de correlación mostrando relaciones entre diferentes variables de prácticas de gestión e intensidad general de gestión."
+#| fig-cap: "Correlaciones entre prácticas de gestión, mostrando que senderos gestionados, vallado y limpieza mecánica se implementan de forma coordinada, mientras que servicios estacionales operan independientemente."
 #| echo: false
 #| eval: true
 #| output: true
