@@ -352,49 +352,9 @@ print(combined_gradient_plot)
 ggsave(here("figures","nmds_regional_management_gradient.png"), combined_gradient_plot, width = 16, height = 18)
 ```
 
-```{r}
-#| label: fig-regional-management-distribution
-#| fig-cap: "Distribución de categorías de intensidad de gestión dentro de cada región, mostrando la proporción relativa de áreas sin gestión, con gestión baja, moderada y alta en Tarragona, Barcelona y Girona."
-#| echo: false
-#| eval: true
-#| output: true
-#| fig-width: 12
-#| fig-height: 8
-#| fig-pos: "H"
-
-# Create a stacked bar chart of management distribution by region
-all_management_distribution %>%
-  ggplot(aes(x = Region, y = Percentage, fill = Management_Category)) +
-  geom_bar(stat = "identity", position = "stack", color = "white") +
-  geom_text(aes(label = paste0(round(Percentage, 1), "%")),
-            position = position_stack(vjust = 0.5),
-            color = "white", fontface = "bold", size = 3) +
-  theme_minimal() +
-  labs(
-    title = "Distribución de Categorías de Intensidad de Gestión por Región",
-    subtitle = "Basado en puntuaciones ordinales de gestión (0-5) en múltiples prácticas",
-    x = "Región",
-    y = "Porcentaje de Parcelas",
-    fill = "Categoría de Gestión"
-  ) +
-  # Apply custom theme
-  theme(
-    axis.text.x = element_text(face = "bold"),
-    legend.position = "right",
-    plot.title = element_text(face = "bold"),
-    panel.grid.major.x = element_blank()
-  ) +
-  # Use consistent color palette
-  scale_fill_brewer(palette = "Spectral", direction = -1) +
-  scale_x_discrete(limits = PROVINCE_ORDER)
-
-# Save the plot
-ggsave(here("figures","regional_management_distribution.png"), width = 12, height = 8)
-```
 
 ```{r}
 #| label: fig-management-practices-by-region
-#| fig-cap: "Comparación de puntuaciones de prácticas de gestión individuales entre regiones, mostrando la intensidad promedio de senderos gestionados, vallados con cuerdas, limpieza mecánica, servicios estacionales y servicios fijos para cada región."
 #| echo: false
 #| eval: true
 #| output: true
@@ -410,87 +370,6 @@ all_regional_data <- bind_rows(
 ) %>%
   mutate(Region = factor(Region, levels = PROVINCE_ORDER))
 
-# Prepare data for management practices comparison
-mgmt_practices_regional <- all_regional_data %>%
-  filter(!is.na(Managed_Paths)) %>%
-  select(Region, Managed_Paths, Rope_Fences, Mechanical_Cleaning) %>%
-  pivot_longer(cols = c(Managed_Paths, Rope_Fences, Mechanical_Cleaning), 
-               names_to = "practice", 
-               values_to = "score") %>%
-  mutate(
-    practice = case_when(
-      practice == "Managed_Paths" ~ "Senderos Gestionados",
-      practice == "Rope_Fences" ~ "Vallado con Cuerdas", 
-      practice == "Mechanical_Cleaning" ~ "Limpieza Mecánica"
-    )
-  ) %>%
-  group_by(Region, practice) %>%
-  summarise(
-    mean_score = mean(score, na.rm = TRUE),
-    se_score = sd(score, na.rm = TRUE) / sqrt(n()),
-    median_score = median(score, na.rm = TRUE),
-    .groups = "drop"
-  )
-
-# Create comparison plot with both mean and median
-p1 <- ggplot(mgmt_practices_regional, aes(x = Region, y = mean_score, fill = practice)) +
-  geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
-  geom_errorbar(aes(ymin = mean_score - se_score, ymax = mean_score + se_score),
-                position = position_dodge(width = 0.9), width = 0.2) +
-  geom_text(aes(label = round(mean_score, 1)),
-            position = position_dodge(width = 0.9), 
-            vjust = -0.5, fontface = "bold", size = 3) +
-  theme_minimal() +
-  labs(
-    title = "Intensidad Promedio de Prácticas de Gestión por Región",
-    subtitle = "Puntuaciones medias con barras de error estándar (escala 0-5)",
-    x = "Región",
-    y = "Puntuación Promedio de Gestión (0-5)",
-    fill = "Práctica de Gestión"
-  ) +
-  theme(
-    axis.text.x = element_text(face = "bold"),
-    legend.position = "bottom",
-    plot.title = element_text(face = "bold", size = 12),
-    panel.grid.major.x = element_blank()
-  ) +
-  scale_fill_brewer(palette = "Set2") +
-  ylim(0, 5.5) +
-  geom_hline(yintercept = c(1, 2, 3, 4, 5), linetype = "dashed", alpha = 0.3)
-
-# Create a boxplot for distribution visualization
-p2 <- all_regional_data %>%
-  filter(!is.na(Managed_Paths)) %>%
-  select(Region, Management_Intensity) %>%
-  ggplot(aes(x = Region, y = Management_Intensity, fill = Region)) +
-  geom_boxplot(alpha = 0.7) +
-  geom_jitter(width = 0.2, alpha = 0.5) +
-  theme_minimal() +
-  labs(
-    title = "Distribución de Intensidad General de Gestión por Región",
-    subtitle = "Diagramas de caja mostrando mediana, cuartiles y valores de parcelas individuales",
-    x = "Región",
-    y = "Intensidad General de Gestión (0-5)",
-    fill = "Región"
-  ) +
-  theme(
-    axis.text.x = element_text(face = "bold"),
-    legend.position = "none",
-    plot.title = element_text(face = "bold", size = 12),
-    panel.grid.major.x = element_blank()
-  ) +
-  scale_fill_manual(values = PROVINCE_COLORS) +
-  ylim(0, 5.5) +
-  geom_hline(yintercept = c(1, 2, 3, 4, 5), linetype = "dashed", alpha = 0.3)
-
-# Combine plots
-combined_practices_plot <- p1 / p2 +
-  plot_layout(heights = c(1, 1))
-
-print(combined_practices_plot)
-
-# Save the plot
-ggsave(here("figures","management_practices_by_region.png"), combined_practices_plot, width = 14, height = 10)
 ```
 
 ```{r}
@@ -541,30 +420,4 @@ ggplot(habitat_management_interaction, aes(x = Habitat, y = percentage, fill = M
 ggsave(here("figures","habitat_management_interaction.png"), width = 12, height = 8)
 ```
 
-```{r}
-#| label: tbl-regional-management-summary
-#| tbl-cap: "Estadísticas resumen de prácticas de gestión y distribución de hábitats entre regiones."
-#| echo: false
-#| eval: true
-#| output: true
-
-# Create comprehensive summary table
-regional_summary <- all_regional_data %>%
-  filter(!is.na(Management_Category)) %>%
-  group_by(Region) %>%
-  summarise(
-    n_beaches = n_distinct(Beach),
-    pct_unmanaged = round(sum(Management_Category == "Sin Gestión", na.rm = TRUE) / n() * 100, 1),
-    pct_low_mgmt = round(sum(Management_Category == "Gestión Baja", na.rm = TRUE) / n() * 100, 1),
-    pct_mod_mgmt = round(sum(Management_Category == "Gestión Moderada", na.rm = TRUE) / n() * 100, 1),
-    pct_high_mgmt = round(sum(Management_Category == "Gestión Alta", na.rm = TRUE) / n() * 100, 1),
-    .groups = "drop"
-  )
-
-knitr::kable(regional_summary,
-             caption = "Resumen regional de prácticas de gestión y distribución de intensidad",
-             format = "markdown",
-             col.names = c("Región", "Playas", "% Sin Gestión", "% Gestión Baja",
-                          "% Gestión Moderada", "% Gestión Alta"))
-```
 
