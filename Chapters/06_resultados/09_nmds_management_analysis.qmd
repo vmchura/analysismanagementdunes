@@ -392,9 +392,11 @@ ggplot(management_practices, aes(x = Region, y = mean_score, fill = practice)) +
 ggsave(here("figures","management_practices_comparison.png"), width = 14, height = 8)
 ```
 
+La composición específica muestra especies dominantes distintas según la intensidad de gestión (@fig-species-management-response). Las áreas sin gestión están dominadas por Elymus farctus(barrón rígido) y Ammophila arenaria (barrón), las de gestión baja por Medicago marina (mielga marina) y Ammophila arenaria (barrón), mientras que las de gestión moderada mantienen Elymus farctus(barrón rígido) como especie principal.
+
 ```{r}
 #| label: fig-species-management-response
-#| fig-cap: "Respuesta de la composición de especies a diferentes intensidades de gestión, mostrando cómo varían las comunidades vegetales entre áreas de dunas costeras no gestionadas y altamente gestionadas."
+#| fig-cap: "Especies dominantes por intensidad de gestión, mostrando el reemplazo de gramíneas dunares nativas por especies ruderales en áreas de mayor intervención."
 #| echo: false
 #| eval: true
 #| output: true
