@@ -320,9 +320,11 @@ print(combined_mgmt_plot)
 ggsave(here("figures","nmds_regional_management_categories.png"), combined_mgmt_plot, width = 16, height = 18)
 ```
 
+El gradiente continuo de intensidad de gestión confirma la ausencia de patrones claros en las tres regiones (@fig-regional-management-gradient). La distribución aleatoria de colores (intensidades de gestión) en el espacio de ordenación indica que el gradiente de manejo no estructura las comunidades vegetales de forma consistente. Tarragona y Girona muestran mayor rango de intensidades pero sin segregación espacial evidente, mientras Barcelona mantiene valores uniformemente bajos.
+
 ```{r}
 #| label: fig-regional-management-gradient
-#| fig-cap: "Gráficos NMDS mostrando la composición de vegetación con la intensidad de gestión como un gradiente continuo (escala 0-5) para cada región. La intensidad del color representa el nivel de gestión desde no gestionado (oscuro) hasta altamente gestionado (brillante)."
+#| fig-cap: "Gradiente continuo de gestión regional mostrando distribución aleatoria de intensidades sin patrones espaciales evidentes en el espacio de ordenación NMDS."
 #| echo: false
 #| eval: true
 #| output: true
