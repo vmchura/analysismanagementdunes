@@ -326,9 +326,11 @@ management_distribution %>%
 ggsave(here("figures", "management_distribution_by_region.png"), width = 10, height = 6)
 ```
 
+Las prácticas específicas de gestión muestran enfoques regionales diferenciados (@fig-management-practices-comparison). Tarragona prioriza servicios fijos (3.4) y estacionales (2.3), Barcelona mantiene gestión mínima en todas las prácticas excepto servicios fijos, y Girona destaca en servicios fijos (3.7) y vallado con cuerdas (3.6).
+
 ```{r}
 #| label: fig-management-practices-comparison
-#| fig-cap: "Comparación de puntuaciones de prácticas de gestión individuales entre regiones, mostrando la intensidad promedio (escala 0-5) de senderos gestionados, vallados con cuerdas, limpieza mecánica e impactos de servicios."
+#| fig-cap: "Intensidades específicas de gestión por región, mostrando que Tarragona prioriza servicios turísticos, Barcelona mantiene gestión mínima, y Girona enfatiza protección física mediante vallados y servicios fijos."
 #| echo: false
 #| eval: true
 #| output: true
