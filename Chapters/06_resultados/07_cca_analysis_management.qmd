@@ -636,7 +636,7 @@ if(length(valid_results) > 0) {
 #| message: false
 #| warning: false
 #| output: true
-
+#| tbl-pos: "H"
 # Summary of analysis results
 
 results_summary <- data.frame(
@@ -769,7 +769,7 @@ for(region_name in names(valid_results)) {
 #| echo: false
 #| eval: true
 #| output: true
-
+#| tbl-pos: "H"
 # Create summary table of management effects
 if(length(valid_results) > 0) {
   mgmt_effects_summary <- data.frame()

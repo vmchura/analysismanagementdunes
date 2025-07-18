@@ -76,7 +76,7 @@
 {{< include 06_resultados/07_cca_analysis_management.qmd >}}
 :::
 
-### Análisis SIMPER
+### Análisis de Similaridad Porcentual - SIMPER {#sec-simper-management-analysis}
 ::: {#sec-cca-management-content}
 {{< include 06_resultados/11_simper_management_analysis.qmd >}}
 :::

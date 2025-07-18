@@ -892,7 +892,6 @@ if(nrow(simper_summary) > 0) {
 }
 ```
 
-### Análisis Detallado de Contribuciones por Especie
 
 La @tbl-simper-species muestra las especies que más contribuyen a caracterizar cada región, destacando su importancia relativa en la diferenciación de las comunidades vegetales según el nivel de gestión aplicado en las playas.
 
@@ -910,6 +909,7 @@ Las muestras de Barcelona no se consideraron en este análisis porque no existen
 #| echo: false
 #| eval: true
 #| output: true
+#| tbl-pos: "H"
 
 if(exists("simper_summary") && nrow(simper_summary) > 0) {
   # Crear tabla separada para especies - evitar duplicados
@@ -953,7 +953,7 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
 #| eval: true
 #| output: true
 #| results: asis
-
+#| tbl-pos: "H"
 if (exists("simper_summary") && nrow(simper_summary) > 0) {
   # Crear tabla de resumen con solo 3 comparaciones por región
   display_summary <- simper_summary %>%
