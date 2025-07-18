@@ -2,7 +2,7 @@
 
 ## Análisis de Patrones de Vegetación {#sec-patrones-vegetacion}
 
-### Comparación de las especies vegetales más abundantes{#sec-especies-abundantes}
+### Comparación de las Especies Vegetales más Abundantes {#sec-especies-abundantes}
 
 ::: {#sec-especies-abundantes-content}
 {{< include 06_resultados/01_abundant_species.qmd >}}
@@ -58,14 +58,20 @@
 
 ## Efectos de las Prácticas de Gestión {#sec-efectos-gestion}
 
+### Análisis NMDS de Respuesta de la Vegetación a la Gestión {#sec-nmds-management-analysis}
+
 ::: {#sec-nmds-management-content}
 {{< include 06_resultados/09_nmds_management_analysis.qmd >}}
 :::
 
-::: {#sec-nmds-region-management}
+### Análisis NMDS Regional con Integración de Variables de Gestión {#sec-nmds-regional-management-analysis}
+
+::: {#sec-nmds-regional-management-content}
 {{< include 06_resultados/10_nmds_regional_management_analysis.qmd >}}
 :::
 
-::: {#sec-cca-management}
+### Análisis de Correspondencia Canónica con Variables de Gestión {#sec-cca-management-analysis}
+
+::: {#sec-cca-management-content}
 {{< include 06_resultados/07_cca_analysis_management.qmd >}}
 :::
