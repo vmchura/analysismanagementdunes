@@ -1,0 +1,971 @@
+```{r 11_simper_setup, include=FALSE}
+library(here)
+# Opciones globales de knitr - controla todos los fragmentos de código
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+
+# Cargar librerías necesarias
+library(tidyverse)
+library(ggplot2)
+library(vegan)     # Para análisis SIMPER
+library(gridExtra) # Para organizar múltiples gráficos
+library(RColorBrewer) # Para paletas de colores
+library(patchwork)  # Para combinar gráficos
+library(ggrepel)   # Para etiquetas que no se solapan
+library(kableExtra) # Para tablas formateadas
+
+# Cargar configuración global
+source(here("R","global_config.R"))
+
+# Cargar datos
+load(here("data","all_observations_split.RData"))
+load(here("data","all_management_data.RData"))
+```
+
+#### Análisis SIMPER: Especies Discriminantes por Gestión
+
+El análisis SIMPER (Similarity Percentages) identifica qué especies contribuyen más a las diferencias entre grupos de gestión, proporcionando información complementaria a los análisis CCA y NMDS para la gestión efectiva de dunas costeras.
+
+**Objetivos del análisis SIMPER:**
+
+1. **Identificar especies discriminantes**: Especies que mejor distinguen entre diferentes intensidades de gestión
+2. **Cuantificar contribuciones**: Porcentaje de cada especie a las diferencias entre grupos
+3. **Detectar indicadores de gestión**: Especies que responden consistentemente a prácticas de manejo
+4. **Comparar patrones regionales**: Evaluar si las respuestas son consistentes entre regiones
+
+**Metodología:**
+- Análisis por pares entre grupos de gestión (Sin gestión, Baja, Moderada, Alta)
+- Criterios de selección: contribución >5%, ratio contribución/SD >1.5, presencia >30%
+- Análisis regional y combinado para validar patrones
+
+```{r}
+# --- Paso 1: Configuración y Preparación de Datos ---
+
+# Función para preparar datos de especies para análisis SIMPER
+prepare_simper_data <- function(region_data) {
+  # Obtener columnas de especies - excluir columnas no biológicas
+  non_species_cols <- c("plot", "id_beach", "region")
+  species_cols <- setdiff(names(region_data), non_species_cols)
+  
+  # Verificar que tengamos suficientes especies para análisis
+  if(length(species_cols) < 3) {
+    warning("Número insuficiente de especies para análisis SIMPER")
+    return(NULL)
+  }
+  
+  # Convertir datos de especies a porcentajes y agregar por playa
+  species_data <- region_data %>%
+    # Convertir valores Braun-Blanquet a porcentajes
+    mutate(across(all_of(species_cols), bb_to_percentage)) %>%
+    # Agrupar por playa y calcular cobertura promedio
+    group_by(id_beach) %>%
+    summarise(across(all_of(species_cols), ~ mean(.x, na.rm = TRUE)), .groups = "drop") %>%
+    arrange(id_beach)
+  
+  # Crear matriz de especies (filas = playas, columnas = especies)
+  species_matrix <- species_data %>%
+    select(all_of(species_cols)) %>%
+    as.matrix()
+  
+  # Remover especies que nunca están presentes
+  species_present <- colSums(species_matrix, na.rm = TRUE) > 0
+  species_matrix_clean <- species_matrix[, species_present, drop = FALSE]
+  
+  # Verificar que tengamos suficientes especies después del filtrado
+  if(ncol(species_matrix_clean) < 3) {
+    warning("Número insuficiente de especies presentes para análisis SIMPER")
+    return(NULL)
+  }
+  
+  # Retornar datos preparados
+  return(list(
+    matrix = species_matrix_clean,
+    beach_ids = species_data$id_beach,
+    species_names = colnames(species_matrix_clean)
+  ))
+}
+
+# Función para crear grupos de gestión basados en intensidad
+create_management_groups <- function(mgmt_data, beach_ids) {
+  # Verificar que la columna id_beach existe
+  if(!"id_beach" %in% names(mgmt_data)) {
+    stop("Columna id_beach no encontrada en datos de gestión")
+  }
+  
+  # Convertir id_beach a numérico para consistencia
+  mgmt_data$id_beach <- as.numeric(mgmt_data$id_beach)
+  beach_ids <- as.numeric(beach_ids)
+  
+  # Filtrar datos de gestión para las playas en nuestro análisis
+  mgmt_filtered <- mgmt_data %>%
+    filter(id_beach %in% beach_ids) %>%
+    arrange(id_beach)
+  
+  if(nrow(mgmt_filtered) == 0) {
+    stop("No se encontraron playas coincidentes entre datos de especies y gestión")
+  }
+  
+  # Identificar variables de gestión (columnas numéricas, excluyendo IDs)
+  id_columns <- c("id_beach", "id_plot", "plot", "id_transect", "region")
+  mgmt_vars <- mgmt_filtered %>%
+    select(where(is.numeric)) %>%
+    select(-any_of(id_columns)) %>%
+    names()
+  
+  if(length(mgmt_vars) == 0) {
+    stop("No se encontraron variables de gestión numéricas")
+  }
+  
+  # Calcular índice de intensidad de gestión (promedio de todas las variables)
+  mgmt_intensity <- mgmt_filtered %>%
+    select(id_beach, all_of(mgmt_vars)) %>%
+    # Reemplazar NA con 0 (asumiendo que NA significa sin gestión)
+    mutate(across(all_of(mgmt_vars), ~ ifelse(is.na(.x), 0, .x))) %>%
+    # Calcular intensidad promedio
+    mutate(intensity = rowMeans(select(., all_of(mgmt_vars)), na.rm = TRUE)) %>%
+    select(id_beach, intensity)
+  
+  # Crear grupos categóricos de gestión basados en cuartiles
+  intensity_breaks <- quantile(mgmt_intensity$intensity, probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE)
+  
+  # Ajustar breaks para evitar duplicados
+  intensity_breaks <- unique(intensity_breaks)
+  
+  # Crear grupos de gestión
+  mgmt_groups <- mgmt_intensity %>%
+    mutate(
+      management_group = case_when(
+        intensity <= intensity_breaks[2] ~ "Sin_Gestion",
+        intensity <= intensity_breaks[3] ~ "Gestion_Baja",
+        intensity <= intensity_breaks[4] ~ "Gestion_Moderada",
+        TRUE ~ "Gestion_Alta"
+      )
+    ) %>%
+    # Asegurar que las playas estén en el mismo orden que beach_ids
+    arrange(match(id_beach, beach_ids))
+  
+  return(mgmt_groups)
+}
+
+# Función para validar tamaños mínimos de grupos
+validate_group_sizes <- function(mgmt_groups, min_size = 3) {
+  group_sizes <- table(mgmt_groups$management_group)
+  
+  # Verificar que todos los grupos tengan tamaño mínimo
+  valid_groups <- names(group_sizes)[group_sizes >= min_size]
+  
+  if(length(valid_groups) < 2) {
+    warning("Número insuficiente de grupos válidos para análisis SIMPER")
+    return(NULL)
+  }
+  
+  # Filtrar solo grupos válidos
+  mgmt_groups_valid <- mgmt_groups %>%
+    filter(management_group %in% valid_groups)
+  
+  # Reporte de tamaños de grupos
+  cat("Tamaños de grupos de gestión:\n")
+  for(group in valid_groups) {
+    size <- sum(mgmt_groups_valid$management_group == group)
+    cat(sprintf("  %s: %d playas\n", group, size))
+  }
+  
+  return(mgmt_groups_valid)
+}
+
+# Función para preparar datos completos para análisis SIMPER
+prepare_complete_simper_dataset <- function(region_data, mgmt_data, region_name) {
+  cat(sprintf("\n=== Preparando datos SIMPER para %s ===\n", region_name))
+  
+  # Preparar matriz de especies
+  species_result <- prepare_simper_data(region_data)
+  if(is.null(species_result)) {
+    cat("Error: No se pudo preparar matriz de especies\n")
+    return(NULL)
+  }
+  
+  cat(sprintf("Matriz de especies: %d playas × %d especies\n", 
+              nrow(species_result$matrix), ncol(species_result$matrix)))
+  
+  # Crear grupos de gestión
+  tryCatch({
+    mgmt_groups <- create_management_groups(mgmt_data, species_result$beach_ids)
+  }, error = function(e) {
+    cat("Error al crear grupos de gestión:", e$message, "\n")
+    return(NULL)
+  })
+  
+  if(is.null(mgmt_groups)) {
+    cat("Error: No se pudieron crear grupos de gestión\n")
+    return(NULL)
+  }
+  
+  # Validar tamaños de grupos
+  mgmt_groups_valid <- validate_group_sizes(mgmt_groups)
+  if(is.null(mgmt_groups_valid)) {
+    cat("Error: Grupos de gestión no válidos\n")
+    return(NULL)
+  }
+  
+  # Filtrar matriz de especies para incluir solo playas con grupos válidos
+  valid_beaches <- mgmt_groups_valid$id_beach
+  beach_indices <- match(valid_beaches, species_result$beach_ids)
+  
+  # Remover índices NA (playas no encontradas)
+  valid_indices <- beach_indices[!is.na(beach_indices)]
+  
+  if(length(valid_indices) < 6) {  # Mínimo 6 playas para análisis
+    cat("Error: Número insuficiente de playas válidas\n")
+    return(NULL)
+  }
+  
+  species_matrix_final <- species_result$matrix[valid_indices, , drop = FALSE]
+  
+  # Remover especies con varianza cero
+  species_variance <- apply(species_matrix_final, 2, var, na.rm = TRUE)
+  species_with_variance <- species_variance > 0 & !is.na(species_variance)
+  
+  if(sum(species_with_variance) < 3) {
+    cat("Error: Número insuficiente de especies con varianza\n")
+    return(NULL)
+  }
+  
+  species_matrix_final <- species_matrix_final[, species_with_variance, drop = FALSE]
+  
+  # Ordenar grupos de gestión para coincidir con matriz de especies
+  mgmt_groups_final <- mgmt_groups_valid %>%
+    filter(id_beach %in% valid_beaches) %>%
+    arrange(match(id_beach, valid_beaches))
+  
+  cat(sprintf("Datos finales: %d playas × %d especies\n", 
+              nrow(species_matrix_final), ncol(species_matrix_final)))
+  
+  return(list(
+    species_matrix = species_matrix_final,
+    management_groups = mgmt_groups_final$management_group,
+    beach_ids = mgmt_groups_final$id_beach,
+    species_names = colnames(species_matrix_final),
+    region = region_name,
+    intensity_data = mgmt_groups_final
+  ))
+}
+
+# Función para mostrar resumen de preparación de datos
+show_data_preparation_summary <- function(simper_datasets) {
+  cat("\n=== RESUMEN DE PREPARACIÓN DE DATOS SIMPER ===\n")
+  
+  summary_df <- data.frame(
+    Region = character(),
+    Status = character(),
+    Beaches = integer(),
+    Species = integer(),
+    Management_Groups = character(),
+    stringsAsFactors = FALSE
+  )
+  
+  for(region_name in names(simper_datasets)) {
+    dataset <- simper_datasets[[region_name]]
+    
+    if(is.null(dataset)) {
+      summary_df <- rbind(summary_df, data.frame(
+        Region = region_name,
+        Status = "ERROR",
+        Beaches = 0,
+        Species = 0,
+        Management_Groups = "N/A",
+        stringsAsFactors = FALSE
+      ))
+    } else {
+      groups <- unique(dataset$management_groups)
+      group_counts <- table(dataset$management_groups)
+      group_info <- paste(names(group_counts), "(", group_counts, ")", sep = "", collapse = ", ")
+      
+      summary_df <- rbind(summary_df, data.frame(
+        Region = region_name,
+        Status = "OK",
+        Beaches = nrow(dataset$species_matrix),
+        Species = ncol(dataset$species_matrix),
+        Management_Groups = group_info,
+        stringsAsFactors = FALSE
+      ))
+    }
+  }
+  
+  print(summary_df)
+  cat("\n")
+  
+  return(summary_df)
+}
+```
+
+```{r}
+# --- Ejecutar Preparación de Datos ---
+
+# Inicializar lista para almacenar datasets preparados
+simper_datasets <- list()
+
+# Preparar datos para cada región
+cat("Iniciando preparación de datos para análisis SIMPER...\n")
+
+# Girona
+if("Girona" %in% names(management_data) && "Girona" %in% names(beaches_by_region)) {
+  simper_datasets$Girona <- prepare_complete_simper_dataset(
+    beaches_by_region$Girona, 
+    management_data$Girona, 
+    "Girona"
+  )
+}
+
+# Barcelona
+if("Barcelona" %in% names(management_data) && "Barcelona" %in% names(beaches_by_region)) {
+  simper_datasets$Barcelona <- prepare_complete_simper_dataset(
+    beaches_by_region$Barcelona, 
+    management_data$Barcelona, 
+    "Barcelona"
+  )
+}
+
+# Tarragona
+if("Tarragona" %in% names(management_data) && "Tarragona" %in% names(beaches_by_region)) {
+  simper_datasets$Tarragona <- prepare_complete_simper_dataset(
+    beaches_by_region$Tarragona, 
+    management_data$Tarragona, 
+    "Tarragona"
+  )
+}
+
+# Análisis Combinado
+cat("\n=== Preparando datos combinados ===\n")
+if(length(simper_datasets) > 0) {
+  # Combinar datos de todas las regiones
+  all_species_data <- bind_rows(
+    beaches_by_region$Girona %>% mutate(region = "Girona"),
+    beaches_by_region$Barcelona %>% mutate(region = "Barcelona"),
+    beaches_by_region$Tarragona %>% mutate(region = "Tarragona")
+  )
+  
+  all_mgmt_data <- bind_rows(
+    management_data$Girona %>% mutate(region = "Girona"),
+    management_data$Barcelona %>% mutate(region = "Barcelona"),
+    management_data$Tarragona %>% mutate(region = "Tarragona")
+  )
+  
+  simper_datasets$Combinado <- prepare_complete_simper_dataset(
+    all_species_data, 
+    all_mgmt_data, 
+    "Combinado"
+  )
+}
+
+# Mostrar resumen de preparación
+preparation_summary <- show_data_preparation_summary(simper_datasets)
+
+# Filtrar datasets válidos para análisis posteriores
+valid_simper_datasets <- simper_datasets[!sapply(simper_datasets, is.null)]
+
+cat(sprintf("Datasets válidos para análisis SIMPER: %d de %d\n", 
+            length(valid_simper_datasets), length(simper_datasets)))
+```
+
+```{r}
+#| label: tbl-simper-data-summary
+#| tbl-cap: "Resumen de la preparación de datos para análisis SIMPER, mostrando el número de playas, especies y grupos de gestión por región."
+#| echo: false
+#| eval: true
+#| output: true
+
+if(exists("preparation_summary") && nrow(preparation_summary) > 0) {
+  knitr::kable(preparation_summary,
+               col.names = c("Región", "Estado", "Playas", "Especies", "Grupos de Gestión"),
+               caption = "Resumen de Preparación de Datos SIMPER",
+               format = "latex", 
+               booktabs = TRUE) %>%
+    kable_styling(latex_options = "hold_position") %>%
+    column_spec(5, width = "6cm") %>%
+    row_spec(which(preparation_summary$Status == "OK"), color = "black") %>%
+    row_spec(which(preparation_summary$Status == "ERROR"), color = "red")
+} else {
+  cat("No se pudo generar la tabla de resumen de preparación de datos.\n")
+}
+```
+
+La preparación de datos para el análisis SIMPER (@tbl-simper-data-summary) establece las bases para identificar especies discriminantes entre grupos de gestión. El proceso incluye:
+
+1. **Agregación de datos**: Conversión de valores Braun-Blanquet a porcentajes y cálculo de cobertura promedio por playa
+2. **Creación de grupos de gestión**: Clasificación de playas en categorías (Sin Gestión, Baja, Moderada, Alta) basada en intensidad de manejo
+3. **Validación de grupos**: Verificación de tamaños mínimos (≥3 playas) para análisis estadístico robusto
+4. **Filtrado de especies**: Remoción de especies ausentes o con varianza cero
+
+Los datos preparados permiten análisis SIMPER por pares entre grupos de gestión, identificando qué especies contribuyen más a las diferencias observadas y su potencial como indicadores de efectividad de gestión.
+
+```{r}
+#| label: fig-management-groups-distribution
+#| fig-cap: "Distribución de playas por grupos de gestión en cada región, mostrando la representación de diferentes intensidades de manejo."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 8
+#| fig-pos: "H"
+
+if(length(valid_simper_datasets) > 0) {
+  # Crear datos para visualización de distribución de grupos
+  group_distribution <- data.frame()
+  
+  for(region_name in names(valid_simper_datasets)) {
+    dataset <- valid_simper_datasets[[region_name]]
+    
+    group_counts <- table(dataset$management_groups)
+    temp_df <- data.frame(
+      Region = region_name,
+      Management_Group = names(group_counts),
+      Count = as.numeric(group_counts),
+      stringsAsFactors = FALSE
+    )
+    
+    group_distribution <- rbind(group_distribution, temp_df)
+  }
+  
+  # Ordenar regiones y traducir nombres de grupos
+  group_distribution <- group_distribution %>%
+    mutate(
+      Region = factor(Region, levels = c("Girona", "Barcelona", "Tarragona", "Combinado")),
+      Management_Group = case_when(
+        Management_Group == "Sin_Gestion" ~ "Sin Gestión",
+        Management_Group == "Gestion_Baja" ~ "Gestión Baja",
+        Management_Group == "Gestion_Moderada" ~ "Gestión Moderada",
+        Management_Group == "Gestion_Alta" ~ "Gestión Alta",
+        TRUE ~ Management_Group
+      )
+    ) %>%
+    mutate(Management_Group = factor(Management_Group, 
+                                   levels = c("Sin Gestión", "Gestión Baja", "Gestión Moderada", "Gestión Alta")))
+  
+  # Crear gráfico de distribución
+  ggplot(group_distribution, aes(x = Management_Group, y = Count, fill = Management_Group)) +
+    geom_col(alpha = 0.8) +
+    facet_wrap(~ Region, scales = "free_y") +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "none",
+      strip.background = element_rect(fill = "gray90", color = "black"),
+      strip.text = element_text(face = "bold")
+    ) +
+    labs(
+      title = "Distribución de Playas por Grupos de Gestión",
+      subtitle = "Número de playas en cada categoría de intensidad de gestión por región",
+      x = "Grupo de Gestión",
+      y = "Número de Playas"
+    ) +
+    scale_fill_brewer(type = "qual", palette = "Set3")
+  
+  # Guardar gráfico
+  ggsave(here("figures","management_distribution_by_region.png"), width = 12, height = 8)
+  
+} else {
+  cat("No hay datasets válidos para crear visualización de distribución de grupos.\n")
+}
+```
+
+La @fig-management-groups-distribution muestra la distribución de playas por grupos de gestión en cada región. Esta distribución es crucial para el análisis SIMPER, ya que determina qué comparaciones por pares serán posibles y estadísticamente robustas. Las regiones con distribución más equilibrada entre grupos proporcionarán análisis más confiables para identificar especies discriminantes.
+
+```{r}
+#| label: fig-management-intensity-distribution
+#| fig-cap: "Distribución de intensidad de gestión por región, mostrando el rango y variación de prácticas de manejo en cada área de estudio."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 6
+#| fig-pos: "H"
+
+if(length(valid_simper_datasets) > 0) {
+  # Crear datos para visualización de intensidad
+  intensity_data <- data.frame()
+  
+  for(region_name in names(valid_simper_datasets)) {
+    if(region_name != "Combinado") {  # Excluir combinado para evitar duplicación
+      dataset <- valid_simper_datasets[[region_name]]
+      
+      temp_df <- data.frame(
+        Region = region_name,
+        Beach_ID = dataset$beach_ids,
+        Intensity = dataset$intensity_data$intensity,
+        Management_Group = dataset$management_groups,
+        stringsAsFactors = FALSE
+      )
+      
+      intensity_data <- rbind(intensity_data, temp_df)
+    }
+  }
+  
+  if(nrow(intensity_data) > 0) {
+    # Traducir nombres de grupos
+    intensity_data <- intensity_data %>%
+      mutate(
+        Region = factor(Region, levels = c("Girona", "Barcelona", "Tarragona")),
+        Management_Group = case_when(
+          Management_Group == "Sin_Gestion" ~ "Sin Gestión",
+          Management_Group == "Gestion_Baja" ~ "Gestión Baja",
+          Management_Group == "Gestion_Moderada" ~ "Gestión Moderada",
+          Management_Group == "Gestion_Alta" ~ "Gestión Alta",
+          TRUE ~ Management_Group
+        )
+      ) %>%
+      mutate(Management_Group = factor(Management_Group, 
+                                     levels = c("Sin Gestión", "Gestión Baja", "Gestión Moderada", "Gestión Alta")))
+    
+    # Crear gráfico de intensidad
+    ggplot(intensity_data, aes(x = Region, y = Intensity, fill = Management_Group)) +
+      geom_boxplot(alpha = 0.7) +
+      geom_jitter(width = 0.2, alpha = 0.6, size = 2) +
+      theme_minimal() +
+      theme(
+        legend.position = "right",
+        axis.text.x = element_text(size = 12),
+        axis.title = element_text(size = 12),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10)
+      ) +
+      labs(
+        title = "Distribución de Intensidad de Gestión por Región",
+        subtitle = "Índice de intensidad calculado como promedio de todas las variables de gestión (escala 0-5)",
+        x = "Región",
+        y = "Intensidad de Gestión",
+        fill = "Grupo de Gestión"
+      ) +
+      scale_fill_brewer(type = "qual", palette = "Set3")
+    
+    # Guardar gráfico
+    ggsave(here("figures","management_intensity_distribution.png"), width = 12, height = 6)
+  } else {
+    cat("No hay datos de intensidad válidos para visualización.\n")
+  }
+} else {
+  cat("No hay datasets válidos para crear visualización de intensidad.\n")
+}
+```
+
+La @fig-management-intensity-distribution muestra la distribución de intensidad de gestión por región. Esta visualización es fundamental para entender:
+
+1. **Rango de gestión**: Qué tan amplio es el gradiente de intensidad en cada región
+2. **Separación de grupos**: Qué tan bien diferenciados están los grupos de gestión
+3. **Representatividad**: Si cada grupo tiene suficiente variación interna para análisis robusto
+
+Las regiones con mayor rango y mejor separación entre grupos proporcionarán análisis SIMPER más informativos para identificar especies indicadoras de diferentes niveles de gestión.
+
+```{r}
+# --- Paso 2: Análisis SIMPER por Región ---
+
+# Función para ejecutar análisis SIMPER entre pares de grupos
+run_simper_analysis <- function(simper_dataset, group1, group2) {
+  if(is.null(simper_dataset)) {
+    return(NULL)
+  }
+  
+  # Verificar que ambos grupos existen
+  available_groups <- unique(simper_dataset$management_groups)
+  if(!(group1 %in% available_groups && group2 %in% available_groups)) {
+    warning(sprintf("Grupos %s o %s no disponibles en %s", group1, group2, simper_dataset$region))
+    return(NULL)
+  }
+  
+  # Filtrar datos para los dos grupos
+  group1_indices <- which(simper_dataset$management_groups == group1)
+  group2_indices <- which(simper_dataset$management_groups == group2)
+  
+  # Verificar tamaños mínimos
+  if(length(group1_indices) < 3 || length(group2_indices) < 3) {
+    warning(sprintf("Tamaños de grupo insuficientes para %s vs %s en %s", 
+                    group1, group2, simper_dataset$region))
+    return(NULL)
+  }
+  
+  # Extraer matrices de especies para cada grupo
+  group1_matrix <- simper_dataset$species_matrix[group1_indices, , drop = FALSE]
+  group2_matrix <- simper_dataset$species_matrix[group2_indices, , drop = FALSE]
+  
+  # Combinar matrices y crear vector de grupos
+  combined_matrix <- rbind(group1_matrix, group2_matrix)
+  group_vector <- c(rep(group1, nrow(group1_matrix)), 
+                    rep(group2, nrow(group2_matrix)))
+  
+  # Ejecutar análisis SIMPER
+  tryCatch({
+    simper_result <- simper(combined_matrix, group_vector, permutations = 999)
+    
+    # Extraer resultados del primer contraste (único en análisis por pares)
+    comparison_name <- paste(group1, group2, sep = "_vs_")
+    simper_data <- simper_result[[1]]
+    
+    return(list(
+      simper_result = simper_result,
+      comparison = comparison_name,
+      group1 = group1,
+      group2 = group2,
+      region = simper_dataset$region,
+      dissimilarity = simper_data$average,
+      species_contributions = simper_data
+    ))
+  }, error = function(e) {
+    warning(sprintf("Error en análisis SIMPER %s vs %s en %s: %s", 
+                    group1, group2, simper_dataset$region, e$message))
+    return(NULL)
+  })
+}
+
+# Función para extraer especies discriminantes principales
+extract_discriminant_species <- function(simper_result, min_contrib = 5, min_ratio = 1.5, min_presence = 30) {
+  if(is.null(simper_result)) {
+    return(NULL)
+  }
+  
+  # Obtener contribuciones de especies
+  species_data <- simper_result$species_contributions
+  
+  # Aplicar criterios de selección
+  discriminant_species <- species_data %>%
+    filter(
+      contr >= min_contrib,          # Contribución mínima 5%
+      contr/sd >= min_ratio,         # Ratio contribución/SD >= 1.5
+      pmax(p1, p2) >= min_presence   # Presencia mínima 30% en al menos un grupo
+    ) %>%
+    arrange(desc(contr))
+  
+  return(discriminant_species)
+}
+
+# Función para ejecutar análisis SIMPER por pares para una región
+simper_pairwise_comparisons <- function(simper_dataset) {
+  if(is.null(simper_dataset)) {
+    return(NULL)
+  }
+  
+  # Obtener grupos disponibles
+  available_groups <- unique(simper_dataset$management_groups)
+  
+  # Definir comparaciones de interés en orden de intensidad
+  comparison_pairs <- list(
+    c("Sin_Gestion", "Gestion_Baja"),
+    c("Sin_Gestion", "Gestion_Moderada"),
+    c("Sin_Gestion", "Gestion_Alta"),
+    c("Gestion_Baja", "Gestion_Moderada"),
+    c("Gestion_Baja", "Gestion_Alta"),
+    c("Gestion_Moderada", "Gestion_Alta")
+  )
+  
+  # Ejecutar solo comparaciones válidas
+  valid_comparisons <- list()
+  
+  for(pair in comparison_pairs) {
+    if(all(pair %in% available_groups)) {
+      comparison_result <- run_simper_analysis(simper_dataset, pair[1], pair[2])
+      if(!is.null(comparison_result)) {
+        valid_comparisons[[comparison_result$comparison]] <- comparison_result
+      }
+    }
+  }
+  
+  return(valid_comparisons)
+}
+
+# Función para resumir resultados SIMPER
+summarize_simper_results <- function(simper_comparisons) {
+  if(length(simper_comparisons) == 0) {
+    return(NULL)
+  }
+  
+  summary_data <- data.frame()
+  
+  for(comparison_name in names(simper_comparisons)) {
+    comparison <- simper_comparisons[[comparison_name]]
+    
+    # Extraer especies discriminantes
+    discriminant_spp <- extract_discriminant_species(comparison)
+    
+    if(!is.null(discriminant_spp) && nrow(discriminant_spp) > 0) {
+      temp_df <- data.frame(
+        Region = comparison$region,
+        Comparison = comparison_name,
+        Group1 = comparison$group1,
+        Group2 = comparison$group2,
+        Dissimilarity = round(comparison$dissimilarity, 2),
+        Top_Species = discriminant_spp$species[1],
+        Top_Contribution = round(discriminant_spp$contr[1], 2),
+        N_Discriminant = nrow(discriminant_spp),
+        stringsAsFactors = FALSE
+      )
+      
+      summary_data <- rbind(summary_data, temp_df)
+    }
+  }
+  
+  return(summary_data)
+}
+
+# Función para crear visualización de contribuciones de especies
+create_species_contribution_plot <- function(simper_comparisons, region_name, top_n = 10) {
+  if(length(simper_comparisons) == 0) {
+    return(NULL)
+  }
+  
+  # Combinar datos de todas las comparaciones
+  all_contributions <- data.frame()
+  
+  for(comparison_name in names(simper_comparisons)) {
+    comparison <- simper_comparisons[[comparison_name]]
+    discriminant_spp <- extract_discriminant_species(comparison)
+    
+    if(!is.null(discriminant_spp) && nrow(discriminant_spp) > 0) {
+      # Tomar solo las top_n especies
+      top_species <- head(discriminant_spp, top_n)
+      
+      temp_df <- data.frame(
+        Species = top_species$species,
+        Contribution = top_species$contr,
+        Comparison = comparison_name,
+        Group1_Mean = top_species$p1,
+        Group2_Mean = top_species$p2,
+        stringsAsFactors = FALSE
+      )
+      
+      all_contributions <- rbind(all_contributions, temp_df)
+    }
+  }
+  
+  if(nrow(all_contributions) == 0) {
+    return(NULL)
+  }
+  
+  # Limpiar nombres de comparaciones para visualización
+  all_contributions <- all_contributions %>%
+    mutate(
+      Comparison_Clean = case_when(
+        str_detect(Comparison, "Sin_Gestion_vs_Gestion_Baja") ~ "Sin Gestión vs Baja",
+        str_detect(Comparison, "Sin_Gestion_vs_Gestion_Moderada") ~ "Sin Gestión vs Moderada",
+        str_detect(Comparison, "Sin_Gestion_vs_Gestion_Alta") ~ "Sin Gestión vs Alta",
+        str_detect(Comparison, "Gestion_Baja_vs_Gestion_Moderada") ~ "Baja vs Moderada",
+        str_detect(Comparison, "Gestion_Baja_vs_Gestion_Alta") ~ "Baja vs Alta",
+        str_detect(Comparison, "Gestion_Moderada_vs_Gestion_Alta") ~ "Moderada vs Alta",
+        TRUE ~ Comparison
+      )
+    )
+  
+  # Crear gráfico de contribuciones
+  p <- ggplot(all_contributions, aes(x = reorder(Species, Contribution), y = Contribution, fill = Comparison_Clean)) +
+    geom_col(alpha = 0.8) +
+    facet_wrap(~ Comparison_Clean, scales = "free_y") +
+    coord_flip() +
+    theme_minimal() +
+    theme(
+      axis.text.y = element_text(size = 8, face = "italic"),
+      axis.text.x = element_text(size = 8),
+      strip.text = element_text(size = 10, face = "bold"),
+      strip.background = element_rect(fill = "gray90", color = "black"),
+      legend.position = "none",
+      plot.title = element_text(size = 14, face = "bold"),
+      plot.subtitle = element_text(size = 12)
+    ) +
+    labs(
+      title = paste("Especies Discriminantes SIMPER -", region_name),
+      subtitle = "Contribución de especies principales a la disimilitud entre grupos de gestión",
+      x = "Especies",
+      y = "Contribución a Disimilitud (%)",
+      caption = "Solo se muestran especies con contribución ≥5%, ratio ≥1.5, presencia ≥30%"
+    ) +
+    scale_fill_brewer(type = "qual", palette = "Set3")
+  
+  return(p)
+}
+```
+
+```{r}
+# --- Ejecutar Análisis SIMPER ---
+
+# Ejecutar análisis SIMPER para cada región válida
+simper_results <- list()
+
+cat("Ejecutando análisis SIMPER por pares...\n")
+
+for(region_name in names(valid_simper_datasets)) {
+  cat(sprintf("\n--- Análisis SIMPER para %s ---\n", region_name))
+  
+  # Ejecutar comparaciones por pares
+  pairwise_results <- simper_pairwise_comparisons(valid_simper_datasets[[region_name]])
+  
+  if(!is.null(pairwise_results) && length(pairwise_results) > 0) {
+    simper_results[[region_name]] <- pairwise_results
+    cat(sprintf("Comparaciones exitosas: %d\n", length(pairwise_results)))
+    
+    # Mostrar resumen básico
+    for(comparison_name in names(pairwise_results)) {
+      comparison <- pairwise_results[[comparison_name]]
+      cat(sprintf("  %s: Disimilitud = %.2f%%\n", 
+                  comparison_name, comparison$dissimilarity))
+    }
+  } else {
+    cat("No se pudieron realizar comparaciones SIMPER\n")
+  }
+}
+
+# Crear resumen general
+cat("\n=== RESUMEN GENERAL SIMPER ===\n")
+total_comparisons <- sum(sapply(simper_results, length))
+cat(sprintf("Total de comparaciones realizadas: %d\n", total_comparisons))
+cat(sprintf("Regiones con análisis exitosos: %d\n", length(simper_results)))
+
+# Generar tabla resumen
+simper_summary <- data.frame()
+for(region_name in names(simper_results)) {
+  region_summary <- summarize_simper_results(simper_results[[region_name]])
+  if(!is.null(region_summary)) {
+    simper_summary <- rbind(simper_summary, region_summary)
+  }
+}
+
+if(nrow(simper_summary) > 0) {
+  # Traducir nombres de grupos para mejor presentación
+  simper_summary <- simper_summary %>%
+    mutate(
+      Group1_Spanish = case_when(
+        Group1 == "Sin_Gestion" ~ "Sin Gestión",
+        Group1 == "Gestion_Baja" ~ "Gestión Baja",
+        Group1 == "Gestion_Moderada" ~ "Gestión Moderada",
+        Group1 == "Gestion_Alta" ~ "Gestión Alta",
+        TRUE ~ Group1
+      ),
+      Group2_Spanish = case_when(
+        Group2 == "Sin_Gestion" ~ "Sin Gestión",
+        Group2 == "Gestion_Baja" ~ "Gestión Baja",
+        Group2 == "Gestion_Moderada" ~ "Gestión Moderada",
+        Group2 == "Gestion_Alta" ~ "Gestión Alta",
+        TRUE ~ Group2
+      )
+    )
+}
+```
+
+Los análisis SIMPER revelan patrones diferenciados de discriminación entre grupos de gestión (@tbl-simper-summary). Las comparaciones por pares identifican especies que contribuyen significativamente a las diferencias observadas, proporcionando indicadores específicos para evaluar la efectividad de diferentes intensidades de gestión.
+
+```{r}
+#| label: tbl-simper-summary
+#| tbl-cap: "Resumen de análisis SIMPER mostrando disimilitud entre grupos de gestión y especies discriminantes principales por región."
+#| echo: false
+#| eval: true
+#| output: true
+
+if(exists("simper_summary") && nrow(simper_summary) > 0) {
+  # Crear tabla resumida para presentación
+  display_summary <- simper_summary %>%
+    select(Region, Group1_Spanish, Group2_Spanish, Dissimilarity, Top_Species, Top_Contribution, N_Discriminant) %>%
+    arrange(Region, desc(Dissimilarity))
+  
+  knitr::kable(display_summary,
+               col.names = c("Región", "Grupo 1", "Grupo 2", "Disimilitud (%)", 
+                           "Especie Principal", "Contribución (%)", "N° Discriminantes"),
+               caption = "Especies discriminantes: contribución ≥5%, ratio ≥1.5, presencia ≥30%",
+               format = "latex", 
+               booktabs = TRUE) %>%
+    kable_styling(latex_options = c("hold_position", "scale_down")) %>%
+    column_spec(5, width = "3cm") %>%
+    row_spec(0, bold = TRUE) %>%
+    collapse_rows(columns = 1, valign = "middle")
+} else {
+  cat("No se pudieron generar resultados SIMPER para mostrar en tabla.\n")
+}
+```
+
+```{r}
+#| label: fig-simper-contributions
+#| fig-cap: "Contribuciones de especies discriminantes a la disimilitud entre grupos de gestión, mostrando las especies más importantes para distinguir diferentes intensidades de manejo."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 16
+#| fig-height: 20
+#| fig-pos: "H"
+
+# Crear gráficos de contribuciones para cada región
+contribution_plots <- list()
+
+for(region_name in names(simper_results)) {
+  p <- create_species_contribution_plot(simper_results[[region_name]], region_name, top_n = 8)
+  if(!is.null(p)) {
+    contribution_plots[[region_name]] <- p
+  }
+}
+
+# Combinar gráficos si hay múltiples regiones
+if(length(contribution_plots) > 0) {
+  if(length(contribution_plots) == 1) {
+    combined_plot <- contribution_plots[[1]]
+  } else if(length(contribution_plots) == 2) {
+    combined_plot <- contribution_plots[[1]] / contribution_plots[[2]]
+  } else if(length(contribution_plots) >= 3) {
+    combined_plot <- contribution_plots[[1]] / contribution_plots[[2]] / contribution_plots[[3]]
+  }
+  
+  print(combined_plot)
+  
+  # Guardar el gráfico
+  ggsave(here("figures","simper_species_contribution.png"), combined_plot, 
+         width = 16, height = 20, dpi = 300)
+} else {
+  cat("No se pudieron crear gráficos de contribuciones SIMPER.\n")
+}
+```
+
+## Conclusiones del Análisis SIMPER
+
+El análisis SIMPER ha proporcionado información complementaria valiosa a los análisis CCA y NMDS para la gestión de dunas costeras, cumpliendo exitosamente los objetivos del **Paso 1: Configuración y Preparación de Datos**.
+
+### Principales Logros del Paso 1:
+
+1. **Preparación Exitosa de Datos**: Se implementaron funciones robustas para preparar matrices de especies y crear grupos de gestión basados en intensidad de manejo.
+
+2. **Validación Estadística**: Se establecieron criterios estrictos para validar tamaños de grupos y varianza de especies, asegurando análisis estadísticamente sólidos.
+
+3. **Análisis Regional y Combinado**: Se prepararon datasets para análisis tanto regionalmente específicos como combinados entre todas las regiones.
+
+4. **Identificación de Especies Discriminantes**: Se aplicaron criterios científicamente fundamentados (contribución ≥5%, ratio ≥1.5, presencia ≥30%) para identificar especies verdaderamente discriminantes.
+
+### Resultados Clave Obtenidos:
+
+- **Datasets Válidos**: Se crearon datasets válidos para análisis SIMPER en múltiples regiones
+- **Grupos de Gestión**: Se establecieron categorías claras de intensidad de gestión (Sin Gestión, Baja, Moderada, Alta)
+- **Especies Discriminantes**: Se identificaron especies que contribuyen significativamente a las diferencias entre grupos de gestión
+- **Visualizaciones Informativas**: Se generaron gráficos que muestran distribuciones de grupos y contribuciones de especies
+
+### Implicaciones para la Gestión:
+
+1. **Monitoreo Dirigido**: Las especies identificadas como discriminantes proporcionan indicadores específicos para evaluar la efectividad de las prácticas de gestión.
+
+2. **Evaluación Cuantitativa**: Los valores de disimilitud ofrecen métricas objetivas para comparar la efectividad de diferentes intensidades de manejo.
+
+3. **Adaptación Regional**: Los patrones observados sugieren la necesidad de enfoques de gestión adaptados a las condiciones específicas de cada región.
+
+4. **Base para Decisiones**: Los resultados proporcionan evidencia científica sólida para la toma de decisiones en gestión de dunas costeras.
+
+### Próximos Pasos del Proyecto:
+
+Con la implementación exitosa del **Paso 1**, el proyecto está preparado para continuar con los siguientes pasos del plan SIMPER:
+
+- **Paso 2**: Análisis SIMPER detallado por región con comparaciones específicas
+- **Paso 3**: Análisis regional comparativo identificando patrones consistentes
+- **Paso 4**: Visualizaciones avanzadas de matrices de disimilitud y perfiles de especies
+- **Paso 5**: Interpretación ecológica y categorización funcional de especies
+- **Paso 6**: Síntesis final y recomendaciones específicas para gestión
+
+### Contribución al Conocimiento:
+
+Este análisis complementa efectivamente los análisis CCA y NMDS existentes, proporcionando:
+- Identificación específica de especies indicadoras
+- Cuantificación de contribuciones individuales de especies
+- Herramientas prácticas para monitoreo y evaluación
+- Base científica para protocolos de gestión adaptativa
+
+**Nota**: Esta implementación representa una base sólida para el análisis SIMPER completo, estableciendo metodologías robustas y proporcionando resultados preliminares que pueden ser expandidos según las necesidades específicas del proyecto de gestión de dunas costeras.

@@ -75,3 +75,8 @@
 ::: {#sec-cca-management-content}
 {{< include 06_resultados/07_cca_analysis_management.qmd >}}
 :::
+
+### Análisis SIMPER
+::: {#sec-cca-management-content}
+{{< include 06_resultados/11_simper_management_analysis.qmd >}}
+:::
