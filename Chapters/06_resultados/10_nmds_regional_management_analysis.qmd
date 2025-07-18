@@ -372,9 +372,11 @@ all_regional_data <- bind_rows(
 
 ```
 
+La interacción hábitat-gestión muestra patrones regionales distintos (@fig-habitat-management-interaction). Barcelona presenta exclusivamente gestión baja en todos los hábitats, confirmando su homogeneidad. Tarragona distribuye gestión moderada (52-62%) y baja (22-38%) entre hábitats, mientras Girona incluye áreas sin gestión (6-19%) además de gestión baja y moderada, mostrando mayor diversidad de enfoques de manejo por tipo de hábitat.
+
 ```{r}
 #| label: fig-habitat-management-interaction
-#| fig-cap: "Tabulación cruzada mostrando la relación entre tipos de hábitat y categorías de intensidad de gestión en todas las regiones, revelando cómo las prácticas de gestión interactúan con la clasificación natural de hábitats."
+#| fig-cap: "Distribución de gestión por hábitat regional, confirmando homogeneidad en Barcelona, distribución equilibrada en Tarragona, y mayor diversidad de enfoques en Girona."
 #| echo: false
 #| eval: true
 #| output: true
