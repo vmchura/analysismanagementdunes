@@ -12,7 +12,6 @@ knitr::opts_chunk$set(
 library(tidyverse)
 library(ggplot2)
 library(vegan)     # For RDA analysis
-library(ade4)      # Additional ordination tools
 library(gridExtra) # For arranging multiple plots
 library(RColorBrewer) # For color palettes
 library(patchwork)  # For combining plots
