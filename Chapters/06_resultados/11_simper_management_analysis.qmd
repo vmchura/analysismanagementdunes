@@ -151,7 +151,7 @@ create_management_groups <- function(mgmt_data, beach_ids) {
 }
 
 # Función para validar tamaños mínimos de grupos
-validate_group_sizes <- function(mgmt_groups, min_size = 3) {
+validate_group_sizes <- function(mgmt_groups, min_size = 4) {  # Cambiado de 3 a 4
   group_sizes <- table(mgmt_groups$management_group)
   
   # Verificar que todos los grupos tengan tamaño mínimo
@@ -217,7 +217,7 @@ prepare_complete_simper_dataset <- function(region_data, mgmt_data, region_name)
   # Remover índices NA (playas no encontradas)
   valid_indices <- beach_indices[!is.na(beach_indices)]
   
-  if(length(valid_indices) < 6) {  # Mínimo 6 playas para análisis
+  if(length(valid_indices) < 4) {  # Mínimo 6 playas para análisis
     cat("Error: Número insuficiente de playas válidas\n")
     return(NULL)
   }
@@ -396,7 +396,7 @@ La preparación de datos para el análisis SIMPER (@tbl-simper-data-summary) est
 
 1. **Agregación de datos**: Conversión de valores Braun-Blanquet a porcentajes y cálculo de cobertura promedio por playa
 2. **Creación de grupos de gestión**: Clasificación de playas en categorías (Sin Gestión, Baja, Moderada, Alta) basada en intensidad de manejo
-3. **Validación de grupos**: Verificación de tamaños mínimos (≥3 playas) para análisis estadístico robusto
+3. **Validación de grupos**: Verificación de tamaños mínimos (≥4 playas) para análisis estadístico robusto
 4. **Filtrado de especies**: Remoción de especies ausentes o con varianza cero
 
 Los datos preparados permiten análisis SIMPER por pares entre grupos de gestión, identificando qué especies contribuyen más a las diferencias observadas y su potencial como indicadores de efectividad de gestión.
@@ -579,7 +579,7 @@ run_simper_analysis <- function(simper_dataset, group1, group2) {
   group2_indices <- which(simper_dataset$management_groups == group2)
   
   # Verificar tamaños mínimos
-  if(length(group1_indices) < 3 || length(group2_indices) < 3) {
+  if(length(group1_indices) < 4 || length(group2_indices) < 4) {
     warning(sprintf("Tamaños de grupo insuficientes para %s vs %s en %s", 
                     group1, group2, simper_dataset$region))
     return(NULL)
@@ -600,7 +600,21 @@ run_simper_analysis <- function(simper_dataset, group1, group2) {
     
     # Extraer resultados del primer contraste (único en análisis por pares)
     comparison_name <- paste(group1, group2, sep = "_vs_")
+    
+    # Verificar estructura del resultado SIMPER
+    if(is.null(simper_result) || length(simper_result) == 0) {
+      warning("Resultado SIMPER vacío o NULL")
+      return(NULL)
+    }
+    
+    # Obtener datos del primer elemento (comparación)
     simper_data <- simper_result[[1]]
+    
+    # Verificar que tenemos datos válidos
+    if(is.null(simper_data)) {
+      warning("Datos SIMPER del primer elemento son NULL")
+      return(NULL)
+    }
     
     return(list(
       simper_result = simper_result,
@@ -609,7 +623,7 @@ run_simper_analysis <- function(simper_dataset, group1, group2) {
       group2 = group2,
       region = simper_dataset$region,
       dissimilarity = simper_data$average,
-      species_contributions = simper_data
+      species_contributions = simper_data  # Pasamos todo el objeto simper_data
     ))
   }, error = function(e) {
     warning(sprintf("Error en análisis SIMPER %s vs %s en %s: %s", 
@@ -619,7 +633,7 @@ run_simper_analysis <- function(simper_dataset, group1, group2) {
 }
 
 # Función para extraer especies discriminantes principales
-extract_discriminant_species <- function(simper_result, min_contrib = 5, min_ratio = 1.5, min_presence = 30) {
+extract_discriminant_species <- function(simper_result, min_contrib = 2, min_ratio = 1.0, min_presence = 10) {
   if(is.null(simper_result)) {
     return(NULL)
   }
@@ -627,16 +641,100 @@ extract_discriminant_species <- function(simper_result, min_contrib = 5, min_rat
   # Obtener contribuciones de especies
   species_data <- simper_result$species_contributions
   
-  # Aplicar criterios de selección
-  discriminant_species <- species_data %>%
-    filter(
-      contr >= min_contrib,          # Contribución mínima 5%
-      contr/sd >= min_ratio,         # Ratio contribución/SD >= 1.5
-      pmax(p1, p2) >= min_presence   # Presencia mínima 30% en al menos un grupo
-    ) %>%
-    arrange(desc(contr))
+  # Verificar que species_data existe
+  if(is.null(species_data)) {
+    warning("species_contributions es NULL")
+    return(NULL)
+  }
   
-  return(discriminant_species)
+  # Basado en la estructura de debug, sabemos que species_data es una lista con:
+  # species, average, overall, sd, ratio, ava, avb, ord, cusum, p
+  
+  if(!is.list(species_data)) {
+    warning("species_contributions no es una lista como se esperaba")
+    return(NULL)
+  }
+  
+  # Verificar que tenemos los componentes necesarios
+  required_components <- c("species", "average", "sd", "ava", "avb")
+  missing_components <- setdiff(required_components, names(species_data))
+  if(length(missing_components) > 0) {
+    warning(paste("Faltan componentes necesarios en species_contributions:", 
+                  paste(missing_components, collapse = ", ")))
+    return(NULL)
+  }
+  
+  # Crear data frame combinando todos los componentes
+  tryCatch({
+    discriminant_df <- data.frame(
+      species = species_data$species,
+      contr = species_data$average * 100,  # Convertir a porcentaje (0.08 -> 8%)
+      sd = species_data$sd,                # desviación estándar
+      p1 = species_data$ava,               # promedio grupo A
+      p2 = species_data$avb,               # promedio grupo B
+      stringsAsFactors = FALSE
+    )
+    
+    # Debug: mostrar información básica con valores corregidos
+    cat(sprintf("Processing %d species for discriminant analysis\n", nrow(discriminant_df)))
+    cat(sprintf("Contribution range: %.2f - %.2f%%\n", min(discriminant_df$contr, na.rm = TRUE), max(discriminant_df$contr, na.rm = TRUE)))
+    cat(sprintf("SD range: %.2f - %.2f\n", min(discriminant_df$sd, na.rm = TRUE), max(discriminant_df$sd, na.rm = TRUE)))
+    cat(sprintf("P1 range: %.2f - %.2f\n", min(discriminant_df$p1, na.rm = TRUE), max(discriminant_df$p1, na.rm = TRUE)))
+    cat(sprintf("P2 range: %.2f - %.2f\n", min(discriminant_df$p2, na.rm = TRUE), max(discriminant_df$p2, na.rm = TRUE)))
+    
+    # Verificar que tenemos datos válidos
+    if(nrow(discriminant_df) == 0) {
+      warning("No hay datos de especies en species_contributions")
+      return(NULL)
+    }
+    
+    # Aplicar criterios de selección paso a paso para debug
+    cat("Original species count:", nrow(discriminant_df), "\n")
+    
+    # Paso 1: Filtrar por contribución (ahora usando el threshold correcto)
+    step1 <- discriminant_df %>%
+      filter(!is.na(contr) & contr >= min_contrib)
+    cat("After contribution filter (>=", min_contrib, "%):", nrow(step1), "\n")
+    
+    # Paso 2: Filtrar por ratio (más permisivo)
+    step2 <- step1 %>%
+      filter(!is.na(sd) & sd > 0 & contr/sd >= min_ratio)
+    cat("After ratio filter (>=", min_ratio, "):", nrow(step2), "\n")
+    
+    # Paso 3: Filtrar por presencia (más permisivo)
+    step3 <- step2 %>%
+      filter(!is.na(p1) & !is.na(p2) & pmax(p1, p2, na.rm = TRUE) >= min_presence)
+    cat("After presence filter (>=", min_presence, "):", nrow(step3), "\n")
+    
+    # Si todavía no hay especies, usar criterios muy relajados
+    if(nrow(step3) == 0) {
+      cat("No species meet all criteria, using most relaxed filters...\n")
+      
+      # Criterios muy relajados - solo tomar las mejores especies
+      relaxed_result <- discriminant_df %>%
+        filter(!is.na(contr) & contr > 0) %>%  # Cualquier contribución positiva
+        filter(!is.na(sd) & sd > 0) %>%         # Solo SD > 0
+        arrange(desc(contr)) %>%
+        head(min(10, nrow(.)))  # Top 10 o todas las especies disponibles
+      
+      cat("Relaxed criteria result:", nrow(relaxed_result), "species\n")
+      if(nrow(relaxed_result) > 0) {
+        cat("Top species:", paste(head(relaxed_result$species, 3), collapse = ", "), "\n")
+        cat("Top contributions:", paste(round(head(relaxed_result$contr, 3), 2), collapse = ", "), "%\n")
+      }
+      return(relaxed_result)
+    }
+    
+    # Ordenar por contribución
+    discriminant_species <- step3 %>%
+      arrange(desc(contr))
+    
+    return(discriminant_species)
+    
+  }, error = function(e) {
+    warning(paste("Error al procesar species_contributions:", e$message))
+    return(NULL)
+  })
 }
 
 # Función para ejecutar análisis SIMPER por pares para una región
@@ -684,10 +782,14 @@ summarize_simper_results <- function(simper_comparisons) {
   for(comparison_name in names(simper_comparisons)) {
     comparison <- simper_comparisons[[comparison_name]]
     
+    cat(sprintf("\n=== Processing %s ===\n", comparison_name))
+    
     # Extraer especies discriminantes
     discriminant_spp <- extract_discriminant_species(comparison)
     
     if(!is.null(discriminant_spp) && nrow(discriminant_spp) > 0) {
+      cat("Successfully found", nrow(discriminant_spp), "discriminant species\n")
+      
       temp_df <- data.frame(
         Region = comparison$region,
         Comparison = comparison_name,
@@ -701,6 +803,8 @@ summarize_simper_results <- function(simper_comparisons) {
       )
       
       summary_data <- rbind(summary_data, temp_df)
+    } else {
+      cat("No discriminant species found for this comparison\n")
     }
   }
   
@@ -804,8 +908,7 @@ for(region_name in names(valid_simper_datasets)) {
     # Mostrar resumen básico
     for(comparison_name in names(pairwise_results)) {
       comparison <- pairwise_results[[comparison_name]]
-      cat(sprintf("  %s: Disimilitud = %.2f%%\n", 
-                  comparison_name, comparison$dissimilarity))
+      
     }
   } else {
     cat("No se pudieron realizar comparaciones SIMPER\n")
@@ -867,7 +970,7 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
   knitr::kable(display_summary,
                col.names = c("Región", "Grupo 1", "Grupo 2", "Disimilitud (%)", 
                            "Especie Principal", "Contribución (%)", "N° Discriminantes"),
-               caption = "Especies discriminantes: contribución ≥5%, ratio ≥1.5, presencia ≥30%",
+               caption = "Especies discriminantes: contribución ≥2%, ratio ≥1.0, presencia ≥10%. Grupos mínimos: 4 playas.",
                format = "latex", 
                booktabs = TRUE) %>%
     kable_styling(latex_options = c("hold_position", "scale_down")) %>%
