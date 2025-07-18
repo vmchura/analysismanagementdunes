@@ -892,7 +892,6 @@ if(nrow(simper_summary) > 0) {
 }
 ```
 
-Los análisis SIMPER revelan patrones diferenciados de discriminación entre grupos de gestión (@tbl-simper-summary). Las comparaciones por pares identifican especies que contribuyen significativamente a las diferencias observadas, proporcionando indicadores específicos para evaluar la efectividad de diferentes intensidades de gestión.
 
 ```{r}
 #| label: tbl-simper-species
@@ -902,22 +901,29 @@ Los análisis SIMPER revelan patrones diferenciados de discriminación entre gru
 #| output: true
 
 if(exists("simper_summary") && nrow(simper_summary) > 0) {
-  # Crear tabla separada para especies
+  # Crear tabla separada para especies - evitar duplicados
   species_summary <- simper_summary %>%
     select(Region, Top_Species, Top_Contribution) %>%
-    arrange(Region, desc(Top_Contribution)) %>%
+    # Agregar por región y especie para obtener la máxima contribución
+    group_by(Region, Top_Species) %>%
+    summarise(Max_Contribution = max(Top_Contribution, na.rm = TRUE), .groups = "drop") %>%
+    # Ordenar y tomar top 3 especies únicas por región
+    arrange(Region, desc(Max_Contribution)) %>%
+    group_by(Region) %>%
+    slice_head(n = 3) %>%  # keep only top 3 unique species per region
+    ungroup() %>%
     mutate(
-      Especie = ifelse(nchar(Top_Species) > 20, 
-                      paste0(substr(Top_Species, 1, 18), "..."), 
+      Especie = ifelse(nchar(Top_Species) > 20,
+                      paste0(substr(Top_Species, 1, 18), "..."),
                       Top_Species),
-      Contrib = round(Top_Contribution, 1)
+      Contrib = round(Max_Contribution, 1)
     ) %>%
     select(Region, Especie, Contrib)
-  
-  knitr::kable(species_summary,
+
+  knitr::kable(species_summary,  # Show top 3 unique species per region
                col.names = c("Región", "Especie Principal", "Contribución (%)"),
-               caption = "Especies con mayor contribución a la discriminación entre grupos",
-               format = "latex", 
+               caption = "Top 3 especies únicas con mayor contribución a la discriminación entre grupos por región",
+               format = "markdown",
                booktabs = TRUE) %>%
     kable_styling(latex_options = c("hold_position", "scale_down")) %>%
     column_spec(1, width = "2cm") %>%
@@ -966,7 +972,7 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
   knitr::kable(display_summary,
                col.names = c("Región", "Comparación", "Disimilitud (%)", "N° Esp."),
                caption = "SG=Sin Gestión, GB=Gestión Baja, GM=Gestión Moderada, GA=Gestión Alta",
-               format = "latex", 
+               format = "latex",
                booktabs = TRUE) %>%
     kable_styling(latex_options = c("hold_position", "scale_down")) %>%
     column_spec(1, width = "2cm") %>%
