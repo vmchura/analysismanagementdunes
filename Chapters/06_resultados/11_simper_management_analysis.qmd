@@ -25,21 +25,6 @@ load(here("data","all_observations_split.RData"))
 load(here("data","all_management_data.RData"))
 ```
 
-#### Análisis SIMPER: Especies Discriminantes por Gestión
-
-El análisis SIMPER (Similarity Percentages) identifica qué especies contribuyen más a las diferencias entre grupos de gestión, proporcionando información complementaria a los análisis CCA y NMDS para la gestión efectiva de dunas costeras.
-
-**Objetivos del análisis SIMPER:**
-
-1. **Identificar especies discriminantes**: Especies que mejor distinguen entre diferentes intensidades de gestión
-2. **Cuantificar contribuciones**: Porcentaje de cada especie a las diferencias entre grupos
-3. **Detectar indicadores de gestión**: Especies que responden consistentemente a prácticas de manejo
-4. **Comparar patrones regionales**: Evaluar si las respuestas son consistentes entre regiones
-
-**Metodología:**
-- Análisis por pares entre grupos de gestión (Sin gestión, Baja, Moderada, Alta)
-- Criterios de selección: contribución >5%, ratio contribución/SD >1.5, presencia >30%
-- Análisis regional y combinado para validar patrones
 
 ```{r}
 # --- Paso 1: Configuración y Preparación de Datos ---
@@ -167,10 +152,8 @@ validate_group_sizes <- function(mgmt_groups, min_size = 4) {  # Cambiado de 3 a
     filter(management_group %in% valid_groups)
   
   # Reporte de tamaños de grupos
-  cat("Tamaños de grupos de gestión:\n")
   for(group in valid_groups) {
     size <- sum(mgmt_groups_valid$management_group == group)
-    cat(sprintf("  %s: %d playas\n", group, size))
   }
   
   return(mgmt_groups_valid)
@@ -178,8 +161,7 @@ validate_group_sizes <- function(mgmt_groups, min_size = 4) {  # Cambiado de 3 a
 
 # Función para preparar datos completos para análisis SIMPER
 prepare_complete_simper_dataset <- function(region_data, mgmt_data, region_name) {
-  cat(sprintf("\n=== Preparando datos SIMPER para %s ===\n", region_name))
-  
+
   # Preparar matriz de especies
   species_result <- prepare_simper_data(region_data)
   if(is.null(species_result)) {
@@ -187,9 +169,7 @@ prepare_complete_simper_dataset <- function(region_data, mgmt_data, region_name)
     return(NULL)
   }
   
-  cat(sprintf("Matriz de especies: %d playas × %d especies\n", 
-              nrow(species_result$matrix), ncol(species_result$matrix)))
-  
+
   # Crear grupos de gestión
   tryCatch({
     mgmt_groups <- create_management_groups(mgmt_data, species_result$beach_ids)
@@ -206,7 +186,6 @@ prepare_complete_simper_dataset <- function(region_data, mgmt_data, region_name)
   # Validar tamaños de grupos
   mgmt_groups_valid <- validate_group_sizes(mgmt_groups)
   if(is.null(mgmt_groups_valid)) {
-    cat("Error: Grupos de gestión no válidos\n")
     return(NULL)
   }
   
@@ -240,9 +219,7 @@ prepare_complete_simper_dataset <- function(region_data, mgmt_data, region_name)
     filter(id_beach %in% valid_beaches) %>%
     arrange(match(id_beach, valid_beaches))
   
-  cat(sprintf("Datos finales: %d playas × %d especies\n", 
-              nrow(species_matrix_final), ncol(species_matrix_final)))
-  
+
   return(list(
     species_matrix = species_matrix_final,
     management_groups = mgmt_groups_final$management_group,
@@ -255,8 +232,7 @@ prepare_complete_simper_dataset <- function(region_data, mgmt_data, region_name)
 
 # Función para mostrar resumen de preparación de datos
 show_data_preparation_summary <- function(simper_datasets) {
-  cat("\n=== RESUMEN DE PREPARACIÓN DE DATOS SIMPER ===\n")
-  
+
   summary_df <- data.frame(
     Region = character(),
     Status = character(),
@@ -294,9 +270,7 @@ show_data_preparation_summary <- function(simper_datasets) {
     }
   }
   
-  print(summary_df)
-  cat("\n")
-  
+
   return(summary_df)
 }
 ```
@@ -308,7 +282,6 @@ show_data_preparation_summary <- function(simper_datasets) {
 simper_datasets <- list()
 
 # Preparar datos para cada región
-cat("Iniciando preparación de datos para análisis SIMPER...\n")
 
 # Girona
 if("Girona" %in% names(management_data) && "Girona" %in% names(beaches_by_region)) {
@@ -338,7 +311,6 @@ if("Tarragona" %in% names(management_data) && "Tarragona" %in% names(beaches_by_
 }
 
 # Análisis Combinado
-cat("\n=== Preparando datos combinados ===\n")
 if(length(simper_datasets) > 0) {
   # Combinar datos de todas las regiones
   all_species_data <- bind_rows(
@@ -366,53 +338,8 @@ preparation_summary <- show_data_preparation_summary(simper_datasets)
 # Filtrar datasets válidos para análisis posteriores
 valid_simper_datasets <- simper_datasets[!sapply(simper_datasets, is.null)]
 
-cat(sprintf("Datasets válidos para análisis SIMPER: %d de %d\n", 
-            length(valid_simper_datasets), length(simper_datasets)))
 ```
 
-```{r}
-#| label: tbl-simper-data-summary
-#| tbl-cap: "Resumen de la preparación de datos para análisis SIMPER."
-#| echo: false
-#| eval: true
-#| output: true
-
-if(exists("preparation_summary") && nrow(preparation_summary) > 0) {
-  # Crear tabla muy compacta sin la columna problemática
-  compact_summary <- preparation_summary %>%
-    select(Region, Status, Beaches, Species) %>%
-    mutate(
-      Estado = case_when(
-        Status == "OK" ~ "✓",
-        Status == "ERROR" ~ "✗",
-        TRUE ~ Status
-      )
-    ) %>%
-    select(Region, Estado, Beaches, Species)
-  
-  knitr::kable(compact_summary,
-               col.names = c("Región", "Estado", "Playas", "Especies"),
-               format = "latex", 
-               booktabs = TRUE) %>%
-    kable_styling(latex_options = c("hold_position")) %>%
-    column_spec(1, width = "2.5cm") %>%
-    column_spec(2, width = "1.5cm") %>%
-    column_spec(3, width = "1.5cm") %>%
-    column_spec(4, width = "1.5cm") %>%
-    row_spec(0, bold = TRUE)
-} else {
-  cat("No se pudo generar la tabla de resumen de preparación de datos.\n")
-}
-```
-
-La preparación de datos para el análisis SIMPER (@tbl-simper-data-summary) establece las bases para identificar especies discriminantes entre grupos de gestión. El proceso incluye:
-
-1. **Agregación de datos**: Conversión de valores Braun-Blanquet a porcentajes y cálculo de cobertura promedio por playa
-2. **Creación de grupos de gestión**: Clasificación de playas en categorías (Sin Gestión, Baja, Moderada, Alta) basada en intensidad de manejo
-3. **Validación de grupos**: Verificación de tamaños mínimos (≥4 playas) para análisis estadístico robusto
-4. **Filtrado de especies**: Remoción de especies ausentes o con varianza cero
-
-Los datos preparados permiten análisis SIMPER por pares entre grupos de gestión, identificando qué especies contribuyen más a las diferencias observadas y su potencial como indicadores de efectividad de gestión.
 
 ```{r}
 #| label: fig-management-groups-distribution
@@ -484,7 +411,6 @@ if(length(valid_simper_datasets) > 0) {
 }
 ```
 
-La @fig-management-groups-distribution muestra la distribución de playas por grupos de gestión en cada región. Esta distribución es crucial para el análisis SIMPER, ya que determina qué comparaciones por pares serán posibles y estadísticamente robustas. Las regiones con distribución más equilibrada entre grupos proporcionarán análisis más confiables para identificar especies discriminantes.
 
 ```{r}
 #| label: fig-management-intensity-distribution
@@ -563,17 +489,13 @@ if(length(valid_simper_datasets) > 0) {
 }
 ```
 
-La @fig-management-intensity-distribution muestra la distribución de intensidad de gestión por región. Esta visualización es fundamental para entender:
-
-1. **Rango de gestión**: Qué tan amplio es el gradiente de intensidad en cada región
-2. **Separación de grupos**: Qué tan bien diferenciados están los grupos de gestión
-3. **Representatividad**: Si cada grupo tiene suficiente variación interna para análisis robusto
-
-Las regiones con mayor rango y mejor separación entre grupos proporcionarán análisis SIMPER más informativos para identificar especies indicadoras de diferentes niveles de gestión.
-
 ```{r}
-# --- Paso 2: Análisis SIMPER por Región ---
-
+#| echo: false
+#| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
+#| output: false
 # Función para ejecutar análisis SIMPER entre pares de grupos
 run_simper_analysis <- function(simper_dataset, group1, group2) {
   if(is.null(simper_dataset)) {
@@ -689,11 +611,11 @@ extract_discriminant_species <- function(simper_result, min_contrib = 2, min_rat
     )
     
     # Debug: mostrar información básica con valores corregidos
-    cat(sprintf("Processing %d species for discriminant analysis\n", nrow(discriminant_df)))
-    cat(sprintf("Contribution range: %.2f - %.2f%%\n", min(discriminant_df$contr, na.rm = TRUE), max(discriminant_df$contr, na.rm = TRUE)))
-    cat(sprintf("SD range: %.2f - %.2f\n", min(discriminant_df$sd, na.rm = TRUE), max(discriminant_df$sd, na.rm = TRUE)))
-    cat(sprintf("P1 range: %.2f - %.2f\n", min(discriminant_df$p1, na.rm = TRUE), max(discriminant_df$p1, na.rm = TRUE)))
-    cat(sprintf("P2 range: %.2f - %.2f\n", min(discriminant_df$p2, na.rm = TRUE), max(discriminant_df$p2, na.rm = TRUE)))
+    if (interactive()) cat(sprintf("Processing %d species for discriminant analysis\n", nrow(discriminant_df)))
+    if (interactive()) cat(sprintf("Contribution range: %.2f - %.2f%%\n", min(discriminant_df$contr, na.rm = TRUE), max(discriminant_df$contr, na.rm = TRUE)))
+    if (interactive()) cat(sprintf("SD range: %.2f - %.2f\n", min(discriminant_df$sd, na.rm = TRUE), max(discriminant_df$sd, na.rm = TRUE)))
+    if (interactive()) cat(sprintf("P1 range: %.2f - %.2f\n", min(discriminant_df$p1, na.rm = TRUE), max(discriminant_df$p1, na.rm = TRUE)))
+    if (interactive()) cat(sprintf("P2 range: %.2f - %.2f\n", min(discriminant_df$p2, na.rm = TRUE), max(discriminant_df$p2, na.rm = TRUE)))
     
     # Verificar que tenemos datos válidos
     if(nrow(discriminant_df) == 0) {
@@ -702,26 +624,26 @@ extract_discriminant_species <- function(simper_result, min_contrib = 2, min_rat
     }
     
     # Aplicar criterios de selección paso a paso para debug
-    cat("Original species count:", nrow(discriminant_df), "\n")
+    if (interactive()) cat("Original species count:", nrow(discriminant_df), "\n")
     
     # Paso 1: Filtrar por contribución (ahora usando el threshold correcto)
     step1 <- discriminant_df %>%
       filter(!is.na(contr) & contr >= min_contrib)
-    cat("After contribution filter (>=", min_contrib, "%):", nrow(step1), "\n")
+    if (interactive()) cat("After contribution filter (>=", min_contrib, "%):", nrow(step1), "\n")
     
     # Paso 2: Filtrar por ratio (más permisivo)
     step2 <- step1 %>%
       filter(!is.na(sd) & sd > 0 & contr/sd >= min_ratio)
-    cat("After ratio filter (>=", min_ratio, "):", nrow(step2), "\n")
+    if (interactive()) cat("After ratio filter (>=", min_ratio, "):", nrow(step2), "\n")
     
     # Paso 3: Filtrar por presencia (más permisivo)
     step3 <- step2 %>%
       filter(!is.na(p1) & !is.na(p2) & pmax(p1, p2, na.rm = TRUE) >= min_presence)
-    cat("After presence filter (>=", min_presence, "):", nrow(step3), "\n")
+    if (interactive()) cat("After presence filter (>=", min_presence, "):", nrow(step3), "\n")
     
     # Si todavía no hay especies, usar criterios muy relajados
     if(nrow(step3) == 0) {
-      cat("No species meet all criteria, using most relaxed filters...\n")
+      if (interactive()) cat("No species meet all criteria, using most relaxed filters...\n")
       
       # Criterios muy relajados - solo tomar las mejores especies
       relaxed_result <- discriminant_df %>%
@@ -730,10 +652,10 @@ extract_discriminant_species <- function(simper_result, min_contrib = 2, min_rat
         arrange(desc(contr)) %>%
         head(min(10, nrow(.)))  # Top 10 o todas las especies disponibles
       
-      cat("Relaxed criteria result:", nrow(relaxed_result), "species\n")
+      if (interactive()) cat("Relaxed criteria result:", nrow(relaxed_result), "species\n")
       if(nrow(relaxed_result) > 0) {
-        cat("Top species:", paste(head(relaxed_result$species, 3), collapse = ", "), "\n")
-        cat("Top contributions:", paste(round(head(relaxed_result$contr, 3), 2), collapse = ", "), "%\n")
+        if (interactive()) cat("Top species:", paste(head(relaxed_result$species, 3), collapse = ", "), "\n")
+        if (interactive()) cat("Top contributions:", paste(round(head(relaxed_result$contr, 3), 2), collapse = ", "), "%\n")
       }
       return(relaxed_result)
     }
@@ -795,13 +717,13 @@ summarize_simper_results <- function(simper_comparisons) {
   for(comparison_name in names(simper_comparisons)) {
     comparison <- simper_comparisons[[comparison_name]]
     
-    cat(sprintf("\n=== Processing %s ===\n", comparison_name))
+    if (interactive()) cat(sprintf("\n=== Processing %s ===\n", comparison_name))
     
     # Extraer especies discriminantes
     discriminant_spp <- extract_discriminant_species(comparison)
     
     if(!is.null(discriminant_spp) && nrow(discriminant_spp) > 0) {
-      cat("Successfully found", nrow(discriminant_spp), "discriminant species\n")
+      if (interactive()) cat("Successfully found", nrow(discriminant_spp), "discriminant species\n")
       
       temp_df <- data.frame(
         Region = comparison$region,
@@ -817,7 +739,7 @@ summarize_simper_results <- function(simper_comparisons) {
       
       summary_data <- rbind(summary_data, temp_df)
     } else {
-      cat("No discriminant species found for this comparison\n")
+      if (interactive()) cat("No discriminant species found for this comparison\n")
     }
   }
   
@@ -902,37 +824,42 @@ create_species_contribution_plot <- function(simper_comparisons, region_name, to
 
 ```{r}
 # --- Ejecutar Análisis SIMPER ---
-
+#| echo: false
+#| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
+#| output: false
 # Ejecutar análisis SIMPER para cada región válida
 simper_results <- list()
 
-cat("Ejecutando análisis SIMPER por pares...\n")
+if (interactive()) cat("Ejecutando análisis SIMPER por pares...\n")
 
 for(region_name in names(valid_simper_datasets)) {
-  cat(sprintf("\n--- Análisis SIMPER para %s ---\n", region_name))
-  
+  if (interactive()) cat(sprintf("\n--- Análisis SIMPER para %s ---\n", region_name))
+
   # Ejecutar comparaciones por pares
   pairwise_results <- simper_pairwise_comparisons(valid_simper_datasets[[region_name]])
   
   if(!is.null(pairwise_results) && length(pairwise_results) > 0) {
     simper_results[[region_name]] <- pairwise_results
-    cat(sprintf("Comparaciones exitosas: %d\n", length(pairwise_results)))
-    
+    if (interactive()) cat(sprintf("Comparaciones exitosas: %d\n", length(pairwise_results)))
+
     # Mostrar resumen básico
     for(comparison_name in names(pairwise_results)) {
       comparison <- pairwise_results[[comparison_name]]
       
     }
   } else {
-    cat("No se pudieron realizar comparaciones SIMPER\n")
+    if (interactive()) cat("No se pudieron realizar comparaciones SIMPER\n")
   }
 }
 
 # Crear resumen general
-cat("\n=== RESUMEN GENERAL SIMPER ===\n")
+if (interactive()) cat("\n=== RESUMEN GENERAL SIMPER ===\n")
 total_comparisons <- sum(sapply(simper_results, length))
-cat(sprintf("Total de comparaciones realizadas: %d\n", total_comparisons))
-cat(sprintf("Regiones con análisis exitosos: %d\n", length(simper_results)))
+if (interactive()) cat(sprintf("Total de comparaciones realizadas: %d\n", total_comparisons))
+if (interactive()) cat(sprintf("Regiones con análisis exitosos: %d\n", length(simper_results)))
 
 # Generar tabla resumen
 simper_summary <- data.frame()
