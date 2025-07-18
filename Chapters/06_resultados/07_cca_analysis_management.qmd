@@ -548,9 +548,11 @@ if(!is.null(combinado_cca_mgmt)) {
 }
 ```
 
+Los análisis CCA regionales revelan patrones diferenciados de efectividad de gestión (@fig-cca-mgmt-regional, @fig-mgmt-importance). Girona muestra la menor varianza explicada (42.3%) con vectores de gestión dispersos, indicando efectos débiles. Barcelona presenta alta varianza explicada (100%) pero con solo dos variables activas (senderos gestionados y servicios estacionales), reflejando su limitado rango de gestión. Tarragona exhibe varianza moderada (50.5%) con vectores de gestión más agrupados, sugiriendo asociación entre las prácticas de manejo. Los análisis de significancia confirman efectos generalmente débiles, con solo senderos gestionados en Tarragona alcanzando significancia estadística (p < 0.05).
+
 ```{r}
 #| label: fig-cca-mgmt-regional
-#| fig-cap: "Biplots CCA regionales mostrando cómo responde la vegetación a las prácticas de gestión en cada región de Cataluña. Cada gráfico revela qué prácticas de gestión son más efectivas para conservar la vegetación de dunas costeras en diferentes contextos regionales."
+#| fig-cap: "CCA regionales mostrando efectividad diferencial de gestión: Girona con efectos débiles, Barcelona con rango limitado, y Tarragona con mayor coherencia en prácticas de manejo."
 #| echo: false
 #| eval: true
 #| output: true
