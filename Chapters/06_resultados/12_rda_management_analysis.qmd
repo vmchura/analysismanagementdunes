@@ -1,0 +1,460 @@
+```{r 12_rda_setup, include=FALSE}
+library(here)
+
+# Global knitr options - controls all code chunks
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(vegan)     # For RDA analysis
+library(ade4)      # Additional ordination tools
+library(gridExtra) # For arranging multiple plots
+library(RColorBrewer) # For color palettes
+library(patchwork)  # For combining plots
+library(ggrepel)   # For non-overlapping text labels
+library(kableExtra)
+
+# Load global configuration
+source(here("R","global_config.R"))
+
+# Load data
+load(here("data","all_observations_split.RData"))
+load(here("data","all_management_data.RData"))
+
+```
+
+#### Análisis de Redundancia (RDA) con Variables de Gestión
+
+Este capítulo presenta el Análisis de Redundancia (RDA) para examinar las relaciones lineales entre la composición de vegetación de dunas costeras y las prácticas de gestión de playas en las tres regiones: Girona, Barcelona y Tarragona.
+
+**Metodología RDA:**
+
+El Análisis de Redundancia (RDA) es una técnica de ordenación constrainida que asume respuestas lineales de las especies a las variables ambientales. A diferencia del CCA que asume respuestas unimodales, RDA es apropiado cuando:
+
+1. Las especies muestran respuestas lineales a gradientes ambientales cortos
+2. Los datos de especies han sido transformados (transformación Hellinger)
+3. Se requiere maximizar la varianza explicada por variables constrainidas
+
+**Ventajas del RDA para datos de gestión:**
+- Preserva distancias euclidianas tras transformación Hellinger
+- Interpreta gradientes lineales de intensidad de gestión
+- Permite partición de efectos puros vs compartidos entre predictores
+
+```{r}
+# --- PASO 1: CONFIGURACIÓN Y PREPARACIÓN DE DATOS ---
+
+# --- Funciones de preparación de datos para RDA ---
+
+# Función para preparar matriz de especies para análisis RDA por región
+prepare_rda_species_matrix <- function(region_data, aggregation_level = "beach") {
+  
+  # Obtener columnas de especies - excluir columnas no-especie
+  non_species_cols <- c("plot", "id_beach", "region")
+  species_cols <- setdiff(names(region_data), non_species_cols)
+  
+  if(aggregation_level == "beach") {
+    # Agregar datos de especies por playa (calcular media de cobertura por playa)
+    species_by_unit <- region_data %>%
+      # Convertir valores Braun-Blanquet a porcentajes primero
+      mutate(across(all_of(species_cols), bb_to_percentage)) %>%
+      # Agrupar por playa y calcular media de cobertura de especies
+      group_by(id_beach) %>%
+      summarise(across(all_of(species_cols), ~ mean(.x, na.rm = TRUE)), .groups = "drop") %>%
+      # Mantener id_beach para hacer match con datos de gestión
+      arrange(id_beach)
+  } else {
+    # Usar datos a nivel de parcela
+    species_by_unit <- region_data %>%
+      # Convertir valores Braun-Blanquet a porcentajes
+      mutate(across(all_of(species_cols), bb_to_percentage)) %>%
+      arrange(id_beach, plot)
+  }
+  
+  # Extraer solo las columnas de especies para la matriz
+  species_matrix <- species_by_unit %>%
+    select(all_of(species_cols)) %>%
+    as.matrix()
+  
+  # Remover especies que nunca están presentes
+  species_present <- colSums(species_matrix) > 0
+  species_matrix_final <- species_matrix[, species_present, drop = FALSE]
+  
+  # Verificar que tengamos suficientes especies
+  if(ncol(species_matrix_final) < 2) {
+    warning("Insuficientes especies para análisis RDA")
+    return(NULL)
+  }
+  
+  # Retornar tanto la matriz como los IDs para hacer match
+  if(aggregation_level == "beach") {
+    unit_ids <- species_by_unit$id_beach
+  } else {
+    unit_ids <- paste(region_data$id_beach, region_data$plot, sep = "_")
+  }
+  
+  return(list(
+    matrix = species_matrix_final,
+    unit_ids = unit_ids,
+    species_names = colnames(species_matrix_final)
+  ))
+}
+
+# Función para aplicar transformación Hellinger
+apply_hellinger_transformation <- function(species_matrix) {
+  
+  # Verificar que la matriz no tenga valores negativos
+  if(any(species_matrix < 0, na.rm = TRUE)) {
+    warning("La matriz de especies contiene valores negativos. Convirtiendo a 0.")
+    species_matrix[species_matrix < 0] <- 0
+  }
+  
+  # Aplicar transformación Hellinger usando vegan
+  hellinger_matrix <- decostand(species_matrix, method = "hellinger")
+  
+  # Verificar que la transformación fue exitosa
+  if(any(is.na(hellinger_matrix))) {
+    warning("La transformación Hellinger produjo valores NA")
+  }
+  
+  return(hellinger_matrix)
+}
+
+# Función para preparar matriz de variables de gestión para RDA
+prepare_rda_management_matrix <- function(management_region_data, unit_ids, aggregation_level = "beach") {
+  
+  # Asegurar que existe la columna id_beach y es numérica
+  if(!"id_beach" %in% names(management_region_data)) {
+    stop("No se encontró columna id_beach en datos de gestión")
+  }
+  
+  # Convertir id_beach a numérico si no lo es ya
+  management_region_data$id_beach <- as.numeric(management_region_data$id_beach)
+  
+  if(aggregation_level == "beach") {
+    # Usar IDs de playa directamente
+    numeric_unit_ids <- as.numeric(unit_ids)
+    
+    # Obtener datos de gestión para las playas en nuestros datos de especies
+    mgmt_data <- management_region_data %>%
+      filter(id_beach %in% numeric_unit_ids) %>%
+      arrange(id_beach)
+      
+  } else {
+    # Para datos a nivel de parcela, extraer IDs de playa de los IDs combinados
+    beach_ids_from_plots <- as.numeric(sapply(strsplit(unit_ids, "_"), `[`, 1))
+    
+    mgmt_data <- management_region_data %>%
+      filter(id_beach %in% unique(beach_ids_from_plots)) %>%
+      arrange(id_beach)
+    
+    # Expandir datos de gestión para cada parcela
+    plot_management <- data.frame()
+    for(unit_id in unit_ids) {
+      beach_id <- as.numeric(strsplit(unit_id, "_")[[1]][1])
+      beach_mgmt <- mgmt_data[mgmt_data$id_beach == beach_id, ]
+      if(nrow(beach_mgmt) > 0) {
+        beach_mgmt$unit_id <- unit_id
+        plot_management <- rbind(plot_management, beach_mgmt)
+      }
+    }
+    mgmt_data <- plot_management
+  }
+  
+  if(nrow(mgmt_data) == 0) {
+    stop("No se encontraron playas coincidentes entre datos de especies y gestión")
+  }
+  
+  # Identificar variables potenciales de gestión (columnas numéricas, excluyendo todas las columnas ID)
+  id_columns <- c("id_beach", "id_plot", "plot", "id_transect", "unit_id")
+  numeric_cols <- mgmt_data %>%
+    select(where(is.numeric)) %>%
+    select(-any_of(id_columns)) %>%
+    names()
+  
+  if(length(numeric_cols) == 0) {
+    stop("No se encontraron variables numéricas de gestión")
+  }
+  
+  # Crear matriz de gestión
+  if(aggregation_level == "beach") {
+    mgmt_matrix <- mgmt_data %>%
+      select(id_beach, all_of(numeric_cols)) %>%
+      # Convertir a numérico y manejar valores faltantes
+      mutate(across(all_of(numeric_cols), ~ as.numeric(.x))) %>%
+      # Reemplazar NA con 0 (asumiendo que sin datos significa sin gestión)
+      mutate(across(all_of(numeric_cols), ~ ifelse(is.na(.x), 0, .x)))
+  } else {
+    mgmt_matrix <- mgmt_data %>%
+      select(unit_id, all_of(numeric_cols)) %>%
+      # Convertir a numérico y manejar valores faltantes
+      mutate(across(all_of(numeric_cols), ~ as.numeric(.x))) %>%
+      # Reemplazar NA con 0
+      mutate(across(all_of(numeric_cols), ~ ifelse(is.na(.x), 0, .x)))
+  }
+  
+  # Remover variables con varianza cero
+  if(aggregation_level == "beach") {
+    variance_check <- mgmt_matrix %>%
+      select(-id_beach) %>%
+      summarise(across(everything(), ~ var(.x, na.rm = TRUE)))
+  } else {
+    variance_check <- mgmt_matrix %>%
+      select(-unit_id) %>%
+      summarise(across(everything(), ~ var(.x, na.rm = TRUE)))
+  }
+  
+  valid_vars <- names(variance_check)[variance_check > 0 & !is.na(variance_check)]
+  
+  if(length(valid_vars) == 0) {
+    stop("No hay variables de gestión con varianza > 0")
+  }
+  
+  if(aggregation_level == "beach") {
+    mgmt_matrix_final <- mgmt_matrix %>%
+      select(id_beach, all_of(valid_vars))
+  } else {
+    mgmt_matrix_final <- mgmt_matrix %>%
+      select(unit_id, all_of(valid_vars))
+  }
+  
+  # Limpiar nombres de columnas para mejor legibilidad usando diccionario global de traducción
+  clean_names <- valid_vars
+  
+  # Aplicar mapeo de nombres solo si los nombres originales coinciden con patrones esperados
+  name_mappings <- c(
+    "surface area occupied by seasonal services and amenities on or less than 5 m from the dunes" = "Servicios Estacionales (≤5m de Dunas)",
+    "surface area of parking or other fixed services on or less than 5 m from the dunes" = "Servicios Fijos (≤5m de Dunas)",
+    "managed paths" = "Senderos Gestionados",
+    "rope fences" = "Vallado con Cuerdas",
+    "mechanical cleaning" = "Limpieza Mecánica",
+    "protection of the system and the immediate environment" = "Protección del Sistema",
+    "degree of protection according to the iucn classification" = "Protección IUCN"
+  )
+  
+  # Aplicar traducciones para variables conocidas
+  for(old_name in names(name_mappings)) {
+    if(old_name %in% clean_names) {
+      clean_names[clean_names == old_name] <- name_mappings[old_name]
+    }
+  }
+  
+  # Para variables restantes no traducidas, usar el sistema global de traducción
+  remaining_vars <- clean_names[!clean_names %in% name_mappings]
+  if(length(remaining_vars) > 0) {
+    # Verificar si alguna variable sigue en inglés (contiene palabras comunes en inglés)
+    english_pattern <- "(surface|area|occupied|seasonal|services|amenities|parking|fixed|managed|paths|rope|fences|mechanical|cleaning|protection|system|environment|degree|classification)"
+    english_vars <- remaining_vars[grepl(english_pattern, remaining_vars, ignore.case = TRUE)]
+    
+    if(length(english_vars) > 0) {
+      # Intentar traducir variables en inglés usando el sistema global
+      tryCatch({
+        translated_english <- translate_labels(english_vars, debug = FALSE)
+        # Reemplazar las variables en inglés con sus traducciones
+        for(i in seq_along(english_vars)) {
+          clean_names[clean_names == english_vars[i]] <- translated_english[i]
+        }
+      }, error = function(e) {
+        # Si falla la traducción, usar versión limpia
+        warning(paste("No se pudieron traducir algunas variables de gestión:", paste(english_vars, collapse = ", ")))
+        clean_names[clean_names %in% english_vars] <- tools::toTitleCase(gsub("_", " ", english_vars))
+      })
+    }
+  }
+  
+  # Actualizar nombres de columnas
+  names(mgmt_matrix_final)[names(mgmt_matrix_final) %in% valid_vars] <- clean_names
+  
+  return(mgmt_matrix_final)
+}
+
+# Función para estandarizar variables de gestión (Z-score)
+standardize_management_vars <- function(mgmt_matrix, id_col = "id_beach") {
+  
+  # Separar columna ID de variables de gestión
+  if(id_col %in% names(mgmt_matrix)) {
+    id_data <- mgmt_matrix %>% select(all_of(id_col))
+    mgmt_vars <- mgmt_matrix %>% select(-all_of(id_col))
+  } else {
+    stop(paste("Columna ID", id_col, "no encontrada en matriz de gestión"))
+  }
+  
+  # Aplicar estandarización Z-score (media=0, sd=1) a variables de gestión
+  mgmt_standardized <- mgmt_vars %>%
+    mutate(across(everything(), ~ scale(.x)[,1]))
+  
+  # Verificar que no hay NaN (que ocurren cuando sd=0)
+  mgmt_standardized <- mgmt_standardized %>%
+    mutate(across(everything(), ~ ifelse(is.nan(.x), 0, .x)))
+  
+  # Combinar de vuelta con ID
+  result <- bind_cols(id_data, mgmt_standardized)
+  
+  return(result)
+}
+
+# Función principal para preparar datos completos para RDA
+prepare_rda_data <- function(region_data, mgmt_region_data, region_name, aggregation_level = "beach") {
+  
+  cat("Preparando datos RDA para región:", region_name, "\n")
+  
+  # Verificar que tenemos suficientes datos
+  if(nrow(region_data) < 3) {
+    warning(paste("Datos insuficientes para análisis RDA en", region_name))
+    return(NULL)
+  }
+  
+  # Preparar matriz de especies
+  tryCatch({
+    species_result <- prepare_rda_species_matrix(region_data, aggregation_level)
+    if(is.null(species_result)) {
+      return(NULL)
+    }
+    species_matrix <- species_result$matrix
+    unit_ids <- species_result$unit_ids
+    species_names <- species_result$species_names
+    
+    cat("  - Especies encontradas:", length(species_names), "\n")
+    cat("  - Unidades de muestreo:", length(unit_ids), "\n")
+    
+  }, error = function(e) {
+    warning(paste("Error preparando datos de especies para", region_name, ":", e$message))
+    return(NULL)
+  })
+  
+  # Aplicar transformación Hellinger a datos de especies
+  tryCatch({
+    species_hellinger <- apply_hellinger_transformation(species_matrix)
+    cat("  - Transformación Hellinger aplicada exitosamente\n")
+  }, error = function(e) {
+    warning(paste("Error en transformación Hellinger para", region_name, ":", e$message))
+    return(NULL)
+  })
+  
+  if(ncol(species_hellinger) < 2) {
+    warning(paste("Insuficientes especies para análisis RDA en", region_name))
+    return(NULL)
+  }
+  
+  # Preparar matriz de gestión
+  tryCatch({
+    mgmt_matrix <- prepare_rda_management_matrix(mgmt_region_data, unit_ids, aggregation_level)
+    cat("  - Variables de gestión encontradas:", ncol(mgmt_matrix)-1, "\n")
+  }, error = function(e) {
+    warning(paste("Error preparando datos de gestión para", region_name, ":", e$message))
+    return(NULL)
+  })
+  
+  if(is.null(mgmt_matrix)) {
+    return(NULL)
+  }
+  
+  # Hacer match entre datos de gestión y datos de especies agregados
+  if(aggregation_level == "beach") {
+    mgmt_matrix_matched <- mgmt_matrix %>% 
+      filter(id_beach %in% unit_ids) %>%
+      arrange(id_beach)
+    id_col <- "id_beach"
+  } else {
+    mgmt_matrix_matched <- mgmt_matrix %>% 
+      filter(unit_id %in% unit_ids) %>%
+      arrange(unit_id)
+    id_col <- "unit_id"
+  }
+  
+  # Asegurar que ambos datasets tienen las mismas unidades en el mismo orden
+  if(aggregation_level == "beach") {
+    common_units <- intersect(unit_ids, mgmt_matrix_matched$id_beach)
+  } else {
+    common_units <- intersect(unit_ids, mgmt_matrix_matched$unit_id)
+  }
+  
+  if(length(common_units) < 3) {
+    warning(paste("Unidades coincidentes insuficientes para análisis RDA en", region_name))
+    return(NULL)
+  }
+  
+  # Filtrar ambos datasets a unidades comunes y asegurar mismo orden
+  unit_order <- sort(common_units)
+  
+  # Reordenar matriz de especies para hacer match con orden de unidades
+  if(aggregation_level == "beach") {
+    species_order <- match(unit_order, unit_ids)
+  } else {
+    species_order <- match(unit_order, unit_ids)
+  }
+  species_hellinger_final <- species_hellinger[species_order, , drop = FALSE]
+  
+  # Reordenar matriz de gestión para hacer match con orden de unidades
+  if(aggregation_level == "beach") {
+    mgmt_matrix_final <- mgmt_matrix_matched %>% 
+      filter(id_beach %in% unit_order) %>%
+      arrange(id_beach)
+  } else {
+    mgmt_matrix_final <- mgmt_matrix_matched %>% 
+      filter(unit_id %in% unit_order) %>%
+      arrange(unit_id)
+  }
+  
+  # Estandarizar variables de gestión (Z-score)
+  tryCatch({
+    mgmt_standardized <- standardize_management_vars(mgmt_matrix_final, id_col)
+    cat("  - Variables de gestión estandarizadas\n")
+  }, error = function(e) {
+    warning(paste("Error estandarizando variables de gestión para", region_name, ":", e$message))
+    return(NULL)
+  })
+  
+  # Remover columna ID de matriz de gestión para análisis
+  mgmt_vars_final <- mgmt_standardized %>% select(-all_of(id_col))
+  
+  # Verificar dimensiones finales
+  cat("  - Dimensiones finales:\n")
+  cat("    * Matriz de especies (Hellinger):", nrow(species_hellinger_final), "x", ncol(species_hellinger_final), "\n")
+  cat("    * Matriz de gestión (estandarizada):", nrow(mgmt_vars_final), "x", ncol(mgmt_vars_final), "\n")
+  
+  # Verificar que las dimensiones coinciden
+  if(nrow(species_hellinger_final) != nrow(mgmt_vars_final)) {
+    stop(paste("Dimensiones de matrices no coinciden en", region_name))
+  }
+  
+  return(list(
+    species_matrix = species_hellinger_final,
+    management_matrix = mgmt_vars_final,
+    unit_ids = unit_order,
+    species_names = colnames(species_hellinger_final),
+    management_names = colnames(mgmt_vars_final),
+    region = region_name,
+    aggregation_level = aggregation_level,
+    n_units = length(unit_order),
+    n_species = ncol(species_hellinger_final),
+    n_management_vars = ncol(mgmt_vars_final)
+  ))
+}
+```
+
+El Paso 1 del análisis RDA (Configuración y Preparación de Datos) ha sido implementado exitosamente. Este paso fundamental establece las bases metodológicas para los análisis posteriores mediante:
+
+**Transformaciones aplicadas:**
+- **Transformación Hellinger** en datos de especies para preservar distancias euclidianas
+- **Estandarización Z-score** en variables de gestión para equiparar escalas
+- **Agregación por playa** para nivel de resolución apropiado
+
+**Funciones implementadas:**
+1. `prepare_rda_species_matrix()` - Preparación y agregación de datos de especies
+2. `apply_hellinger_transformation()` - Aplicación de transformación Hellinger
+3. `prepare_rda_management_matrix()` - Preparación de variables de gestión
+4. `standardize_management_vars()` - Estandarización Z-score
+5. `prepare_rda_data()` - Función principal de preparación completa
+
+**Validaciones incluidas:**
+- Control de dimensiones de matrices
+- Verificación de ausencia de valores faltantes
+- Validación de variabilidad suficiente
+- Emparejamiento correcto entre datasets
+
+Los datos están ahora listos para continuar con los pasos 2-8 del plan RDA, incluyendo análisis por región, análisis combinado con control regional, selección de variables, y interpretación de gradientes lineales de gestión.
