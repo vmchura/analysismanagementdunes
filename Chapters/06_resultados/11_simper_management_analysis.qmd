@@ -913,8 +913,8 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
     slice_head(n = 3) %>%  # keep only top 3 unique species per region
     ungroup() %>%
     mutate(
-      Especie = ifelse(nchar(Top_Species) > 20,
-                      paste0(substr(Top_Species, 1, 18), "..."),
+      Especie = ifelse(nchar(Top_Species) > 26,
+                      paste0(substr(Top_Species, 1, 24), "..."),
                       Top_Species),
       Contrib = round(Max_Contribution, 1)
     ) %>%
@@ -926,9 +926,9 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
                format = "markdown",
                booktabs = TRUE) %>%
     kable_styling(latex_options = c("hold_position", "scale_down")) %>%
-    column_spec(1, width = "2cm") %>%
-    column_spec(2, width = "4cm") %>%
-    column_spec(3, width = "2cm") %>%
+    column_spec(1, width = "3cm") %>%
+    column_spec(2, width = "5cm") %>%
+    column_spec(3, width = "3cm") %>%
     row_spec(0, bold = TRUE)
 } else {
   cat("No se pudieron generar datos de especies discriminantes.\n")
@@ -941,17 +941,20 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
 #| echo: false
 #| eval: true
 #| output: true
+#| results: asis
 
-if(exists("simper_summary") && nrow(simper_summary) > 0) {
-  # Crear tabla muy compacta para evitar problemas de LaTeX
+if (exists("simper_summary") && nrow(simper_summary) > 0) {
+  # Crear tabla de resumen con solo 3 comparaciones por región
   display_summary <- simper_summary %>%
     select(Region, Group1_Spanish, Group2_Spanish, Dissimilarity, N_Discriminant) %>%
     arrange(Region, desc(Dissimilarity)) %>%
+    group_by(Region) %>%
+    slice_head(n = 3) %>%
+    ungroup() %>%
     mutate(
-      # Grupos muy cortos
       G1 = case_when(
         Group1_Spanish == "Sin Gestión" ~ "SG",
-        Group1_Spanish == "Gestión Baja" ~ "GB", 
+        Group1_Spanish == "Gestión Baja" ~ "GB",
         Group1_Spanish == "Gestión Moderada" ~ "GM",
         Group1_Spanish == "Gestión Alta" ~ "GA",
         TRUE ~ substr(Group1_Spanish, 1, 2)
@@ -959,7 +962,7 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
       G2 = case_when(
         Group2_Spanish == "Sin Gestión" ~ "SG",
         Group2_Spanish == "Gestión Baja" ~ "GB",
-        Group2_Spanish == "Gestión Moderada" ~ "GM", 
+        Group2_Spanish == "Gestión Moderada" ~ "GM",
         Group2_Spanish == "Gestión Alta" ~ "GA",
         TRUE ~ substr(Group2_Spanish, 1, 2)
       ),
@@ -968,17 +971,17 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
       N_Esp = N_Discriminant
     ) %>%
     select(Region, Comparación, Disim, N_Esp)
-  
+
   knitr::kable(display_summary,
-               col.names = c("Región", "Comparación", "Disimilitud (%)", "N° Esp."),
+               col.names = c("Región", "Comparación", "Disimilitud (%)", "N° Especies"),
                caption = "SG=Sin Gestión, GB=Gestión Baja, GM=Gestión Moderada, GA=Gestión Alta",
-               format = "latex",
+               format = "markdown",
                booktabs = TRUE) %>%
-    kable_styling(latex_options = c("hold_position", "scale_down")) %>%
-    column_spec(1, width = "2cm") %>%
-    column_spec(2, width = "2.5cm") %>%
-    column_spec(3, width = "1.5cm") %>%
-    column_spec(4, width = "1.5cm") %>%
+    kableExtra::kable_styling(latex_options = c("hold_position", "scale_down")) %>%
+    column_spec(1, width = "2.5cm") %>%
+    column_spec(2, width = "3cm") %>%
+    column_spec(3, width = "2cm") %>%
+    column_spec(4, width = "2cm") %>%
     row_spec(0, bold = TRUE)
 } else {
   cat("No se pudieron generar resultados SIMPER para mostrar en tabla.\n")
@@ -1023,54 +1026,3 @@ if(length(contribution_plots) > 0) {
   cat("No se pudieron crear gráficos de contribuciones SIMPER.\n")
 }
 ```
-
-## Conclusiones del Análisis SIMPER
-
-El análisis SIMPER ha proporcionado información complementaria valiosa a los análisis CCA y NMDS para la gestión de dunas costeras, cumpliendo exitosamente los objetivos del **Paso 1: Configuración y Preparación de Datos**.
-
-### Principales Logros del Paso 1:
-
-1. **Preparación Exitosa de Datos**: Se implementaron funciones robustas para preparar matrices de especies y crear grupos de gestión basados en intensidad de manejo.
-
-2. **Validación Estadística**: Se establecieron criterios estrictos para validar tamaños de grupos y varianza de especies, asegurando análisis estadísticamente sólidos.
-
-3. **Análisis Regional y Combinado**: Se prepararon datasets para análisis tanto regionalmente específicos como combinados entre todas las regiones.
-
-4. **Identificación de Especies Discriminantes**: Se aplicaron criterios científicamente fundamentados (contribución ≥5%, ratio ≥1.5, presencia ≥30%) para identificar especies verdaderamente discriminantes.
-
-### Resultados Clave Obtenidos:
-
-- **Datasets Válidos**: Se crearon datasets válidos para análisis SIMPER en múltiples regiones
-- **Grupos de Gestión**: Se establecieron categorías claras de intensidad de gestión (Sin Gestión, Baja, Moderada, Alta)
-- **Especies Discriminantes**: Se identificaron especies que contribuyen significativamente a las diferencias entre grupos de gestión
-- **Visualizaciones Informativas**: Se generaron gráficos que muestran distribuciones de grupos y contribuciones de especies
-
-### Implicaciones para la Gestión:
-
-1. **Monitoreo Dirigido**: Las especies identificadas como discriminantes proporcionan indicadores específicos para evaluar la efectividad de las prácticas de gestión.
-
-2. **Evaluación Cuantitativa**: Los valores de disimilitud ofrecen métricas objetivas para comparar la efectividad de diferentes intensidades de manejo.
-
-3. **Adaptación Regional**: Los patrones observados sugieren la necesidad de enfoques de gestión adaptados a las condiciones específicas de cada región.
-
-4. **Base para Decisiones**: Los resultados proporcionan evidencia científica sólida para la toma de decisiones en gestión de dunas costeras.
-
-### Próximos Pasos del Proyecto:
-
-Con la implementación exitosa del **Paso 1**, el proyecto está preparado para continuar con los siguientes pasos del plan SIMPER:
-
-- **Paso 2**: Análisis SIMPER detallado por región con comparaciones específicas
-- **Paso 3**: Análisis regional comparativo identificando patrones consistentes
-- **Paso 4**: Visualizaciones avanzadas de matrices de disimilitud y perfiles de especies
-- **Paso 5**: Interpretación ecológica y categorización funcional de especies
-- **Paso 6**: Síntesis final y recomendaciones específicas para gestión
-
-### Contribución al Conocimiento:
-
-Este análisis complementa efectivamente los análisis CCA y NMDS existentes, proporcionando:
-- Identificación específica de especies indicadoras
-- Cuantificación de contribuciones individuales de especies
-- Herramientas prácticas para monitoreo y evaluación
-- Base científica para protocolos de gestión adaptativa
-
-**Nota**: Esta implementación representa una base sólida para el análisis SIMPER completo, estableciendo metodologías robustas y proporcionando resultados preliminares que pueden ser expandidos según las necesidades específicas del proyecto de gestión de dunas costeras.
