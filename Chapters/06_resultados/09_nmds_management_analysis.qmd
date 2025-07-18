@@ -512,9 +512,11 @@ intensity_stats <- nmds_data %>%
   )
 ```
 
+Las curvas de respuesta específica revelan patrones diferenciados a lo largo del gradiente de gestión (@fig-management-gradient-analysis). Especies como Ammophila arenaria (barrón) y Artemisia campestris muestran abundancias máximas en gestión baja (intensidad 1-2), mientras que Plantago crassifolia y Juncus acutus (junco marino) aumentan progresivamente hacia gestión alta (intensidad 5). Arthrocnemum fruticosum presenta un pico en gestión moderada (intensidad 3), sugiriendo respuestas específicas de tolerancia a la perturbación.
+
 ```{r}
 #| label: fig-management-gradient-analysis
-#| fig-cap: "Análisis de la composición de vegetación a lo largo del gradiente de intensidad de gestión, mostrando cómo las especies responden a niveles crecientes de gestión desde 0 (sin gestión) hasta 5 (gestión de alta calidad)."
+#| fig-cap: "Respuestas específicas al gradiente de gestión, mostrando tres patrones principales: especies que prefieren gestión baja, especies tolerantes a gestión alta, y especies con óptimos en gestión moderada."
 #| echo: false
 #| eval: true
 #| output: true
