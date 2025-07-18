@@ -372,21 +372,34 @@ cat(sprintf("Datasets válidos para análisis SIMPER: %d de %d\n",
 
 ```{r}
 #| label: tbl-simper-data-summary
-#| tbl-cap: "Resumen de la preparación de datos para análisis SIMPER, mostrando el número de playas, especies y grupos de gestión por región."
+#| tbl-cap: "Resumen de la preparación de datos para análisis SIMPER."
 #| echo: false
 #| eval: true
 #| output: true
 
 if(exists("preparation_summary") && nrow(preparation_summary) > 0) {
-  knitr::kable(preparation_summary,
-               col.names = c("Región", "Estado", "Playas", "Especies", "Grupos de Gestión"),
-               caption = "Resumen de Preparación de Datos SIMPER",
+  # Crear tabla muy compacta sin la columna problemática
+  compact_summary <- preparation_summary %>%
+    select(Region, Status, Beaches, Species) %>%
+    mutate(
+      Estado = case_when(
+        Status == "OK" ~ "✓",
+        Status == "ERROR" ~ "✗",
+        TRUE ~ Status
+      )
+    ) %>%
+    select(Region, Estado, Beaches, Species)
+  
+  knitr::kable(compact_summary,
+               col.names = c("Región", "Estado", "Playas", "Especies"),
                format = "latex", 
                booktabs = TRUE) %>%
-    kable_styling(latex_options = "hold_position") %>%
-    column_spec(5, width = "6cm") %>%
-    row_spec(which(preparation_summary$Status == "OK"), color = "black") %>%
-    row_spec(which(preparation_summary$Status == "ERROR"), color = "red")
+    kable_styling(latex_options = c("hold_position")) %>%
+    column_spec(1, width = "2.5cm") %>%
+    column_spec(2, width = "1.5cm") %>%
+    column_spec(3, width = "1.5cm") %>%
+    column_spec(4, width = "1.5cm") %>%
+    row_spec(0, bold = TRUE)
 } else {
   cat("No se pudo generar la tabla de resumen de preparación de datos.\n")
 }
@@ -407,8 +420,8 @@ Los datos preparados permiten análisis SIMPER por pares entre grupos de gestió
 #| echo: false
 #| eval: true
 #| output: true
-#| fig-width: 12
-#| fig-height: 8
+#| fig-width: 10
+#| fig-height: 6
 #| fig-pos: "H"
 
 if(length(valid_simper_datasets) > 0) {
@@ -464,7 +477,7 @@ if(length(valid_simper_datasets) > 0) {
     scale_fill_brewer(type = "qual", palette = "Set3")
   
   # Guardar gráfico
-  ggsave(here("figures","management_distribution_by_region.png"), width = 12, height = 8)
+  ggsave(here("figures","management_distribution_by_region.png"), width = 10, height = 6)
   
 } else {
   cat("No hay datasets válidos para crear visualización de distribución de grupos.\n")
@@ -479,8 +492,8 @@ La @fig-management-groups-distribution muestra la distribución de playas por gr
 #| echo: false
 #| eval: true
 #| output: true
-#| fig-width: 12
-#| fig-height: 6
+#| fig-width: 10
+#| fig-height: 5
 #| fig-pos: "H"
 
 if(length(valid_simper_datasets) > 0) {
@@ -541,7 +554,7 @@ if(length(valid_simper_datasets) > 0) {
       scale_fill_brewer(type = "qual", palette = "Set3")
     
     # Guardar gráfico
-    ggsave(here("figures","management_intensity_distribution.png"), width = 12, height = 6)
+    ggsave(here("figures","management_intensity_distribution.png"))
   } else {
     cat("No hay datos de intensidad válidos para visualización.\n")
   }
@@ -955,6 +968,41 @@ if(nrow(simper_summary) > 0) {
 Los análisis SIMPER revelan patrones diferenciados de discriminación entre grupos de gestión (@tbl-simper-summary). Las comparaciones por pares identifican especies que contribuyen significativamente a las diferencias observadas, proporcionando indicadores específicos para evaluar la efectividad de diferentes intensidades de gestión.
 
 ```{r}
+#| label: tbl-simper-species
+#| tbl-cap: "Especies discriminantes principales identificadas en el análisis SIMPER por región."
+#| echo: false
+#| eval: true
+#| output: true
+
+if(exists("simper_summary") && nrow(simper_summary) > 0) {
+  # Crear tabla separada para especies
+  species_summary <- simper_summary %>%
+    select(Region, Top_Species, Top_Contribution) %>%
+    arrange(Region, desc(Top_Contribution)) %>%
+    mutate(
+      Especie = ifelse(nchar(Top_Species) > 20, 
+                      paste0(substr(Top_Species, 1, 18), "..."), 
+                      Top_Species),
+      Contrib = round(Top_Contribution, 1)
+    ) %>%
+    select(Region, Especie, Contrib)
+  
+  knitr::kable(species_summary,
+               col.names = c("Región", "Especie Principal", "Contribución (%)"),
+               caption = "Especies con mayor contribución a la discriminación entre grupos",
+               format = "latex", 
+               booktabs = TRUE) %>%
+    kable_styling(latex_options = c("hold_position", "scale_down")) %>%
+    column_spec(1, width = "2cm") %>%
+    column_spec(2, width = "4cm") %>%
+    column_spec(3, width = "2cm") %>%
+    row_spec(0, bold = TRUE)
+} else {
+  cat("No se pudieron generar datos de especies discriminantes.\n")
+}
+```
+
+```{r}
 #| label: tbl-simper-summary
 #| tbl-cap: "Resumen de análisis SIMPER mostrando disimilitud entre grupos de gestión y especies discriminantes principales por región."
 #| echo: false
@@ -962,21 +1010,43 @@ Los análisis SIMPER revelan patrones diferenciados de discriminación entre gru
 #| output: true
 
 if(exists("simper_summary") && nrow(simper_summary) > 0) {
-  # Crear tabla resumida para presentación
+  # Crear tabla muy compacta para evitar problemas de LaTeX
   display_summary <- simper_summary %>%
-    select(Region, Group1_Spanish, Group2_Spanish, Dissimilarity, Top_Species, Top_Contribution, N_Discriminant) %>%
-    arrange(Region, desc(Dissimilarity))
+    select(Region, Group1_Spanish, Group2_Spanish, Dissimilarity, N_Discriminant) %>%
+    arrange(Region, desc(Dissimilarity)) %>%
+    mutate(
+      # Grupos muy cortos
+      G1 = case_when(
+        Group1_Spanish == "Sin Gestión" ~ "SG",
+        Group1_Spanish == "Gestión Baja" ~ "GB", 
+        Group1_Spanish == "Gestión Moderada" ~ "GM",
+        Group1_Spanish == "Gestión Alta" ~ "GA",
+        TRUE ~ substr(Group1_Spanish, 1, 2)
+      ),
+      G2 = case_when(
+        Group2_Spanish == "Sin Gestión" ~ "SG",
+        Group2_Spanish == "Gestión Baja" ~ "GB",
+        Group2_Spanish == "Gestión Moderada" ~ "GM", 
+        Group2_Spanish == "Gestión Alta" ~ "GA",
+        TRUE ~ substr(Group2_Spanish, 1, 2)
+      ),
+      Comparación = paste(G1, "vs", G2),
+      Disim = round(Dissimilarity, 1),
+      N_Esp = N_Discriminant
+    ) %>%
+    select(Region, Comparación, Disim, N_Esp)
   
   knitr::kable(display_summary,
-               col.names = c("Región", "Grupo 1", "Grupo 2", "Disimilitud (%)", 
-                           "Especie Principal", "Contribución (%)", "N° Discriminantes"),
-               caption = "Especies discriminantes: contribución ≥2%, ratio ≥1.0, presencia ≥10%. Grupos mínimos: 4 playas.",
+               col.names = c("Región", "Comparación", "Disimilitud (%)", "N° Esp."),
+               caption = "SG=Sin Gestión, GB=Gestión Baja, GM=Gestión Moderada, GA=Gestión Alta",
                format = "latex", 
                booktabs = TRUE) %>%
     kable_styling(latex_options = c("hold_position", "scale_down")) %>%
-    column_spec(5, width = "3cm") %>%
-    row_spec(0, bold = TRUE) %>%
-    collapse_rows(columns = 1, valign = "middle")
+    column_spec(1, width = "2cm") %>%
+    column_spec(2, width = "2.5cm") %>%
+    column_spec(3, width = "1.5cm") %>%
+    column_spec(4, width = "1.5cm") %>%
+    row_spec(0, bold = TRUE)
 } else {
   cat("No se pudieron generar resultados SIMPER para mostrar en tabla.\n")
 }
@@ -988,8 +1058,8 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
 #| echo: false
 #| eval: true
 #| output: true
-#| fig-width: 16
-#| fig-height: 20
+#| fig-width: 12
+#| fig-height: 14
 #| fig-pos: "H"
 
 # Crear gráficos de contribuciones para cada región
@@ -1015,8 +1085,7 @@ if(length(contribution_plots) > 0) {
   print(combined_plot)
   
   # Guardar el gráfico
-  ggsave(here("figures","simper_species_contribution.png"), combined_plot, 
-         width = 16, height = 20, dpi = 300)
+  ggsave(here("figures","simper_species_contribution.png"), combined_plot)
 } else {
   cat("No se pudieron crear gráficos de contribuciones SIMPER.\n")
 }
