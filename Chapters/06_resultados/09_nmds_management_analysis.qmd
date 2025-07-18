@@ -276,7 +276,7 @@ print(p_nmds_management)
 ggsave(here("figures", "nmds_management_analysis.png"), p_nmds_management, width = 12, height = 8)
 ```
 
-La distribución de las prácticas de gestión varía considerablemente entre las tres regiones costeras estudiadas (@fig-management-region-distribution). Barcelona presenta un patrón muy homogéneo, con el 99.7% de las parcelas bajo gestión de baja intensidad. En contraste, Girona muestra la mayor diversidad: 12.7% de parcelas sin gestión, 44.1% con gestión baja y 43.2% con gestión moderada. Tarragona mantiene una posición intermedia con 60.3% de gestión baja y 39.7% de gestión moderada.
+La distribución de las prácticas de gestión varía considerablemente entre las tres regiones costeras estudiadas (@fig-management-region-distribution, @tbl-management-summary). Barcelona presenta un patrón muy homogéneo, con el 100.0% de las parcelas bajo gestión de baja intensidad. En contraste, Girona muestra la mayor diversidad: 12.7% de parcelas sin gestión, 44.1% con gestión baja y 43.2% con gestión moderada. Tarragona mantiene una posición intermedia con 60.3% de gestión baja y 39.7% de gestión moderada.
 
 ```{r}
 #| label: fig-management-region-distribution
@@ -324,6 +324,28 @@ management_distribution %>%
 
 # Save the plot
 ggsave(here("figures", "management_distribution_by_region.png"), width = 10, height = 6)
+```
+```{r}
+#| label: tbl-management-summary
+#| tbl-cap: "Resumen de prácticas de gestión y su distribución entre regiones y parcelas."
+#| echo: false
+#| eval: true
+#| output: true
+
+# Create summary table of management practices
+management_summary <- nmds_data %>%
+  filter(!is.na(management_simple)) %>%
+  group_by(Region, management_simple) %>%
+  summarise(
+    n_beaches = n_distinct(Beach),
+    .groups = "drop"
+  ) %>%
+  pivot_wider(names_from = management_simple,
+              values_from = c(n_beaches),
+              values_fill = list(n_beaches = 0))
+
+knitr::kable(management_summary,
+             format = "markdown")
 ```
 
 Las prácticas específicas de gestión muestran enfoques regionales diferenciados (@fig-management-practices-comparison). Tarragona prioriza servicios fijos (3.4) y estacionales (2.3), Barcelona mantiene gestión mínima en todas las prácticas excepto servicios fijos, y Girona destaca en servicios fijos (3.7) y vallado con cuerdas (3.6).
@@ -460,28 +482,6 @@ ggplot(species_by_management, aes(x = reorder(species, mean_abundance), y = mean
 ggsave(here("figures","species_management_response.png"), width = 14, height = 10)
 ```
 
-```{r}
-#| label: tbl-management-summary
-#| tbl-cap: "Resumen de prácticas de gestión y su distribución entre regiones y parcelas."
-#| echo: false
-#| eval: true
-#| output: true
-
-# Create summary table of management practices
-management_summary <- nmds_data %>%
-  filter(!is.na(management_simple)) %>%
-  group_by(Region, management_simple) %>%
-  summarise(
-    n_beaches = n_distinct(Beach),
-    .groups = "drop"
-  ) %>%
-  pivot_wider(names_from = management_simple, 
-              values_from = c(n_beaches),
-              values_fill = list(n_beaches = 0))
-
-knitr::kable(management_summary,
-             format = "markdown")
-```
 
 ```{r}
 #| label: management-stress-interpretation
