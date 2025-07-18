@@ -520,9 +520,11 @@ create_mgmt_importance_plot <- function(cca_results) {
 }
 ```
 
+El análisis de correspondencia canónica revela relaciones débiles entre prácticas de gestión y composición vegetal (@fig-cca-mgmt-combinado). Los vectores de gestión muestran direcciones dispersas sin agrupaciones claras, indicando que ninguna práctica de manejo estructura consistentemente las comunidades vegetales. Las especies como *Eryngium* y *Plantago* aparecen asociadas débilmente con gradientes específicos de gestión, pero la varianza explicada total sugiere efectos limitados del manejo sobre la vegetación dunar.
+
 ```{r}
 #| label: fig-cca-mgmt-combinado
-#| fig-cap: "Biplot CCA mostrando relaciones entre vegetación de dunas costeras y prácticas de gestión en todas las regiones. Los puntos azules representan playas, las flechas rojas muestran gradientes de gestión (0=sin gestión, 5=buena gestión), los puntos verdes indican especies clave."
+#| fig-cap: "Biplot CCA combinado mostrando relaciones dispersas entre gestión y vegetación, indicando efectos débiles de las prácticas de manejo sobre la composición específica en sistemas dunares costeros."
 #| echo: false
 #| eval: true
 #| output: true
