@@ -276,9 +276,11 @@ print(p_nmds_management)
 ggsave(here("figures", "nmds_management_analysis.png"), p_nmds_management, width = 12, height = 8)
 ```
 
+La distribución de las prácticas de gestión varía considerablemente entre las tres regiones costeras estudiadas (@fig-management-region-distribution). Barcelona presenta un patrón muy homogéneo, con el 99.7% de las parcelas bajo gestión de baja intensidad. En contraste, Girona muestra la mayor diversidad: 12.7% de parcelas sin gestión, 44.1% con gestión baja y 43.2% con gestión moderada. Tarragona mantiene una posición intermedia con 60.3% de gestión baja y 39.7% de gestión moderada.
+
 ```{r}
 #| label: fig-management-region-distribution
-#| fig-cap: "Distribución de prácticas de gestión en las tres regiones de Cataluña, mostrando la proporción de parcelas bajo diferentes intensidades de gestión dentro de cada región."
+#| fig-cap: "Distribución regional de intensidades de gestión en sistemas dunares costeros. Girona presenta la mayor diversidad de enfoques de manejo, mientras que Barcelona muestra un patrón homogéneo de gestión de baja intensidad."
 #| echo: false
 #| eval: true
 #| output: true
