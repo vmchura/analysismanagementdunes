@@ -1,3 +1,5 @@
+A diferencia de los métodos de ordenación no constrainados, el RDA modela explícitamente las relaciones lineales entre la matriz de especies y las variables ambientales explicativas, proporcionando una medida cuantitativa de la varianza explicada por factores de manejo.
+
 ```{r 12_rda_setup, include=FALSE}
 library(here)
 
@@ -27,11 +29,6 @@ load(here("data","all_management_data.RData"))
 
 ```
 
-## Análisis de Redundancia (RDA) para Variables de Gestión
-
-El análisis de redundancia constituye una técnica de ordenación constrainada que permite evaluar directamente la influencia de variables de gestión sobre la composición de especies vegetales. A diferencia de los métodos de ordenación no constrainados, el RDA modela explícitamente las relaciones lineales entre la matriz de especies y las variables ambientales explicativas, proporcionando una medida cuantitativa de la varianza explicada por factores de manejo.
-
-Este análisis se estructura en tres fases complementarias: primero, se ejecutan análisis RDA independientes para cada región para identificar patrones específicos; segundo, se evalúa la importancia relativa de cada variable de gestión; y tercero, se implementa un análisis RDA combinado que controla por efectos regionales, permitiendo separar los efectos puros de gestión de aquellos confundidos con diferencias geográficas.
 
 
 ```{r}
@@ -802,7 +799,7 @@ if (interactive()) cat("Análisis RDA exitosos:", nrow(rda_summary), "\n")
 ```
 
 
-La @tbl-rda-summary presenta los resultados principales del análisis de redundancia (RDA) aplicado por separado a cada región. El análisis reveló diferencias importantes en la capacidad explicativa de las variables de gestión sobre la composición de especies vegetales. Girona muestra la menor varianza explicada con un 44.8%, seguido de Tarragona con 50.6% y Barcelona con 100%. La significancia estadística indica que las relaciones observadas entre gestión y vegetación son estadísticamente válidas en Girona, mientras que Tarragona no alcanza significancia estadística. El número de variables de gestión seleccionadas mediante forward selection varió entre regiones, sugiriendo diferentes patrones de influencia de las prácticas de manejo.
+La @tbl-rda-summary presenta los resultados principales del análisis de redundancia (RDA) aplicado por separado a cada región. La significancia estadística indica que las relaciones observadas entre gestión y vegetación no alcanzan la significancia estadística. El número de variables de gestión seleccionadas mediante forward selection varió entre regiones, sugiriendo diferentes patrones de influencia de las prácticas de manejo.
 
 ```{r}
 #| label: tbl-rda-summary
@@ -837,7 +834,7 @@ if(exists("rda_summary") && nrow(rda_summary) > 0) {
 }
 ```
 
-Los biplots RDA de la @fig-rda-biplots visualizan las relaciones entre la composición de especies y las variables de gestión para cada región. En estos gráficos, las flechas rojas representan las variables de gestión y su longitud indica la importancia relativa, mientras que los puntos verdes muestran las especies más influyentes y los puntos azules representan las playas muestreadas. En Girona, las variables 'Senderos Gestionados' y 'Protección del Sistema' emergen como los factores de gestión más determinantes. Barcelona presenta un patrón más concentrado con 'Senderos Gestionados' y 'Vallado con Cuerdas' como principales factores estructuradores. Tarragona muestra el patrón más complejo, con múltiples variables de gestión influyendo de manera similar en la composición vegetal.
+Los biplots RDA de la @fig-rda-biplots visualizan las relaciones entre la composición de especies y las variables de gestión para cada región. En Girona, las variables 'Senderos Gestionados' es opuesta a ‘Servicios Estacionales (<=5m de Dunas)‘ y ambas casi perpendicular a 'Protección del Sistema', se les podría considerar factores de gestión más determinantes. Barcelona presenta la misma relación para las variables 'Senderos Gestionados' y ‘Servicios Estacionales (<=5m de Dunas)‘. Tarragona muestra el patrón más complejo, con múltiples variables de gestión influyendo de manera similar en la composición vegetal, sin alguna variable clara predominante.
 
 ```{r}
 #| label: fig-rda-biplots
@@ -955,68 +952,6 @@ if(length(valid_rda_analyses) > 0) {
 }
 
 ```
-
-La @fig-management-variable-importance cuantifica la importancia relativa de cada variable de gestión dentro de cada región. En Girona, 'Senderos Gestionados' emerge como la variable más influyente, seguida de 'Protección del Sistema' y 'Protección IUCN'. En Barcelona, 'Senderos Gestionados' también domina, pero con contribuciones más equilibradas de 'Vallado con Cuerdas' y otras variables. Tarragona presenta el patrón más homogéneo, con múltiples variables de gestión mostrando importancias similares, lo que sugiere un sistema más complejo de interacciones entre diferentes prácticas de manejo.
-
-```{r}
-#| label: fig-rda-variance-partition-preview
-#| fig-cap: "Varianza explicada por factores de gestión en cada región mediante análisis RDA individual. Barcelona muestra la mayor capacidad explicativa (100%), seguida de Tarragona (50.6%) y Girona (44.8%). La varianza no explicada sugiere la importancia de otros factores no medidos."
-#| echo: false
-#| eval: true
-#| output: true
-#| fig-width: 10
-#| fig-height: 6
-#| fig-pos: "H"
-
-if(length(valid_rda_analyses) > 0) {
-  # Crear vista previa de partición de varianza usando datos actuales
-  variance_preview <- data.frame(
-    Region = names(valid_rda_analyses),
-    Management_Variance = sapply(valid_rda_analyses, function(x) x$explained_variance),
-    Unexplained_Variance = sapply(valid_rda_analyses, function(x) 100 - x$explained_variance),
-    stringsAsFactors = FALSE
-  ) %>%
-    pivot_longer(cols = c(Management_Variance, Unexplained_Variance),
-                 names_to = "Component",
-                 values_to = "Variance") %>%
-    mutate(
-      Component = case_when(
-        Component == "Management_Variance" ~ "Gestión (Explicada)",
-        Component == "Unexplained_Variance" ~ "No Explicada",
-        TRUE ~ Component
-      )
-    )
-
-  ggplot(variance_preview, aes(x = Region, y = Variance, fill = Component)) +
-    geom_col(position = "stack", alpha = 0.8) +
-    theme_minimal() +
-    theme(
-      legend.position = "bottom",
-      plot.title = element_text(face = "bold"),
-      axis.text.x = element_text(face = "bold")
-    ) +
-    labs(
-      title = "Varianza Explicada por Gestión por Región",
-      subtitle = "Proporción de varianza en composición vegetal atribuible a variables de gestión",
-      x = "Región",
-      y = "Varianza (%)",
-      fill = "Componente de Varianza"
-    ) +
-    scale_fill_brewer(type = "qual", palette = "Set3") +
-    geom_text(aes(label = paste0(round(Variance, 1), "%")),
-              position = position_stack(vjust = 0.5),
-              color = "white", fontface = "bold")
-
-  # Guardar gráfico
-  ggsave(here("figures","rda_variance_partition_preview.png"), width = 10, height = 6)
-} else {
-  if (interactive()) cat("No hay datos RDA para crear vista previa de partición de varianza.\n")
-}
-
-```
-
-La @fig-rda-variance-partition-preview compara la capacidad explicativa de las variables de gestión entre regiones cuando se analizan por separado. Barcelona presenta el máximo poder explicativo (100%), sugiriendo que las variables de gestión medidas capturan completamente la variación en composición vegetal de esta región. Tarragona muestra una capacidad explicativa intermedia (50.6%), mientras que Girona presenta la menor explicación (44.8%). Estas diferencias regionales podrían reflejar distintos grados de impacto de la gestión, diferentes historias de manejo, o la presencia de factores ambientales no medidos que varían en importancia entre regiones.
-
 
 
 ```{r}
@@ -1295,14 +1230,14 @@ create_combined_rda_triplot <- function(combined_rda_result, title_suffix = "") 
     p <- ggplot() +
       # Añadir puntos de sitios coloreados por región
       geom_point(data = site_scores, aes(x = RDA1, y = RDA2, color = Region),
-                 size = 4, alpha = 0.8) +
+                 size = 3, alpha = 0.8) +
       # Añadir elipses de confianza por región
       stat_ellipse(data = site_scores, aes(x = RDA1, y = RDA2, color = Region),
                    type = "norm", level = 0.8, size = 1.2) +
       # Añadir flechas de variables de gestión
       geom_segment(data = mgmt_scores,
                    aes(x = 0, y = 0, xend = RDA1 * 2.5, yend = RDA2 * 2.5),
-                   arrow = arrow(length = unit(0.8, "cm")),
+                   arrow = arrow(length = unit(0.2, "cm")),
                    color = "red", size = 1.5, alpha = 0.9) +
       # Añadir etiquetas de variables de gestión
       ggrepel::geom_text_repel(data = mgmt_scores,
@@ -1370,20 +1305,15 @@ if (interactive()) cat("\n=== PASO 3 COMPLETADO ===\n")
 
 ```
 
-El análisis RDA combinado permite evaluar los efectos de gestión controlando por diferencias regionales inherentes. Este enfoque más robusto separa la varianza atribuible exclusivamente a prácticas de gestión de aquella que podría estar confundida con características regionales (clima, geología, historia de uso). Los resultados de este análisis combinado proporcionan una evaluación más precisa del verdadero impacto de las variables de manejo sobre la composición vegetal, eliminando el sesgo que podría introducir la agrupación geográfica de los datos.
+#### RDA Combinado
 
+El análisis RDA combinado permite evaluar los efectos de gestión controlando por diferencias regionales inherentes. Este enfoque separa la varianza atribuible exclusivamente a prácticas de gestión de aquella que podría estar confundida con características regionales (clima, geología, historia de uso).
 
-## Síntesis de Resultados del Análisis RDA
-
-Los análisis de redundancia revelan patrones complejos en la influencia de la gestión sobre la vegetación dunar. A nivel regional, las variables de gestión explican entre 44.8% y 100% de la varianza en composición vegetal, con Barcelona mostrando la mayor capacidad explicativa. Sin embargo, el análisis combinado que controla por efectos regionales reduce drásticamente la contribución atribuible exclusivamente a gestión (4.3%), indicando que gran parte de la varianza aparentemente explicada por gestión en los análisis regionales está confundida con características geográficas inherentes.
-
-Los 'Senderos Gestionados' emergen consistentemente como la variable de gestión más influyente across regiones, seguidos por medidas de protección y control de acceso. La dominancia de la varianza no explicada (88.3%) sugiere que factores no medidos—como microhábitat, historia de perturbaciones, procesos estocásticos, o variables ambientales de escala fina—ejercen una influencia fundamental sobre los patrones de vegetación dunar que supera el efecto de las prácticas de gestión evaluadas.
-
-La @fig-variance-partition cuantifica la contribución relativa de los efectos de gestión versus los efectos regionales en la variación de la composición vegetal. Esta partición de varianza revela que únicamente el 4.3% de la varianza puede atribuirse exclusivamente a factores de gestión, mientras que el 9% corresponde a efectos compartidos entre gestión y región. La región como factor puro no contribuye significativamente, y el 88.3% de la varianza permanece sin explicar por estos factores. Este resultado sugiere que otros factores no medidos (como condiciones microambientales, historia de perturbaciones, o procesos estocásticos) ejercen una influencia dominante sobre los patrones de vegetación dunar.
+La @fig-variance-partition cuantifica la contribución relativa de los efectos de gestión versus los efectos regionales en la variación de la composición vegetal. Esta partición de varianza revela que únicamente el 4.3% de la varianza puede atribuirse exclusivamente a factores de gestión, mientras que el 9% corresponde a efectos compartidos entre gestión y región. La región como factor puro no contribuye significativamente, y el 88.3% de la varianza permanece sin explicar por estos factores. Este resultado sugiere que otros factores no medidos (como condiciones microambientales, historia de perturbaciones, o procesos estocásticos) ejercen una influencia dominante sobre los patrones de vegetación dunar. En la @fig-combined-triplot se visualiza que no existen patrones en la distribución de especies definidas según los ejes de gestión.
 
 ```{r}
 #| label: fig-variance-partition
-#| fig-cap: "Partición de varianza mediante análisis de redundancia combinado. Descomposición cuantitativa de la varianza en composición vegetal atribuible exclusivamente a gestión (4.3%), exclusivamente a región (0%), efectos compartidos (9%) y factores no explicados (88.3%)."
+#| fig-cap: "Partición de varianza mediante análisis de redundancia combinado."
 #| echo: false
 #| eval: true
 #| output: true
@@ -1448,15 +1378,23 @@ if(!is.null(variance_partition_result)) {
          width = 14, height = 8)
          
   # También crear y mostrar el triplot combinado si hay datos disponibles
-  if(!is.null(combined_rda_result)) {
-    combined_triplot <- create_combined_rda_triplot(combined_rda_result)
-    if(!is.null(combined_triplot)) {
-      print(combined_triplot)
-      ggsave(here("figures","rda_combined_triplot.png"), combined_triplot,
-             width = 14, height = 10)
-    }
-  }
+
 } else {
   cat("No se pudo crear visualización de partición de varianza.\n")
 }
+```
+
+```{r}
+#| label: fig-combined-triplot
+#| fig-cap: "Plot del análisis de redundancia combinado."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 8
+#| fig-pos: "H"
+    combined_triplot <- create_combined_rda_triplot(combined_rda_result)
+      print(combined_triplot)
+      ggsave(here("figures","rda_combined_triplot.png"), combined_triplot,
+             width = 14, height = 10)
 ```
