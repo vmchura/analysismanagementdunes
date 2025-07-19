@@ -73,9 +73,9 @@ El Análisis de Similaridad Porcentual (SIMPER) se utilizó para identificar las
 - Cuantificación de la contribución de cada especie a las disimilitudes
 - Selección de especies indicadoras para cada tipo de hábitat
 
-### Análisis de Diversidad
+## Índices de Diversidad
 
-Se calcularon múltiples índices de diversidad para caracterizar las comunidades vegetales:
+Se utilizaron múltiples índices de diversidad para caracterizar las comunidades vegetales:
 
 **Diversidad vegetal** se define como el número total de especies diferentes presentes en una comunidad o área determinada. Es la medida más básica de diversidad biológica y proporciona información fundamental sobre la complejidad florística de los ecosistemas dunares.
 
@@ -91,29 +91,6 @@ J' = H' / ln(S)
 
 donde S es el número de especies. Valores cercanos a 1 indican distribución uniforme de abundancias.
 
-## Análisis de Clasificación
-
-### Agrupamiento de Sitios
-
-Los sitios se clasificaron en grupos homogéneos utilizando agrupamiento jerárquico sobre las coordenadas del NMDS. Se utilizó el método de Ward con distancia euclidiana para generar dendrogramas y determinar el número óptimo de grupos.
-
-### Especies Indicadoras
-
-Para cada grupo de sitios se identificaron especies indicadoras utilizando el índice IndVal (Indicator Value). Este índice combina la fidelidad (especificidad del grupo) y la constancia (frecuencia en el grupo) de cada especie.
-
-## Validación de Resultados
-
-### Validación Estadística
-
-- Significancia de ejes de ordenación mediante tests de permutación
-- Evaluación de la calidad de agrupamientos mediante índices de silueta
-- Análisis de la varianza explicada por variables ambientales
-
-### Validación Ecológica
-
-- Verificación de la coherencia ecológica de los grupos identificados
-- Comparación con clasificaciones de hábitats existentes
-- Evaluación de la correspondencia con gradientes ambientales conocidos
 
 ## Análisis por Escalas Espaciales
 
