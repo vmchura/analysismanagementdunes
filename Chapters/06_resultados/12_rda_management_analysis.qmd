@@ -1168,39 +1168,48 @@ run_combined_rda <- function(all_region_datasets, verbose = TRUE) {
 
 # Función para realizar partición de varianza
 perform_variance_partition <- function(combined_rda_result) {
-  if(is.null(combined_rda_result)) {
+  if (is.null(combined_rda_result)) {
     return(NULL)
   }
 
   if (interactive()) cat("=== REALIZANDO PARTICIÓN DE VARIANZA ===\n")
 
+  # Ensure matrices are in correct format
+  species_matrix <- as.matrix(combined_rda_result$species_matrix)
+  management_matrix <- as.data.frame(combined_rda_result$management_matrix)
+  region_indicators <- as.data.frame(combined_rda_result$region_indicators)
+
+  # Convert character or factor columns in region_indicators to dummy variables
+  region_matrix <- model.matrix(~ . - 1, data = region_indicators)
+
+  # Handle potential issues in matrix conversion
+  if (!is.numeric(species_matrix)) stop("species_matrix must be numeric")
+  if (!all(sapply(management_matrix, is.numeric))) stop("management_matrix must be fully numeric")
+  if (!is.matrix(region_matrix)) stop("region_indicators must be convertible to a numeric matrix")
+
   # Usar varpart de vegan para partición formal
   tryCatch({
     varpart_result <- varpart(
-      combined_rda_result$species_matrix,
-      combined_rda_result$management_matrix,
-      combined_rda_result$region_indicators
+      species_matrix,
+      management_matrix,
+      region_matrix
     )
 
     # Extraer componentes de varianza
     variance_components <- varpart_result$part
-
-    # Componentes:
-    # [a] = Gestión pura
-    # [b] = Compartida entre gestión y región
-    # [c] = Región pura
-    # [d] = Residual (no explicada)
 
     pure_management <- variance_components$indfract$Adj.R.squared[1] * 100
     shared_variance <- variance_components$indfract$Adj.R.squared[2] * 100
     pure_region <- variance_components$indfract$Adj.R.squared[3] * 100
     residual <- 100 - (pure_management + shared_variance + pure_region)
 
-    if (interactive()) cat("Componentes de varianza:\n")
-    if (interactive()) cat("  - Gestión pura:", round(pure_management, 2), "%\n")
-    if (interactive()) cat("  - Compartida:", round(shared_variance, 2), "%\n")
-    if (interactive()) cat("  - Región pura:", round(pure_region, 2), "%\n")
-    if (interactive()) cat("  - Residual:", round(residual, 2), "%\n")
+    if (interactive()) {
+      cat("Componentes de varianza:\n")
+      cat("  - Gestión pura:", round(pure_management, 2), "%\n")
+      cat("  - Compartida:", round(shared_variance, 2), "%\n")
+      cat("  - Región pura:", round(pure_region, 2), "%\n")
+      cat("  - Residual:", round(residual, 2), "%\n")
+    }
 
     return(list(
       varpart_result = varpart_result,
@@ -1216,6 +1225,7 @@ perform_variance_partition <- function(combined_rda_result) {
     return(NULL)
   })
 }
+
 
 # Función para crear triplot RDA combinado
 create_combined_rda_triplot <- function(combined_rda_result, title_suffix = "") {
