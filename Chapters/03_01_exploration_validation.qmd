@@ -1,6 +1,3 @@
-## Preprocesamiento de Datos
-
-Transformación de datos originales de vegetación dunar para análisis estadístico a partir del archivo de datos con 278 observaciones de 147 especies en escala ordinal 0-5.
 
 ```{r}
 #| label: load-packages
@@ -11,7 +8,6 @@ Transformación de datos originales de vegetación dunar para análisis estadís
 library(tidyverse)
 library(readxl)
 library(conflicted)
-library(ggplot2)
 library(janitor)
 library(dplyr)
 library(here)
@@ -234,4 +230,5 @@ if (file.exists(here("data","all_management_data.RData"))) {
 }
 ```
 
-El preprocesamiento genera tres archivos de datos limpios: observaciones de especies, cobertura del suelo y prácticas de gestión por provincia.
+A partir de los archivos fuente de relevamiento, se generaron tres archivos de datos limpios mediante preprocesamiento: observaciones de especies, cobertura del suelo y prácticas de gestión, todos desagregados por provincia.
+

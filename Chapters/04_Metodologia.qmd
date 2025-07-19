@@ -1,19 +1,29 @@
 # Metodología {#sec-contribucion}
 
-## Resumen
 
-Este trabajo aplica técnicas de análisis multivariante para el estudio de comunidades vegetales dunares en Cataluña. Se utilizaron métodos estándar de ecología numérica adaptados al contexto específico de ecosistemas dunares, incluyendo estandarización de datos ordinales, análisis de ordenación y clasificación de comunidades.
+Este trabajo presenta una propuesta metodológica organizada y reproducible para el análisis de datos aplicados a comunidades dunares.
+El aporte más relevante es la aplicación de análisis multivariantes adaptados a este tipo de ecosistemas.
+
+
+## Escala Braun-Blanquet
+
+La escala de Braun-Blanquet es un sistema de clasificación semicuantitativo ampliamente utilizado en estudios de vegetación, especialmente en ecología de comunidades. Fue desarrollada por el fitosociólogo Josias Braun-Blanquet a principios del siglo XX y permite estimar de forma rápida y estandarizada la cobertura y la abundancia relativa de especies en una parcela de muestreo.
+
+Este sistema asigna categorías ordinales que representan rangos de cobertura, facilitando la comparación entre parcelas y especies sin necesidad de realizar estimaciones numéricas exactas. Las categorías comunes incluyen: `r` (presencia rara), `+` (presencia escasa), `1` (menos del 5% de cobertura), `2` (5–25%), `3` (25–50%), `4` (50–75%) y `5` (75–100%). En este trabajo, se utiliza una versión ya transformada a valores ordinales simplificados (0, 1, 2, 3, 4, 5), según lo habitual en estudios que requieren posterior análisis cuantitativo.
+
+
+## Estandarización de Datos
+
+Como parte del preprocesamiento necesario para aplicar análisis multivariantes, se realizó una conversión sistemática de los datos de abundancia expresados en la escala de Braun-Blanquet a valores porcentuales de cobertura. Esta transformación permite adaptar los datos semicuantitativos a un formato numérico continuo, adecuado para métodos estadísticos más robustos.
+
+La función utilizada aplica una correspondencia entre los valores ordinales y los puntos medios de los intervalos de cobertura asociados a cada clase. Por ejemplo, el valor `2` (5–25%) se transforma en un 25% de cobertura. El esquema de conversión adoptado fue:
+**(0, 1, 2, 3, 4, 5) → (0%, 5%, 25%, 50%, 75%, 100%)**.
+Este enfoque mantiene la coherencia ecológica de los datos originales y facilita su análisis en herramientas estadísticas que requieren valores numéricos continuos.
+
+Aunque esta conversión no representa un aporte metodológico original, se considera un paso necesario para integrar los datos de diversidad vegetal en un marco de análisis cuantitativo reproducible.
 
 {{< include 03_01_exploration_validation.qmd >}}
 {{< include 03_02_split_provinces.qmd >}}
-
-## Preparación de Datos
-
-### Conversión de Datos Ordinales
-
-Los datos de abundancia se registraron siguiendo la escala ordinal estándar de Braun-Blanquet (0, 0.1, 0.5, 1, 2, 3, 4, 5). Para permitir el uso de análisis estadísticos multivariantes, estos valores se convirtieron a porcentajes de cobertura utilizando los puntos medios de cada clase: 0% (ausente), 2.5% (muy escasa), 2.5% (escasa), 2.5% (poco abundante), 15% (abundante), 37.5% (muy abundante), 62.5% (dominante), y 87.5% (codominante).
-
-Esta conversión sigue protocolos establecidos en ecología vegetal y permite el uso de índices de disimilitud apropiados para datos de abundancia.
 
 ### Agregación Espacial
 
