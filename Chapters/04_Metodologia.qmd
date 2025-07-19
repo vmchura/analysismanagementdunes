@@ -114,6 +114,18 @@ Se realizaron análisis separados por región (Barcelona, Girona, Tarragona) par
 - Variables ambientales más importantes localmente
 - Especies características regionales
 
+## Marco de Reproducibilidad
+
+El trabajo implementa un marco robusto para garantizar la reproducibilidad y escalabilidad de los análisis:
+
+* Configuración estandarizada: Parámetros globales centralizados y documentados
+* Funciones modulares: Código reutilizable para conversión de datos y análisis
+* Documentación integrada: Todos los procedimientos documentados en código ejecutable
+* Control de versiones: Gestión sistemática de cambios en datos y código
+
+Esta estructura facilita la adaptación y extensión de la metodología a nuevos datasets
+y contextos de estudio.
+
 ## Limitaciones del Estudio
 
 **Limitaciones temporales:** Los datos corresponden a un único período de muestreo, limitando las inferencias sobre dinámicas temporales.
@@ -121,7 +133,3 @@ Se realizaron análisis separados por región (Barcelona, Girona, Tarragona) par
 **Limitaciones espaciales:** El tamaño de muestra varía entre regiones, afectando el poder estadístico de las comparaciones regionales.
 
 **Limitaciones metodológicas:** La conversión de datos ordinales introduce cierta incertidumbre, aunque sigue protocolos estándar en ecología vegetal.
-
-## Consideraciones Finales
-
-Esta metodología aplica técnicas estándar de análisis multivariante adaptadas al estudio de comunidades vegetales dunares. Los métodos seleccionados son apropiados para datos de abundancia de especies y permiten identificar patrones ecológicos relevantes para la gestión de ecosistemas costeros catalanes.
