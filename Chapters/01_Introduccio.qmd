@@ -36,9 +36,10 @@ Analizar la relación entre las prácticas de gestión de playas y la diversidad
 
 ## Contribuciones del Trabajo
 
-**Recopilación de Datos**: Integración y estandarización de datos de 278 parcelas en 39 playas catalanas, incluyendo 147 especies vegetales (escala Braun-Blanquet), variables de cobertura del suelo a 50m y 100m, y prácticas de gestión costera.
+**Recopilación de Datos**: Integración y estandarización de datos de 278 parcelas en 39 playas catalanas, incluyendo 147 especies vegetales, variables de cobertura del suelo a 50m y 100m, y prácticas de gestión costera.
 
-**Implementación Metodológica**: Implementación de análisis multivariantes especializados (NMDS, CCA) para comunidades dunares, sistema automatizado de validación de datos, y conversión estandarizada de valores Braun-Blanquet a porcentajes.
+**Implementación Metodológica**: Formulación y aplicación de técnicas especializadas de análisis multivariante, como el \textit{Análisis de Escalamiento No Métrico Multidimensional} (\textit{Non-metric Multidimensional Scaling}, NMDS), el \textit{Análisis de Correspondencias Canónicas} (\textit{Canonical Correspondence Analysis}, CCA), el \textit{Análisis de Similitudes por Porcentaje} (\textit{Similarity Percentage Analysis}, SIMPER) y el \textit{Análisis de Redundancia} (\textit{Redundancy Analysis}, RDA), para el estudio de comunidades dunares. Además, se implementó un sistema automatizado de validación de datos y se realizó la conversión estandarizada de valores Braun-Blanquet ---una escala semicuantitativa utilizada en estudios de vegetación para estimar la cobertura y abundancia de especies--- a porcentajes.
+
 
 **Análisis Empírico**: Clasificación de hábitats dunares, evaluación de efectos de cobertura del suelo y prácticas de gestión sobre diversidad vegetal, y análisis comparativo entre regiones (Girona, Barcelona, Tarragona).
 
