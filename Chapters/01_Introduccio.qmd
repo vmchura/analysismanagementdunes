@@ -43,7 +43,7 @@ Analizar la relación entre las prácticas de gestión de playas y la diversidad
 
 **Análisis Empírico**: Clasificación de hábitats dunares, evaluación de efectos de cobertura del suelo y prácticas de gestión sobre diversidad vegetal, y análisis comparativo entre regiones (Girona, Barcelona, Tarragona).
 
-**Herramientas de Visualización**: Desarrollo de gráficos biplots interpretativos y representaciones gráficas para comunicación de resultados a gestores costeros.
+**Herramientas de Visualización**: Aplicación de herramientas gráficas multivariantes como biplots y otras para la comunicación de resultados.
 
 ## Resultados Principales
 
