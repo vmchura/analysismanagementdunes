@@ -1,16 +1,28 @@
-# Contribución Metodológica {#sec-contribucion}
+# Metodología {#sec-contribucion}
 
 ## Resumen
 
-Este trabajo desarrolla un marco metodológico estructurado, principalmente replicable para el análisis de datos.
-Las principales contribuciones incluyen estandarización de datos, análisis multivariantes adaptados a comunidades dunares,
-y métodos de validación automatizada.
+Este trabajo presenta una propuesta metodológica organizada y reproducible para el análisis de datos aplicados a comunidades dunares.
+El aporte más relevante es la aplicación de análisis multivariantes adaptados a este tipo de ecosistemas.
 
-## Estandarización de Datos.
 
-Una de las principales contribuciones técnicas es el desarrollo de un protocolo robusto para la conversión sistemática de datos de abundancia en escala Braun-Blanquet a valores numéricos continuos. Esta transformación es fundamental para permitir análisis estadísticos multivariantes en datos de vegetación.
+## Escala Braun-Blanquet
 
-La función implementada convierte los valores ordinales de la escala Braun-Blanquet (0, 0.1, 0.5, 1, 2, 3, 4, 5) a porcentajes de cobertura representativos (0%, 2.5%, 2.5%, 2.5%, 15%, 37.5%, 62.5%, 87.5%) basándose en los puntos medios de los intervalos de cobertura definidos por esta escala clásica en ecología vegetal. Esta aproximación preserva la información ecológica original mientras facilita el uso de técnicas estadísticas avanzadas.
+La escala de Braun-Blanquet es un sistema de clasificación semicuantitativo ampliamente utilizado en estudios de vegetación, especialmente en ecología de comunidades. Fue desarrollada por el fitosociólogo Josias Braun-Blanquet a principios del siglo XX y permite estimar de forma rápida y estandarizada la cobertura y la abundancia relativa de especies en una parcela de muestreo.
+
+Este sistema asigna categorías ordinales que representan rangos de cobertura, facilitando la comparación entre parcelas y especies sin necesidad de realizar estimaciones numéricas exactas. Las categorías comunes incluyen: `r` (presencia rara), `+` (presencia escasa), `1` (menos del 5% de cobertura), `2` (5–25%), `3` (25–50%), `4` (50–75%) y `5` (75–100%). En este trabajo, se utiliza una versión ya transformada a valores ordinales simplificados (0, 1, 2, 3, 4, 5), según lo habitual en estudios que requieren posterior análisis cuantitativo.
+
+
+## Estandarización de Datos
+
+Como parte del preprocesamiento necesario para aplicar análisis multivariantes, se realizó una conversión sistemática de los datos de abundancia expresados en la escala de Braun-Blanquet a valores porcentuales de cobertura. Esta transformación permite adaptar los datos semicuantitativos a un formato numérico continuo, adecuado para métodos estadísticos más robustos.
+
+La función utilizada aplica una correspondencia entre los valores ordinales y los puntos medios de los intervalos de cobertura asociados a cada clase. Por ejemplo, el valor `2` (5–25%) se transforma en un 25% de cobertura. El esquema de conversión adoptado fue:
+**(0, 1, 2, 3, 4, 5) → (0%, 5%, 25%, 50%, 75%, 100%)**.
+Este enfoque mantiene la coherencia ecológica de los datos originales y facilita su análisis en herramientas estadísticas que requieren valores numéricos continuos.
+
+Aunque esta conversión no representa un aporte metodológico original, se considera un paso necesario para integrar los datos vegetacionales en un marco de análisis cuantitativo reproducible.
+
 
 ## Integración y Agregación Multiescalar
 
@@ -39,6 +51,29 @@ Se desarrolló un flujo de trabajo CCA (Canonical Correspondence Analysis) adapt
 - Interpretación de gradientes ambientales región-específicos
 
 Esta implementación identifica los principales gradientes ambientales que estructuran las comunidades vegetales dunares y cuantifica su importancia relativa.
+
+### Análisis de Similitudes por Porcentaje (SIMPER)
+
+Se aplicó el análisis SIMPER (*Similarity Percentage Analysis*) para descomponer la disimilitud entre grupos de comunidades dunares en términos de la contribución relativa de cada especie. La metodología incluye:
+
+- Cálculo de disimilitudes Bray-Curtis entre grupos definidos por NMDS/k-means
+- Estimación de la contribución media de cada especie a la disimilitud total
+- Identificación de especies con mayor poder discriminativo entre comunidades
+
+Este análisis facilita la interpretación ecológica al destacar qué especies explican las diferencias entre tipos de vegetación.
+
+
+### Análisis de Redundancia (RDA) sobre Coberturas Estandarizadas
+
+Se implementó un análisis de redundancia (RDA, *Redundancy Analysis*) para explorar relaciones lineales entre las coberturas de especies y las variables ambientales. El enfoque incluyó:
+
+- Transformación Hellinger de las matrices de abundancia para adecuación al análisis lineal
+- Filtrado previo de variables ambientales redundantes o poco informativas
+- Visualización conjunta de especies, sitios y variables ambientales en espacio canónico
+- Comparación de resultados frente al CCA para evaluar robustez y complementariedad
+
+La RDA permite cuantificar cuánta variación en la composición de especies puede explicarse por los factores ambientales considerados.
+
 
 ## Sistema de Validación Automatizada
 
