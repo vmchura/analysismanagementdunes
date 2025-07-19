@@ -45,13 +45,13 @@ Analizar la relación entre las prácticas de gestión de playas y la diversidad
 
 **Herramientas de Visualización**: Aplicación de herramientas gráficas multivariantes como biplots y otras para la comunicación de resultados.
 
-## Resultados Principales
+## Resumen de Resultados Principales
 
 **Diversidad Regional**: Girona presenta mayor diversidad vegetal (35-45 especies/playa), seguida de Tarragona (25-35) y Barcelona (15-25), reflejando un gradiente de presión antrópica.
 
-**Clasificación de Hábitats**: Identificación de cuatro tipos mediante NMDS: dunas frontales (25%), dunas traseras (35%), áreas mixtas (30%) y zonas perturbadas (10%), cada uno con especies indicadoras específicas.
+**Clasificación de Hábitats**: Identificación de cuatro tipos, con presencia del 25%, 35%, 30% y10%, cada uno con especies indicadoras específicas.
 
-**Efectos de Cobertura del Suelo**: La cobertura urbana reduce significativamente la diversidad (r = -0.45), mientras que el matorral mediterráneo la favorece (r = 0.35). Los efectos son más pronunciados a 50m que a 100m.
+**Efectos de Cobertura del Suelo**: La cobertura urbana reduce significativamente la diversidad, mientras que el matorral mediterráneo la favorece. Los efectos son más pronunciados a 50m que a 100m.
 
 **Impacto de Gestión**: Los senderos gestionados y barreras de cuerda aumentan la riqueza de especies (20-30%), mientras que servicios estacionales e infraestructuras fijas la reducen (15-25%). Los efectos varían regionalmente.
 
