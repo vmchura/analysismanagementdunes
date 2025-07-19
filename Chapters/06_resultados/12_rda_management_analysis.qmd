@@ -27,22 +27,6 @@ load(here("data","all_management_data.RData"))
 
 ```
 
-#### Análisis de Redundancia (RDA) con Variables de Gestión
-
-Este capítulo presenta el Análisis de Redundancia (RDA) para examinar las relaciones lineales entre la composición de vegetación de dunas costeras y las prácticas de gestión de playas en las tres regiones: Girona, Barcelona y Tarragona.
-
-**Metodología RDA:**
-
-El Análisis de Redundancia (RDA) es una técnica de ordenación constrainida que asume respuestas lineales de las especies a las variables ambientales. A diferencia del CCA que asume respuestas unimodales, RDA es apropiado cuando:
-
-1. Las especies muestran respuestas lineales a gradientes ambientales cortos
-2. Los datos de especies han sido transformados (transformación Hellinger)
-3. Se requiere maximizar la varianza explicada por variables constrainidas
-
-**Ventajas del RDA para datos de gestión:**
-- Preserva distancias euclidianas tras transformación Hellinger
-- Interpreta gradientes lineales de intensidad de gestión
-- Permite partición de efectos puros vs compartidos entre predictores
 
 ```{r}
 # --- PASO 1: CONFIGURACIÓN Y PREPARACIÓN DE DATOS ---
@@ -436,27 +420,6 @@ prepare_rda_data <- function(region_data, mgmt_region_data, region_name, aggrega
 }
 ```
 
-El Paso 1 del análisis RDA (Configuración y Preparación de Datos) ha sido implementado exitosamente. Este paso fundamental establece las bases metodológicas para los análisis posteriores mediante:
-
-**Transformaciones aplicadas:**
-- **Transformación Hellinger** en datos de especies para preservar distancias euclidianas
-- **Estandarización Z-score** en variables de gestión para equiparar escalas
-- **Agregación por playa** para nivel de resolución apropiado
-
-**Funciones implementadas:**
-1. `prepare_rda_species_matrix()` - Preparación y agregación de datos de especies
-2. `apply_hellinger_transformation()` - Aplicación de transformación Hellinger
-3. `prepare_rda_management_matrix()` - Preparación de variables de gestión
-4. `standardize_management_vars()` - Estandarización Z-score
-5. `prepare_rda_data()` - Función principal de preparación completa
-
-**Validaciones incluidas:**
-- Control de dimensiones de matrices
-- Verificación de ausencia de valores faltantes
-- Validación de variabilidad suficiente
-- Emparejamiento correcto entre datasets
-
-Los datos están ahora listos para continuar con los pasos 2-8 del plan RDA, incluyendo análisis por región, análisis combinado con control regional, selección de variables, y interpretación de gradientes lineales de gestión.
 
 ```{r}
 #| echo: false
@@ -832,32 +795,6 @@ if (interactive()) cat("\n=== PASO 2 RDA COMPLETADO ===\n")
 if (interactive()) cat("Análisis RDA exitosos:", nrow(rda_summary), "\n")
 ```
 
-### Paso 2: RDA por Región - Resultados
-
-El **Paso 2** del análisis RDA ha sido implementado y ejecutado con éxito, proporcionando análisis individuales para cada región costera. Este paso fundamental incluye:
-
-**Análisis realizados:**
-
-1. **Análisis RDA constrainado** - Relaciones lineales especies-gestión por región
-2. **Tests de significancia** - Validación estadística de modelos y variables
-3. **Selección de variables** - Identificación de predictores más importantes
-4. **Cálculo de varianza explicada** - Cuantificación del poder explicativo
-
-**Funciones implementadas:**
-
-- `run_rda_analysis()` - Ejecución del análisis RDA constrainado
-- `test_rda_significance()` - Tests de permutación para significancia
-- `perform_variable_selection()` - Forward selection de variables importantes
-- `create_rda_biplot()` - Visualización de relaciones especies-ambiente
-- `summarize_rda_results()` - Síntesis de resultados por región
-
-**Validaciones estadísticas:**
-- Tests de significancia global de modelos (p < 0.05)
-- Significancia de ejes canónicos individuales
-- Significancia de variables de gestión específicas
-- Selección estadística de variables no redundantes
-
-Los resultados regionales están listos para la visualización (biplots) y para continuar con el **Paso 3: Análisis RDA Combinado con Control Regional**.
 
 ```{r}
 #| label: tbl-rda-summary
@@ -894,12 +831,12 @@ if(exists("rda_summary") && nrow(rda_summary) > 0) {
 
 ```{r}
 #| label: fig-rda-biplots
-#| fig-cap: "Biplots RDA por región mostrando las relaciones lineales entre composición de especies y variables de gestión. Las flechas rojas representan gradientes de gestión, los puntos azules son sitios de muestreo, y los puntos verdes son especies clave posicionadas según su respuesta a la gestión."
+#| fig-cap: "Biplots RDA por región mostrando las relaciones lineales entre composición de especies y variables de gestión."
 #| echo: false
 #| eval: true
 #| output: true
-#| fig-width: 14
-#| fig-height: 16
+#| fig-width: 11
+#| fig-height: 33
 #| fig-pos: "H"
 
 if(length(valid_rda_analyses) > 0) {
@@ -1007,42 +944,6 @@ if(length(valid_rda_analyses) > 0) {
   if (interactive()) cat("No hay análisis RDA válidos para extraer importancia de variables.\n")
 }
 ```
-
-#### Interpretación de Resultados RDA por Región
-
-**Patrones Regionales Identificados:**
-
-El análisis RDA revela diferencias marcadas en cómo las variables de gestión explican la composición vegetal entre las tres regiones costeras estudiadas. Los resultados (@tbl-rda-summary, @fig-rda-biplots) muestran patrones específicos que reflejan las características ambientales y de gestión particulares de cada zona.
-
-**Girona** presenta la mayor complejidad en las relaciones especies-gestión, con múltiples variables de manejo actuando simultáneamente sobre la vegetación dunar. Los biplots muestran gradientes claros de respuesta específica a diferentes intensidades de gestión.
-
-**Barcelona** exhibe patrones más homogéneos, consistentes con la uniformidad observada en las prácticas de gestión metropolitana. La menor variabilidad en gestión se traduce en relaciones más simples entre variables de manejo y composición específica.
-
-**Tarragona** muestra un patrón intermedio, con algunas variables de gestión ejerciendo efectos pronunciados sobre especies particulares, especialmente aquellas relacionadas con servicios turísticos estacionales.
-
-**Variables de Gestión Clave:**
-
-El análisis de importancia relativa (@fig-management-variable-importance) identifica las variables que más contribuyen a explicar los patrones vegetales:
-
-- **Servicios Fijos** emergen como la variable más importante en múltiples regiones
-- **Vallado con Cuerdas** muestra alta importancia en áreas con mayor diversidad de gestión
-- **Senderos Gestionados** presenta importancia variable según el contexto regional
-- **Limpieza Mecánica** influye principalmente en zonas de alta frecuentación
-
-**Respuestas Lineales vs Unimodales:**
-
-La comparación con análisis CCA previos sugiere que para la mayoría de variables de gestión, las especies muestran respuestas más lineales que unimodales. Esto valida el uso de RDA para este tipo de gradientes antropogénicos, donde la intensidad de gestión actúa como un factor de estrés progresivo rather than como un gradiente ambiental óptimo.
-
-**Implicaciones para Gestión:**
-
-Los resultados RDA proporcionan una base científica sólida para la toma de decisiones en gestión costera:
-
-1. **Priorización de intervenciones** basada en la importancia relativa de variables
-2. **Predicción de impactos** mediante modelos lineales especie-gestión
-3. **Optimización regional** considerando las especificidades de cada zona costera
-4. **Monitoreo dirigido** enfocado en especies indicadoras identificadas
-
-El **Paso 2** completa la caracterización regional de relaciones lineales especies-gestión, estableciendo las bases para el análisis combinado con control por efectos regionales en el **Paso 3**.
 
 ```{r}
 #| label: fig-rda-variance-partition-preview
