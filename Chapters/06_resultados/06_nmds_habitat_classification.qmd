@@ -150,7 +150,7 @@ top_species <- species_scores %>%
   slice_head(n = 10)
 ```
 
-### Clasificación de Hábitats mediante NMDS
+### Clasificación de Hábitats mediante NMDS {#sec-clasificacion-habitats-content}
 
 Análisis de ordenación NMDS para clasificar parcelas de vegetación en 4 tipos de hábitat basados en la composición de especies. Se utilizan 4 grupos para capturar la variabilidad principal de las comunidades dunares.
 

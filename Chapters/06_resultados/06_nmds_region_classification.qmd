@@ -1,4 +1,4 @@
-#### Comparación NMDS entre Regiones
+#### Comparación NMDS entre Regiones {#sec-clasificacion-region-content}
 
 Esta sección presenta un análisis de **Escalamiento Multidimensional No Métrico (NMDS)** que compara las comunidades vegetales entre las tres regiones catalanas.
 

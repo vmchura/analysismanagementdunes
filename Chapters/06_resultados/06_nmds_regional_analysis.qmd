@@ -1,4 +1,4 @@
-#### Análisis NMDS por Región
+#### Análisis NMDS por Región {#sec-clasificacion-habitats-regional}
 
 Análisis NMDS separado para cada región, revelando patrones específicos de clasificación de hábitats en Tarragona, Barcelona y Girona.
 
