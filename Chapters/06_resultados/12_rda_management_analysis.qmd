@@ -1415,47 +1415,8 @@ if(!is.null(variance_partition_result)) {
 
   print(p_partition)
 
-  # Crear también diagrama tipo Venn conceptual
-  venn_data <- data.frame(
-    x = c(1, 1.8, 1.4),
-    y = c(1, 1, 1.5),
-    Componente = c("Gestión", "Región", "Compartida"),
-    Valor = c(
-      variance_partition_result$pure_management,
-      variance_partition_result$pure_region,
-      variance_partition_result$shared_variance
-    ),
-    stringsAsFactors = FALSE
-  )
-
-  p_venn <- ggplot(venn_data, aes(x = x, y = y)) +
-    geom_point(aes(size = Valor, color = Componente), alpha = 0.7) +
-    geom_text(aes(label = paste(Componente, "\n", round(Valor, 1), "%")),
-              color = "black", fontface = "bold", size = 4, vjust = -1.5) +
-    scale_size_continuous(range = c(10, 25), guide = "none") +
-    scale_color_manual(values = c(
-      "Gestión" = "#E31A1C",
-      "Región" = "#1F78B4",
-      "Compartida" = "#FF7F00"
-    )) +
-    theme_void() +
-    labs(
-      title = "Efectos Puros vs Compartidos",
-      subtitle = paste("Residual:", round(variance_partition_result$residual, 1), "%")
-    ) +
-    theme(
-      plot.title = element_text(face = "bold", hjust = 0.5),
-      plot.subtitle = element_text(hjust = 0.5),
-      legend.position = "none"
-    ) +
-    coord_fixed()
-
-  # Combinar ambos gráficos
-  combined_partition <- p_partition + p_venn
-  print(combined_partition)
-
   # Guardar gráfico
-  ggsave(here("figures","rda_variance_partition.png"), combined_partition,
+  ggsave(here("figures","rda_variance_partition.png"), p_partition,
          width = 14, height = 8)
 } else {
   cat("No se pudo crear visualización de partición de varianza.\n")
