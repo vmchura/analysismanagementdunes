@@ -160,5 +160,5 @@ ggsave(here("figures","diversity_indices_by_region.png"), width = 12, height = 6
 La @fig-diversidad-indices muestra que:
 
 - **Diversidad Vegetal**: Tarragona presenta mayor variabilidad, Barcelona valores intermedios consistentes, Girona menor diversidad vegetal general
-- **Shannon**: Sigue patrones similares a riqueza pero incorpora abundancias relativas
-- **Equitatividad**: Indica qué tan equilibradas están las comunidades; valores bajos sugieren dominancia de pocas especies
+- **Equitatividad**: La diversidad vegetal en Barcelona está más equitativamente distribuida entre las especies, es decir, no hay especies claramente dominantes.
+- **Shannon**: Barcelona y Tarragona tienen comunidades vegetales con mayor diversidad vegetal, mientras que Girona destaca por tener menor diversidad vegetal según este índice.
