@@ -74,23 +74,6 @@
    - Barras comparativas por región
    - Cuantificación de efectos puros
 
-### Paso 5: Análisis Comparativo RDA vs CCA
-
-#### Comparaciones metodológicas:
-1. **Varianza explicada**
-   - RDA vs CCA por región
-   - Identificar métodos más apropiados
-   - Convergencia vs divergencia de resultados
-
-2. **Especies indicadoras**
-   - Especies importantes en RDA vs CCA
-   - Concordancia entre métodos
-   - Especies con respuesta lineal vs unimodal
-
-3. **Validación cruzada**
-   - Procrustes analysis entre ordenaciones
-   - Correlación de scores de sitios
-   - Estabilidad de resultados
 
 ## Implementación por Pasos
 

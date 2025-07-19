@@ -946,8 +946,830 @@ if(length(valid_rda_analyses) > 0) {
 ```
 
 ```{r}
-#| label: fig-rda-variance-partition-preview
-#| fig-cap: "Vista previa de la partición de varianza que será desarrollada en el Paso 3, mostrando la contribución relativa de efectos de gestión puros vs compartidos con factores regionales."
+#| echo: false
+#| eval: true
+#| output: false
+
+# --- PASO 3: ANÁLISIS RDA COMBINADO CON CONTROL REGIONAL ---
+
+# Función para ejecutar análisis RDA combinado con control regional
+run_combined_rda <- function(all_region_datasets, verbose = TRUE) {
+  if (verbose && interactive()) cat("=== EJECUTANDO ANÁLISIS RDA COMBINADO ===\n")
+  
+  # Verificar que tenemos datos válidos para múltiples regiones
+  valid_regions <- names(all_region_datasets)[!sapply(all_region_datasets, is.null)]
+  
+  if(length(valid_regions) < 2) {
+    warning("Se necesitan al menos 2 regiones para análisis RDA combinado")
+    return(NULL)
+  }
+  
+  if (verbose && interactive()) cat("Regiones válidas para análisis combinado:", paste(valid_regions, collapse = ", "), "\n")
+  
+  # Combinar matrices de especies de todas las regiones
+  combined_species_matrix <- NULL
+  combined_management_matrix <- NULL
+  combined_region_indicators <- NULL
+  combined_unit_ids <- NULL
+  
+  for(region_name in valid_regions) {
+    dataset <- all_region_datasets[[region_name]]
+    
+    # Combinar matrices de especies
+    if(is.null(combined_species_matrix)) {
+      combined_species_matrix <- dataset$species_matrix
+    } else {
+      # Encontrar especies comunes
+      common_species <- intersect(colnames(combined_species_matrix), colnames(dataset$species_matrix))
+      
+      if(length(common_species) < 5) {
+        warning("Insuficientes especies comunes entre regiones para análisis combinado")
+        return(NULL)
+      }
+      
+      # Combinar solo especies comunes
+      combined_species_matrix <- rbind(
+        combined_species_matrix[, common_species, drop = FALSE],
+        dataset$species_matrix[, common_species, drop = FALSE]
+      )
+    }
+    
+    # Combinar matrices de gestión
+    if(is.null(combined_management_matrix)) {
+      combined_management_matrix <- dataset$management_matrix
+    } else {
+      # Encontrar variables comunes de gestión
+      common_management <- intersect(colnames(combined_management_matrix), colnames(dataset$management_matrix))
+      
+      if(length(common_management) < 2) {
+        warning("Insuficientes variables de gestión comunes entre regiones")
+        return(NULL)
+      }
+      
+      # Combinar solo variables comunes
+      combined_management_matrix <- rbind(
+        combined_management_matrix[, common_management, drop = FALSE],
+        dataset$management_matrix[, common_management, drop = FALSE]
+      )
+    }
+    
+    # Crear indicadores de región
+    region_indicators <- rep(region_name, dataset$n_units)
+    combined_region_indicators <- c(combined_region_indicators, region_indicators)
+    
+    # Combinar IDs de unidades (agregando prefijo de región para evitar duplicados)
+    unit_ids_with_region <- paste(region_name, dataset$unit_ids, sep = "_")
+    combined_unit_ids <- c(combined_unit_ids, unit_ids_with_region)
+  }
+  
+  if (verbose && interactive()) cat("Dimensiones de datos combinados:\n")
+  if (verbose && interactive()) cat("  - Especies:", nrow(combined_species_matrix), "x", ncol(combined_species_matrix), "\n")
+  if (verbose && interactive()) cat("  - Gestión:", nrow(combined_management_matrix), "x", ncol(combined_management_matrix), "\n")
+  if (verbose && interactive()) cat("  - Regiones:", length(unique(combined_region_indicators)), "\n")
+  
+  # Crear variable de región como factor
+  region_factor <- factor(combined_region_indicators)
+  
+  # Crear matriz combinada de variables explicativas (gestión + región)
+  combined_env_matrix <- data.frame(
+    combined_management_matrix,
+    Region = region_factor
+  )
+  
+  tryCatch({
+    # 1. RDA con solo variables de gestión (sin control regional)
+    rda_management_only <- rda(combined_species_matrix ~ ., 
+                              data = combined_management_matrix)
+    
+    # 2. RDA con solo región
+    rda_region_only <- rda(combined_species_matrix ~ Region, 
+                          data = combined_env_matrix)
+    
+    # 3. RDA completo con gestión + región
+    rda_full <- rda(combined_species_matrix ~ ., 
+                   data = combined_env_matrix)
+    
+    # 4. RDA con gestión controlando por región (gestión | región)
+    rda_management_conditional <- rda(combined_species_matrix ~ . + Condition(Region), 
+                                     data = combined_env_matrix)
+    
+    # Calcular eigenvalues y varianzas
+    eigenvals_mgmt <- eigenvals(rda_management_only)
+    eigenvals_region <- eigenvals(rda_region_only)
+    eigenvals_full <- eigenvals(rda_full)
+    eigenvals_conditional <- eigenvals(rda_management_conditional)
+    
+    total_inertia <- sum(eigenvals_mgmt)
+    
+    # Varianza explicada por cada componente
+    variance_management_only <- sum(eigenvals_mgmt[1:min(length(eigenvals_mgmt), ncol(combined_management_matrix))]) / total_inertia * 100
+    variance_region_only <- sum(eigenvals_region[1:1]) / total_inertia * 100  # Solo 1 eje para región
+    variance_full <- sum(eigenvals_full[1:min(length(eigenvals_full), ncol(combined_env_matrix)-1)]) / total_inertia * 100
+    variance_conditional <- sum(eigenvals_conditional) / total_inertia * 100
+    
+    if (verbose && interactive()) cat("Varianza explicada:\n")
+    if (verbose && interactive()) cat("  - Solo gestión:", round(variance_management_only, 2), "%\n")
+    if (verbose && interactive()) cat("  - Solo región:", round(variance_region_only, 2), "%\n")
+    if (verbose && interactive()) cat("  - Gestión + región:", round(variance_full, 2), "%\n")
+    if (verbose && interactive()) cat("  - Gestión | región:", round(variance_conditional, 2), "%\n")
+    
+    return(list(
+      rda_management_only = rda_management_only,
+      rda_region_only = rda_region_only,
+      rda_full = rda_full,
+      rda_conditional = rda_management_conditional,
+      species_matrix = combined_species_matrix,
+      management_matrix = combined_management_matrix,
+      region_indicators = combined_region_indicators,
+      unit_ids = combined_unit_ids,
+      variance_management_only = variance_management_only,
+      variance_region_only = variance_region_only,
+      variance_full = variance_full,
+      variance_conditional = variance_conditional,
+      total_inertia = total_inertia,
+      n_regions = length(valid_regions),
+      n_units = nrow(combined_species_matrix),
+      n_species = ncol(combined_species_matrix),
+      n_management_vars = ncol(combined_management_matrix)
+    ))
+    
+  }, error = function(e) {
+    warning(paste("Error en análisis RDA combinado:", e$message))
+    return(NULL)
+  })
+}
+
+# Función para realizar partición de varianza
+perform_variance_partition <- function(combined_rda_result) {
+  if(is.null(combined_rda_result)) {
+    return(NULL)
+  }
+  
+  if (interactive()) cat("=== REALIZANDO PARTICIÓN DE VARIANZA ===\n")
+  
+  # Usar varpart de vegan para partición formal
+  tryCatch({
+    varpart_result <- varpart(
+      combined_rda_result$species_matrix,
+      combined_rda_result$management_matrix,
+      combined_rda_result$region_indicators
+    )
+    
+    # Extraer componentes de varianza
+    variance_components <- varpart_result$part
+    
+    # Componentes:
+    # [a] = Gestión pura
+    # [b] = Compartida entre gestión y región  
+    # [c] = Región pura
+    # [d] = Residual (no explicada)
+    
+    pure_management <- variance_components$indfract$Adj.R.squared[1] * 100
+    shared_variance <- variance_components$indfract$Adj.R.squared[2] * 100
+    pure_region <- variance_components$indfract$Adj.R.squared[3] * 100
+    residual <- 100 - (pure_management + shared_variance + pure_region)
+    
+    if (interactive()) cat("Componentes de varianza:\n")
+    if (interactive()) cat("  - Gestión pura:", round(pure_management, 2), "%\n")
+    if (interactive()) cat("  - Compartida:", round(shared_variance, 2), "%\n")
+    if (interactive()) cat("  - Región pura:", round(pure_region, 2), "%\n")
+    if (interactive()) cat("  - Residual:", round(residual, 2), "%\n")
+    
+    return(list(
+      varpart_result = varpart_result,
+      pure_management = pure_management,
+      shared_variance = shared_variance,
+      pure_region = pure_region,
+      residual = residual,
+      variance_components = variance_components
+    ))
+    
+  }, error = function(e) {
+    warning(paste("Error en partición de varianza:", e$message))
+    return(NULL)
+  })
+}
+
+# Función para crear triplot RDA combinado
+create_combined_rda_triplot <- function(combined_rda_result, title_suffix = "") {
+  if(is.null(combined_rda_result)) {
+    return(NULL)
+  }
+  
+  # Usar el modelo RDA condicional (gestión controlando por región)
+  rda_result <- combined_rda_result$rda_conditional
+  
+  # Verificar que tenemos al menos 2 ejes canónicos
+  if(length(eigenvals(rda_result)) < 2) {
+    warning("Insuficientes ejes canónicos para triplot RDA combinado")
+    return(NULL)
+  }
+  
+  tryCatch({
+    # Extraer scores de sitios
+    site_scores <- data.frame(
+      RDA1 = scores(rda_result, display = "sites")[, 1],
+      RDA2 = scores(rda_result, display = "sites")[, 2],
+      Region = combined_rda_result$region_indicators,
+      Unit = combined_rda_result$unit_ids
+    )
+    
+    # Extraer scores de especies (seleccionar principales)
+    species_scores <- data.frame(
+      RDA1 = scores(rda_result, display = "species")[, 1],
+      RDA2 = scores(rda_result, display = "species")[, 2],
+      Species = rownames(scores(rda_result, display = "species"))
+    ) %>%
+      mutate(distance = sqrt(RDA1^2 + RDA2^2)) %>%
+      arrange(desc(distance)) %>%
+      slice_head(n = 8)
+    
+    # Extraer scores de variables de gestión (biplot scores)
+    mgmt_scores <- data.frame(
+      RDA1 = scores(rda_result, display = "bp")[, 1],
+      RDA2 = scores(rda_result, display = "bp")[, 2],
+      Variable = rownames(scores(rda_result, display = "bp"))
+    )
+    
+    # Calcular eigenvalues para etiquetas de ejes
+    eigenvals_rda <- eigenvals(rda_result)
+    total_var <- sum(eigenvals(combined_rda_result$rda_full))
+    axis1_var <- eigenvals_rda[1] / total_var * 100
+    axis2_var <- eigenvals_rda[2] / total_var * 100
+    
+    # Crear el triplot
+    p <- ggplot() +
+      # Añadir puntos de sitios coloreados por región
+      geom_point(data = site_scores, aes(x = RDA1, y = RDA2, color = Region),
+                 size = 4, alpha = 0.8) +
+      # Añadir elipses de confianza por región
+      stat_ellipse(data = site_scores, aes(x = RDA1, y = RDA2, color = Region),
+                   type = "norm", level = 0.8, size = 1.2) +
+      # Añadir flechas de variables de gestión
+      geom_segment(data = mgmt_scores,
+                   aes(x = 0, y = 0, xend = RDA1 * 2.5, yend = RDA2 * 2.5),
+                   arrow = arrow(length = unit(0.8, "cm")),
+                   color = "red", size = 1.5, alpha = 0.9) +
+      # Añadir etiquetas de variables de gestión
+      ggrepel::geom_text_repel(data = mgmt_scores,
+                aes(x = RDA1 * 2.8, y = RDA2 * 2.8, label = Variable),
+                color = "red", fontface = "bold", size = 7,
+                max.overlaps = Inf,
+                box.padding = 0.6,
+                point.padding = 0.4,
+                segment.color = "red",
+                segment.alpha = 0.6) +
+      # Añadir puntos de especies principales
+      geom_point(data = species_scores, aes(x = RDA1, y = RDA2),
+                 color = "darkgreen", alpha = 0.9, size = 3) +
+      # Añadir etiquetas de especies principales
+      ggrepel::geom_text_repel(data = species_scores,
+                aes(x = RDA1, y = RDA2, label = Species),
+                color = "darkgreen", fontface = "italic", size = 5,
+                max.overlaps = Inf,
+                box.padding = 0.5,
+                point.padding = 0.3,
+                segment.color = "darkgreen",
+                segment.alpha = 0.5) +
+      # Personalizar apariencia
+      theme_minimal() +
+      labs(
+        title = paste("Triplot RDA Combinado - Gestión Controlando por Región", title_suffix),
+        subtitle = paste("Varianza gestión pura:", round(combined_rda_result$variance_conditional, 1), 
+                        "% |", combined_rda_result$n_regions, "regiones,",
+                        combined_rda_result$n_units, "sitios"),
+        x = paste("RDA1 (", round(axis1_var, 1), "%)", sep = ""),
+        y = paste("RDA2 (", round(axis2_var, 1), "%)", sep = ""),
+        color = "Región"
+      ) +
+      # Usar colores consistentes de región
+      scale_color_manual(values = PROVINCE_COLORS) +
+      theme(
+        plot.title = element_text(face = "bold", size = 18),
+        plot.subtitle = element_text(size = 14),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.title = element_text(face = "bold"),
+        legend.text = element_text(size = 11),
+        panel.grid.minor = element_blank(),
+        aspect.ratio = 1
+      )
+    
+    return(p)
+    
+  }, error = function(e) {
+    warning(paste("Error creando triplot RDA combinado:", e$message))
+    return(NULL)
+  })
+}
+
+# Ejecutar análisis RDA combinado
+if (interactive()) cat("\n=== PASO 3: ANÁLISIS RDA COMBINADO ===\n")
+
+combined_rda_result <- run_combined_rda(valid_rda_datasets)
+
+# Realizar partición de varianza
+variance_partition_result <- perform_variance_partition(combined_rda_result)
+
+if (interactive()) cat("\n=== PASO 3 COMPLETADO ===\n")
+```
+
+```{r}
+#| label: tbl-combined-rda-summary
+#| tbl-cap: "Resumen del análisis RDA combinado mostrando la partición de varianza entre efectos de gestión, región y su interacción."
+#| echo: false
+#| eval: true
+#| output: true
+
+if(!is.null(combined_rda_result)) {
+  # Crear tabla resumen del análisis combinado
+  combined_summary <- data.frame(
+    Componente = c(
+      "Solo Gestión",
+      "Solo Región", 
+      "Gestión + Región",
+      "Gestión | Región (Condicional)"
+    ),
+    Varianza_Explicada = c(
+      paste0(round(combined_rda_result$variance_management_only, 1), "%"),
+      paste0(round(combined_rda_result$variance_region_only, 1), "%"),
+      paste0(round(combined_rda_result$variance_full, 1), "%"),
+      paste0(round(combined_rda_result$variance_conditional, 1), "%")
+    ),
+    Descripcion = c(
+      "Efecto de gestión sin control regional",
+      "Efecto regional sin variables de gestión",
+      "Efecto conjunto de gestión y región",
+      "Efecto puro de gestión controlando región"
+    ),
+    stringsAsFactors = FALSE
+  )
+  
+  knitr::kable(combined_summary,
+               col.names = c("Componente", "Varianza Explicada", "Descripción"),
+               align = c("l", "c", "l")) %>%
+    kableExtra::kable_styling(latex_options = c("hold_position", "scale_down"))
+} else {
+  if (interactive()) cat("No se pudo generar tabla resumen del análisis RDA combinado.\n")
+}
+```
+
+```{r}
+#| label: fig-combined-rda-triplot  
+#| fig-cap: "Triplot RDA combinado mostrando efectos puros de gestión controlando por región. Los sitios están coloreados por región, las flechas rojas muestran gradientes de gestión, y los puntos verdes indican especies características. Las elipses muestran la agrupación regional en el espacio ordenado."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 14
+#| fig-height: 10
+#| fig-pos: "H"
+
+if(!is.null(combined_rda_result)) {
+  # Crear triplot RDA combinado
+  p_combined_triplot <- create_combined_rda_triplot(combined_rda_result)
+  
+  if(!is.null(p_combined_triplot)) {
+    print(p_combined_triplot)
+    
+    # Guardar el gráfico
+    ggsave(here("figures","rda_combined_triplot.png"), p_combined_triplot,
+           width = 14, height = 10)
+  }
+} else {
+  if (interactive()) cat("No se pudo crear triplot RDA combinado.\n")
+}
+```
+
+```{r}
+#| label: fig-variance-partition
+#| fig-cap: "Partición de varianza mostrando los componentes puros y compartidos entre gestión y región. La partición cuantifica qué proporción de varianza en composición de especies se debe exclusivamente a gestión, exclusivamente a región, a efectos compartidos, o permanece sin explicar."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 8
+#| fig-pos: "H"
+
+if(!is.null(variance_partition_result)) {
+  # Crear data frame para visualización de partición de varianza
+  partition_data <- data.frame(
+    Componente = c("Gestión Pura", "Compartida", "Región Pura", "Residual"),
+    Varianza = c(
+      variance_partition_result$pure_management,
+      variance_partition_result$shared_variance,
+      variance_partition_result$pure_region,
+      variance_partition_result$residual
+    ),
+    Color = c("Gestión", "Compartida", "Región", "Residual"),
+    stringsAsFactors = FALSE
+  ) %>%
+    mutate(
+      Varianza = pmax(Varianza, 0),  # Evitar valores negativos
+      Porcentaje = paste0(round(Varianza, 1), "%")
+    )
+  
+  # Crear gráfico de barras de partición
+  p_partition <- ggplot(partition_data, aes(x = reorder(Componente, Varianza), y = Varianza, fill = Color)) +
+    geom_col(alpha = 0.8, color = "white", size = 1) +
+    geom_text(aes(label = Porcentaje), 
+              position = position_stack(vjust = 0.5),
+              color = "white", fontface = "bold", size = 5) +
+    coord_flip() +
+    theme_minimal() +
+    labs(
+      title = "Partición de Varianza: Gestión vs Región",
+      subtitle = "Descomposición de efectos puros, compartidos y residuales",
+      x = "Componente de Varianza",
+      y = "Varianza Explicada (%)",
+      fill = "Tipo de Efecto"
+    ) +
+    scale_fill_manual(values = c(
+      "Gestión" = "#E31A1C",
+      "Compartida" = "#FF7F00", 
+      "Región" = "#1F78B4",
+      "Residual" = "#999999"
+    )) +
+    theme(
+      plot.title = element_text(face = "bold", size = 16),
+      plot.subtitle = element_text(size = 12),
+      axis.title = element_text(size = 12),
+      axis.text = element_text(size = 11),
+      legend.title = element_text(face = "bold"),
+      legend.position = "bottom",
+      panel.grid.minor = element_blank(),
+      panel.grid.major.y = element_blank()
+    )
+  
+  print(p_partition)
+  
+  # Crear también diagrama tipo Venn conceptual
+  venn_data <- data.frame(
+    x = c(1, 1.8, 1.4),
+    y = c(1, 1, 1.5),
+    Componente = c("Gestión", "Región", "Compartida"),
+    Valor = c(
+      variance_partition_result$pure_management,
+      variance_partition_result$pure_region,
+      variance_partition_result$shared_variance
+    ),
+    stringsAsFactors = FALSE
+  )
+  
+  p_venn <- ggplot(venn_data, aes(x = x, y = y)) +
+    geom_point(aes(size = Valor, color = Componente), alpha = 0.7) +
+    geom_text(aes(label = paste(Componente, "\n", round(Valor, 1), "%")),
+              color = "black", fontface = "bold", size = 4, vjust = -1.5) +
+    scale_size_continuous(range = c(10, 25), guide = "none") +
+    scale_color_manual(values = c(
+      "Gestión" = "#E31A1C",
+      "Región" = "#1F78B4", 
+      "Compartida" = "#FF7F00"
+    )) +
+    theme_void() +
+    labs(
+      title = "Efectos Puros vs Compartidos",
+      subtitle = paste("Residual:", round(variance_partition_result$residual, 1), "%")
+    ) +
+    theme(
+      plot.title = element_text(face = "bold", hjust = 0.5),
+      plot.subtitle = element_text(hjust = 0.5),
+      legend.position = "none"
+    ) +
+    coord_fixed()
+  
+  # Combinar ambos gráficos
+  combined_partition <- p_partition + p_venn
+  print(combined_partition)
+  
+  # Guardar gráfico
+  ggsave(here("figures","rda_variance_partition.png"), combined_partition,
+         width = 14, height = 8)
+} else {
+  if (interactive()) cat("No se pudo crear visualización de partición de varianza.\n")
+}
+```
+
+```{r}
+#| echo: false
+#| eval: true
+#| output: false
+
+# --- VALIDACIÓN Y ROBUSTEZ DEL ANÁLISIS RDA COMBINADO ---
+
+# Función para probar significancia del análisis RDA combinado
+test_combined_rda_significance <- function(combined_rda_result) {
+  if(is.null(combined_rda_result)) {
+    return(NULL)
+  }
+  
+  if (interactive()) cat("=== PROBANDO SIGNIFICANCIA RDA COMBINADO ===\n")
+  
+  tryCatch({
+    # Test de significancia del modelo de gestión pura (condicional)
+    sig_conditional <- anova(combined_rda_result$rda_conditional, permutations = 999)
+    
+    # Test de significancia del modelo completo
+    sig_full <- anova(combined_rda_result$rda_full, permutations = 999)
+    
+    # Test de significancia por ejes del modelo condicional
+    sig_axes <- anova(combined_rda_result$rda_conditional, by = "axis", permutations = 999)
+    
+    # Test de significancia por términos del modelo condicional
+    sig_terms <- anova(combined_rda_result$rda_conditional, by = "terms", permutations = 999)
+    
+    if (interactive()) cat("Significancia modelo condicional: p =", round(sig_conditional$`Pr(>F)`[1], 3), "\n")
+    if (interactive()) cat("Significancia modelo completo: p =", round(sig_full$`Pr(>F)`[1], 3), "\n")
+    
+    return(list(
+      conditional = sig_conditional,
+      full = sig_full,
+      axes = sig_axes,
+      terms = sig_terms
+    ))
+    
+  }, error = function(e) {
+    warning(paste("Error en test de significancia RDA combinado:", e$message))
+    return(NULL)
+  })
+}
+
+# Función para comparar métodos (RDA vs CCA vs NMDS)
+compare_ordination_methods <- function(combined_rda_result, rda_datasets) {
+  if(is.null(combined_rda_result)) {
+    return(NULL)
+  }
+  
+  if (interactive()) cat("=== COMPARANDO MÉTODOS DE ORDENACIÓN ===\n")
+  
+  tryCatch({
+    # Ejecutar CCA con las mismas especies pero usando Chi-squared distance
+    cca_comparison <- cca(combined_rda_result$species_matrix ~ ., 
+                         data = combined_rda_result$management_matrix)
+    
+    # Ejecutar NMDS para comparación
+    nmds_comparison <- metaMDS(combined_rda_result$species_matrix, 
+                              distance = "bray", k = 2, trymax = 100)
+    
+    # Calcular correlaciones entre ordenaciones (Procrustes)
+    # RDA vs CCA
+    procrustes_rda_cca <- procrustes(scores(combined_rda_result$rda_management_only, display = "sites"),
+                                    scores(cca_comparison, display = "sites"))
+    
+    # RDA vs NMDS
+    procrustes_rda_nmds <- procrustes(scores(combined_rda_result$rda_management_only, display = "sites"),
+                                     scores(nmds_comparison, display = "sites"))
+    
+    if (interactive()) cat("Correlación RDA-CCA (Procrustes):", round(sqrt(1 - procrustes_rda_cca$ss), 3), "\n")
+    if (interactive()) cat("Correlación RDA-NMDS (Procrustes):", round(sqrt(1 - procrustes_rda_nmds$ss), 3), "\n")
+    
+    return(list(
+      cca_comparison = cca_comparison,
+      nmds_comparison = nmds_comparison,
+      procrustes_rda_cca = procrustes_rda_cca,
+      procrustes_rda_nmds = procrustes_rda_nmds
+    ))
+    
+  }, error = function(e) {
+    warning(paste("Error en comparación de métodos:", e$message))
+    return(NULL)
+  })
+}
+
+# Función para análisis de sensibilidad (bootstrap)
+perform_sensitivity_analysis <- function(combined_rda_result, n_bootstrap = 100) {
+  if(is.null(combined_rda_result)) {
+    return(NULL)
+  }
+  
+  if (interactive()) cat("=== ANÁLISIS DE SENSIBILIDAD (BOOTSTRAP) ===\n")
+  
+  tryCatch({
+    n_sites <- nrow(combined_rda_result$species_matrix)
+    bootstrap_results <- matrix(NA, nrow = n_bootstrap, ncol = 4)
+    colnames(bootstrap_results) <- c("Var_Management", "Var_Region", "Var_Full", "Var_Conditional")
+    
+    for(i in 1:n_bootstrap) {
+      # Muestreo bootstrap de sitios
+      boot_indices <- sample(1:n_sites, size = n_sites, replace = TRUE)
+      
+      boot_species <- combined_rda_result$species_matrix[boot_indices, ]
+      boot_management <- combined_rda_result$management_matrix[boot_indices, ]
+      boot_region <- factor(combined_rda_result$region_indicators[boot_indices])
+      
+      # RDA bootstrap
+      boot_env <- data.frame(boot_management, Region = boot_region)
+      
+      boot_rda_mgmt <- rda(boot_species ~ ., data = boot_management)
+      boot_rda_region <- rda(boot_species ~ Region, data = boot_env)
+      boot_rda_full <- rda(boot_species ~ ., data = boot_env)
+      boot_rda_cond <- rda(boot_species ~ . + Condition(Region), data = boot_env)
+      
+      total_inertia <- sum(eigenvals(boot_rda_mgmt))
+      
+      bootstrap_results[i, 1] <- sum(eigenvals(boot_rda_mgmt)[1:min(length(eigenvals(boot_rda_mgmt)), ncol(boot_management))]) / total_inertia * 100
+      bootstrap_results[i, 2] <- sum(eigenvals(boot_rda_region)[1:1]) / total_inertia * 100
+      bootstrap_results[i, 3] <- sum(eigenvals(boot_rda_full)[1:min(length(eigenvals(boot_rda_full)), ncol(boot_env)-1)]) / total_inertia * 100
+      bootstrap_results[i, 4] <- sum(eigenvals(boot_rda_cond)) / total_inertia * 100
+    }
+    
+    # Calcular intervalos de confianza
+    ci_results <- apply(bootstrap_results, 2, function(x) {
+      c(mean = mean(x, na.rm = TRUE),
+        lower = quantile(x, 0.025, na.rm = TRUE),
+        upper = quantile(x, 0.975, na.rm = TRUE))
+    })
+    
+    if (interactive()) cat("Intervalos de confianza 95% (bootstrap):\n")
+    for(i in 1:ncol(ci_results)) {
+      if (interactive()) cat(sprintf("  %s: %.1f%% [%.1f%% - %.1f%%]\n", 
+                  colnames(ci_results)[i],
+                  ci_results["mean", i],
+                  ci_results["lower", i],
+                  ci_results["upper", i]))
+    }
+    
+    return(list(
+      bootstrap_results = bootstrap_results,
+      confidence_intervals = ci_results
+    ))
+    
+  }, error = function(e) {
+    warning(paste("Error en análisis de sensibilidad:", e$message))
+    return(NULL)
+  })
+}
+
+# Ejecutar validación y análisis de robustez
+if(!is.null(combined_rda_result)) {
+  if (interactive()) cat("\n=== VALIDACIÓN Y ROBUSTEZ ===\n")
+  
+  # Probar significancia
+  combined_rda_significance <- test_combined_rda_significance(combined_rda_result)
+  
+  # Comparar métodos
+  method_comparison <- compare_ordination_methods(combined_rda_result, valid_rda_datasets)
+  
+  # Análisis de sensibilidad (con menos bootstrap para velocidad)
+  sensitivity_analysis <- perform_sensitivity_analysis(combined_rda_result, n_bootstrap = 50)
+  
+  if (interactive()) cat("\n=== VALIDACIÓN COMPLETADA ===\n")
+}
+```
+
+```{r}
+#| label: tbl-combined-rda-significance
+#| tbl-cap: "Tests de significancia para el análisis RDA combinado, incluyendo significancia global del modelo, ejes individuales y términos de gestión."
+#| echo: false
+#| eval: true
+#| output: true
+
+if(!is.null(combined_rda_significance)) {
+  # Crear tabla de significancia
+  sig_summary <- data.frame(
+    Test = c(
+      "Modelo Condicional (Gestión | Región)",
+      "Modelo Completo (Gestión + Región)",
+      "Primer Eje RDA",
+      "Segundo Eje RDA"
+    ),
+    Df = c(
+      combined_rda_significance$conditional$Df[1],
+      combined_rda_significance$full$Df[1],
+      if(!is.null(combined_rda_significance$axes)) combined_rda_significance$axes$Df[1] else NA,
+      if(!is.null(combined_rda_significance$axes)) combined_rda_significance$axes$Df[2] else NA
+    ),
+    F_Value = c(
+      round(combined_rda_significance$conditional$F[1], 2),
+      round(combined_rda_significance$full$F[1], 2),
+      if(!is.null(combined_rda_significance$axes)) round(combined_rda_significance$axes$F[1], 2) else NA,
+      if(!is.null(combined_rda_significance$axes)) round(combined_rda_significance$axes$F[2], 2) else NA
+    ),
+    P_Value = c(
+      round(combined_rda_significance$conditional$`Pr(>F)`[1], 3),
+      round(combined_rda_significance$full$`Pr(>F)`[1], 3),
+      if(!is.null(combined_rda_significance$axes)) round(combined_rda_significance$axes$`Pr(>F)`[1], 3) else NA,
+      if(!is.null(combined_rda_significance$axes)) round(combined_rda_significance$axes$`Pr(>F)`[2], 3) else NA
+    ),
+    Significance = c(
+      ifelse(combined_rda_significance$conditional$`Pr(>F)`[1] < 0.001, "***",
+             ifelse(combined_rda_significance$conditional$`Pr(>F)`[1] < 0.01, "**",
+                   ifelse(combined_rda_significance$conditional$`Pr(>F)`[1] < 0.05, "*", "ns"))),
+      ifelse(combined_rda_significance$full$`Pr(>F)`[1] < 0.001, "***",
+             ifelse(combined_rda_significance$full$`Pr(>F)`[1] < 0.01, "**",
+                   ifelse(combined_rda_significance$full$`Pr(>F)`[1] < 0.05, "*", "ns"))),
+      if(!is.null(combined_rda_significance$axes)) {
+        ifelse(combined_rda_significance$axes$`Pr(>F)`[1] < 0.001, "***",
+               ifelse(combined_rda_significance$axes$`Pr(>F)`[1] < 0.01, "**",
+                     ifelse(combined_rda_significance$axes$`Pr(>F)`[1] < 0.05, "*", "ns")))
+      } else NA,
+      if(!is.null(combined_rda_significance$axes)) {
+        ifelse(combined_rda_significance$axes$`Pr(>F)`[2] < 0.001, "***",
+               ifelse(combined_rda_significance$axes$`Pr(>F)`[2] < 0.01, "**",
+                     ifelse(combined_rda_significance$axes$`Pr(>F)`[2] < 0.05, "*", "ns")))
+      } else NA
+    ),
+    stringsAsFactors = FALSE
+  )
+  
+  # Remover filas con NA
+  sig_summary <- sig_summary[!is.na(sig_summary$F_Value), ]
+  
+  knitr::kable(sig_summary,
+               col.names = c("Tipo de Test", "gl", "Valor F", "Valor p", "Sig."),
+               align = c("l", "c", "c", "c", "c"),
+               caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, ns = no significativo") %>%
+    kableExtra::kable_styling(latex_options = c("hold_position", "scale_down"))
+} else {
+  if (interactive()) cat("Tests de significancia no disponibles.\n")
+}
+```
+
+```{r}
+#| label: fig-method-comparison
+#| fig-cap: "Comparación entre métodos de ordenación (RDA vs CCA vs NMDS) usando análisis Procrustes para evaluar la congruencia entre diferentes aproximaciones metodológicas."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 6
+#| fig-pos: "H"
+
+if(!is.null(method_comparison)) {
+  # Crear gráfico de comparación Procrustes RDA vs CCA
+  rda_scores <- scores(combined_rda_result$rda_management_only, display = "sites")
+  cca_scores <- scores(method_comparison$cca_comparison, display = "sites")
+  nmds_scores <- scores(method_comparison$nmds_comparison, display = "sites")
+  
+  # Datos para gráficos Procrustes
+  procrustes_rda_cca_data <- data.frame(
+    RDA1 = rda_scores[, 1],
+    RDA2 = rda_scores[, 2],
+    CCA1 = method_comparison$procrustes_rda_cca$Yrot[, 1],
+    CCA2 = method_comparison$procrustes_rda_cca$Yrot[, 2],
+    Region = combined_rda_result$region_indicators
+  )
+  
+  procrustes_rda_nmds_data <- data.frame(
+    RDA1 = rda_scores[, 1],
+    RDA2 = rda_scores[, 2],
+    NMDS1 = method_comparison$procrustes_rda_nmds$Yrot[, 1],
+    NMDS2 = method_comparison$procrustes_rda_nmds$Yrot[, 2],
+    Region = combined_rda_result$region_indicators
+  )
+  
+  # Gráfico RDA vs CCA
+  p_rda_cca <- ggplot(procrustes_rda_cca_data, aes(x = RDA1, y = CCA1, color = Region)) +
+    geom_point(size = 3, alpha = 0.7) +
+    geom_smooth(method = "lm", se = TRUE, color = "black", linetype = "dashed") +
+    scale_color_manual(values = PROVINCE_COLORS) +
+    theme_minimal() +
+    labs(
+      title = "RDA vs CCA (Procrustes)",
+      subtitle = paste("Correlación:", round(sqrt(1 - method_comparison$procrustes_rda_cca$ss), 3)),
+      x = "RDA - Eje 1",
+      y = "CCA - Eje 1 (rotado)",
+      color = "Región"
+    ) +
+    theme(
+      plot.title = element_text(face = "bold"),
+      legend.position = "bottom"
+    )
+  
+  # Gráfico RDA vs NMDS
+  p_rda_nmds <- ggplot(procrustes_rda_nmds_data, aes(x = RDA1, y = NMDS1, color = Region)) +
+    geom_point(size = 3, alpha = 0.7) +
+    geom_smooth(method = "lm", se = TRUE, color = "black", linetype = "dashed") +
+    scale_color_manual(values = PROVINCE_COLORS) +
+    theme_minimal() +
+    labs(
+      title = "RDA vs NMDS (Procrustes)",
+      subtitle = paste("Correlación:", round(sqrt(1 - method_comparison$procrustes_rda_nmds$ss), 3)),
+      x = "RDA - Eje 1", 
+      y = "NMDS - Eje 1 (rotado)",
+      color = "Región"
+    ) +
+    theme(
+      plot.title = element_text(face = "bold"),
+      legend.position = "bottom"
+    )
+  
+  # Combinar gráficos
+  combined_comparison <- p_rda_cca + p_rda_nmds
+  print(combined_comparison)
+  
+  # Guardar gráfico
+  ggsave(here("figures","rda_method_comparison.png"), combined_comparison,
+         width = 12, height = 6)
+} else {
+  if (interactive()) cat("Comparación de métodos no disponible.\n")
+}
+```
+
+```{r}
+#| label: fig-sensitivity-analysis
+#| fig-cap: "Análisis de sensibilidad mediante bootstrap mostrando intervalos de confianza para los componentes de varianza explicada. Los intervalos indican la robustez de las estimaciones frente a variaciones en el muestreo."
 #| echo: false
 #| eval: true
 #| output: true
@@ -955,48 +1777,43 @@ if(length(valid_rda_analyses) > 0) {
 #| fig-height: 6
 #| fig-pos: "H"
 
-if(length(valid_rda_analyses) > 0) {
-  # Crear vista previa de partición de varianza usando datos actuales
-  variance_preview <- data.frame(
-    Region = names(valid_rda_analyses),
-    Management_Variance = sapply(valid_rda_analyses, function(x) x$explained_variance),
-    Unexplained_Variance = sapply(valid_rda_analyses, function(x) 100 - x$explained_variance),
+if(!is.null(sensitivity_analysis)) {
+  # Crear data frame para visualización de intervalos de confianza
+  ci_data <- data.frame(
+    Component = c("Solo Gestión", "Solo Región", "Gestión + Región", "Gestión | Región"),
+    Mean = sensitivity_analysis$confidence_intervals["mean", ],
+    Lower = sensitivity_analysis$confidence_intervals["lower", ],
+    Upper = sensitivity_analysis$confidence_intervals["upper", ],
     stringsAsFactors = FALSE
-  ) %>%
-    pivot_longer(cols = c(Management_Variance, Unexplained_Variance),
-                 names_to = "Component",
-                 values_to = "Variance") %>%
-    mutate(
-      Component = case_when(
-        Component == "Management_Variance" ~ "Gestión (Explicada)",
-        Component == "Unexplained_Variance" ~ "No Explicada",
-        TRUE ~ Component
-      )
-    )
-
-  ggplot(variance_preview, aes(x = Region, y = Variance, fill = Component)) +
-    geom_col(position = "stack", alpha = 0.8) +
+  )
+  
+  # Gráfico de intervalos de confianza
+  ggplot(ci_data, aes(x = reorder(Component, Mean), y = Mean)) +
+    geom_point(size = 4, color = "blue") +
+    geom_errorbar(aes(ymin = Lower, ymax = Upper), 
+                  width = 0.2, size = 1, color = "blue") +
+    coord_flip() +
     theme_minimal() +
-    theme(
-      legend.position = "bottom",
-      plot.title = element_text(face = "bold"),
-      axis.text.x = element_text(face = "bold")
-    ) +
     labs(
-      title = "Partición de Varianza por Región - Vista Previa",
-      subtitle = "Análisis completo de partición en Paso 3 incluirá efectos regionales puros vs compartidos",
-      x = "Región",
-      y = "Varianza (%)",
-      fill = "Componente de Varianza"
+      title = "Intervalos de Confianza Bootstrap (95%)",
+      subtitle = "Robustez de estimaciones de varianza explicada",
+      x = "Componente del Modelo",
+      y = "Varianza Explicada (%)",
+      caption = "Basado en 50 muestras bootstrap"
     ) +
-    scale_fill_brewer(type = "qual", palette = "Set3") +
-    geom_text(aes(label = paste0(round(Variance, 1), "%")),
-              position = position_stack(vjust = 0.5),
-              color = "white", fontface = "bold")
-
+    theme(
+      plot.title = element_text(face = "bold"),
+      axis.title = element_text(size = 12),
+      panel.grid.minor = element_blank()
+    ) +
+    geom_text(aes(label = paste0(round(Mean, 1), "%\n[", 
+                                round(Lower, 1), "%-", 
+                                round(Upper, 1), "%]")),
+              hjust = -0.1, vjust = 0.5, size = 3.5)
+  
   # Guardar gráfico
-  ggsave(here("figures","rda_variance_partition_preview.png"), width = 10, height = 6)
+  ggsave(here("figures","rda_sensitivity_analysis.png"), width = 10, height = 6)
 } else {
-  if (interactive()) cat("No hay datos RDA para crear vista previa de partición de varianza.\n")
+  if (interactive()) cat("Análisis de sensibilidad no disponible.\n")
 }
 ```
