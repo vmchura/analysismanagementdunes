@@ -33,6 +33,9 @@ thesis:
   logo-height: "3cm"
 
 bibliography: [example.bib]
+cite-method: biblatex
+biblio-style: alphabetic
+biblio-title: "Referencias"
 
 execute:
   echo: false
