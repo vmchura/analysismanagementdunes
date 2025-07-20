@@ -29,7 +29,7 @@ thesis:
   university: Universitat de Girona
   faculty: Escola Politècnica Superior
   logo: images/logo.png
-  logo-height: "3cm"
+  logo-height: "2cm"
 
 bibliography: [example.bib]
 cite-method: biblatex
