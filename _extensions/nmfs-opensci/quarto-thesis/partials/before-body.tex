@@ -11,54 +11,34 @@
 
 \vspace*{.06\textheight}
 {\scshape\LARGE \univname\par}\vspace{1.5cm} % University name
-\textsc{\Large TFM}\\[0.5cm] % Thesis type
+\textsc{\Large TRABAJO FINAL DE MÁSTER}\\[0.5cm] % Thesis type
 
 \HRule \\[0.4cm] % Horizontal line
 {\huge \bfseries \ttitle\par}\vspace{0.4cm} % Thesis title
 \HRule \\[1.5cm] % Horizontal line
  
-\begin{minipage}[t]{0.4\textwidth}
-\begin{flushleft} \large
-\emph{Author:}\\
+\emph{Autor:}\\
 $if(author.url)$
 \href{$author.url$}{\authorname} % Author name - remove the \href bracket to remove the link
 $else$
-\authorname
+\authorname\\[2cm]
 $endif$
-\end{flushleft}
-\end{minipage}
-\begin{minipage}[t]{0.4\textwidth}
-\begin{flushright} \large
-\emph{Supervisor:} \\
+
+$if(book.date)$
+{\large $book.date$}\\[2cm] % Date
+$endif$
+
+
+\large \textit{\degreename}\\[0.3cm] % University requirement text
+\textit{}\\[0.4cm]
+
+\emph{Tutor:} \\
 $if(thesis.supervisor.url)$%
 \href{$thesis.supervisor.url$}{\supname} % Supervisor name - remove the \href bracket to remove the link  
 $else$%
 \supname
 $endif$
-\end{flushright}
-\end{minipage}\\[3cm]
- 
-\vfill
 
-\large \textit{degree of \degreename}\\[0.3cm] % University requirement text
-\textit{in the}\\[0.4cm]
-
-\vfill
-
-$if(thesis.logo)$
-$if(thesis.logo-height)$
-\includegraphics[height=$thesis.logo-height$]{$thesis.logo$} % University/department logo
-$else$
-\includegraphics{$thesis.logo$}
-$endif$
-$endif$
-
-$if(book.date)$
-{\large $book.date$}\\[4cm] % Date
-$endif$
-
- 
-\vfill
 \end{center}
 \end{titlepage}
 

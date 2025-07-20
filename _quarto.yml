@@ -72,5 +72,6 @@ format:
               \renewcommand{\partname}{Parte}
               \renewcommand{\refname}{Referencias}
               \renewcommand{\proofname}{Demostración}
+              \renewcommand{\supervisor}{Tutor}
             }
           }
