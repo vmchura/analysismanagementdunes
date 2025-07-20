@@ -1,0 +1,86 @@
+# Resultados {#sec-resultados}
+
+## Análisis de Patrones de Vegetación {#sec-patrones-vegetacion}
+
+### Comparación de las Especies Vegetales más Abundantes {#sec-especies-abundantes}
+
+::: {#sec-especies-abundantes-content}
+{{< include 06_resultados/01_abundant_species.qmd >}}
+:::
+
+### Diversidad Vegetal y Diversidad de Especies {#sec-diversidad-vegetal-diversidad}
+
+::: {#sec-diversidad-vegetal-diversidad-content}
+{{< include 06_resultados/02_species_richness.qmd >}}
+:::
+
+### Impacto de la Cobertura del Suelo a 50m {#sec-impacto-50m}
+
+::: {#sec-impacto-50m-content}
+{{< include 06_resultados/03_land_cover_50m.qmd >}}
+:::
+
+### Impacto de la Cobertura del Suelo a 100m {#sec-impacto-100m}
+
+::: {#sec-impacto-100m-content}
+{{< include 06_resultados/04_land_cover_100m.qmd >}}
+:::
+
+### Relación Entre Diversidad Vegetal y Cobertura del Suelo {#sec-relacion-diversidad-vegetal-cobertura}
+
+::: {#sec-relacion-diversidad-vegetal-cobertura-content}
+{{< include 06_resultados/05_richness_vs_land_cover.qmd >}}
+:::
+
+## Análisis de Clasificación mediante NMDS {#sec-analisis-nmds}
+
+::: {#sec-clasificacion-habitats-content}
+{{< include 06_resultados/06_nmds_habitat_classification.qmd >}}
+:::
+
+::: {#sec-clasificacion-region-content}
+{{< include 06_resultados/06_nmds_region_classification.qmd >}}
+:::
+
+::: {#sec-clasificacion-habitats-regional}
+{{< include 06_resultados/06_nmds_regional_analysis.qmd >}}
+:::
+
+## Análisis de Correspondencia Canónica (CCA) {#sec-analisis-cca}
+
+::: {#sec-cca-50m-content}
+{{< include 06_resultados/07_cca_analysis.qmd >}}
+:::
+
+::: {#sec-cca-100m-content}
+{{< include 06_resultados/08_cca_analysis_100m.qmd >}}
+:::
+
+## Efectos de las Prácticas de Gestión {#sec-efectos-gestion}
+
+### Análisis NMDS de Respuesta de la Vegetación a la Gestión {#sec-nmds-management-analysis}
+
+::: {#sec-nmds-management-content}
+{{< include 06_resultados/09_nmds_management_analysis.qmd >}}
+:::
+
+### Análisis NMDS Regional con Integración de Variables de Gestión {#sec-nmds-regional-management-analysis}
+
+::: {#sec-nmds-regional-management-content}
+{{< include 06_resultados/10_nmds_regional_management_analysis.qmd >}}
+:::
+
+### Análisis de Correspondencia Canónica con Variables de Gestión {#sec-cca-management-analysis}
+
+::: {#sec-cca-management-content}
+{{< include 06_resultados/07_cca_analysis_management.qmd >}}
+:::
+
+### Análisis de Similaridad Porcentual - SIMPER {#sec-simper-management-analysis}
+::: {#sec-simper-management-content}
+{{< include 06_resultados/11_simper_management_analysis.qmd >}}
+:::
+### Análisis de redundancia - RDA {#sec-rda-management-analysis}
+::: {#sec-rda-management-content}
+{{< include 06_resultados/12_rda_management_analysis.qmd >}}
+:::

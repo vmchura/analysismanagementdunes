@@ -3,9 +3,30 @@
 
 %\usepackage{mathpazo} % Use the Palatino font by default
 
-\usepackage[backend=bibtex, style=authoryear, natbib=true]{biblatex} % Use the bibtex backend with the authoryear citation style (which resembles APA)
+% Use alphabetic style for [Author Year] labels in bibliography
 
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
+
+% Configure the bibliography format for compact style with page citations
+\DeclareFieldFormat{postnote}{\mkpageprefix[pagination][\mknormrange]{#1}}
+
+% Configure bibliography list format
+\ExecuteBibliographyOptions{
+  sorting=nyt,
+  maxbibnames=999,
+  minbibnames=1,
+  maxcitenames=2,
+  mincitenames=1
+}
+
+% Format for author names (family-given)
+\DeclareNameAlias{sortname}{family-given}
+\DeclareNameAlias{default}{family-given}
+
+% Force biblatex to override any natbib settings
+\let\cite\autocite
+\let\citep\parencite
+\let\citet\textcite
 
 
 

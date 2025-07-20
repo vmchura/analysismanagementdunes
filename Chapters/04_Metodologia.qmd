@@ -1,2 +1,134 @@
-# Metodología {#sec-metodologia}
+# Metodología {#sec-contribucion}
 
+
+Este trabajo presenta una propuesta metodológica organizada y reproducible para el análisis de datos aplicados a comunidades dunares.
+El aporte más relevante es la aplicación de análisis multivariantes adaptados a este tipo de ecosistemas.
+
+## Conceptos especializados utilizados
+### Escala Braun-Blanquet
+
+La escala de Braun-Blanquet es un sistema de clasificación semicuantitativo ampliamente utilizado en estudios de vegetación, especialmente en ecología de comunidades. Fue desarrollada por el fitosociólogo Josias Braun-Blanquet a principios del siglo XX y permite estimar de forma rápida y estandarizada la cobertura y la abundancia relativa de especies en una parcela de muestreo.
+
+Este sistema asigna categorías ordinales que representan rangos de cobertura, facilitando la comparación entre parcelas y especies sin necesidad de realizar estimaciones numéricas exactas. Las categorías comunes incluyen: `r` (presencia rara), `+` (presencia escasa), `1` (menos del 5% de cobertura), `2` (5–25%), `3` (25–50%), `4` (50–75%) y `5` (75–100%). En este trabajo, se utiliza una versión ya transformada a valores ordinales simplificados (0, 1, 2, 3, 4, 5), según lo habitual en estudios que requieren posterior análisis cuantitativo.
+
+### Distancia Bray-Curtis
+La distancia Bray-Curtis es una medida de disimilitud comúnmente utilizada en ecología para comparar composiciones de comunidades entre sitios. Se basa en las diferencias en abundancia relativa de las especies y varía entre 0 (composición idéntica) y 1 (composición completamente distinta). Esta métrica es especialmente útil cuando se analizan datos de presencia-abundancia, ya que no considera las especies ausentes en ambos sitios, reduciendo el efecto de ceros compartidos.
+
+### Transformación Hellinger
+
+La transformación Hellinger es una técnica de normalización aplicada a matrices de abundancia de especies, recomendada antes de realizar análisis multivariantes lineales como el Análisis de Redundancia (RDA). Consiste en calcular la raíz cuadrada de las proporciones relativas de cada especie por sitio. Esta transformación reduce la influencia de especies dominantes y permite trabajar con datos de abundancia en métodos basados en distancias euclidianas, respetando la naturaleza composicional de los datos ecológicos.
+
+### Índices de Diversidad
+
+Se utilizaron múltiples índices de diversidad para caracterizar las comunidades vegetales:
+
+**Diversidad vegetal** se define como el número total de especies diferentes presentes en una comunidad o área determinada. Es la medida más básica de diversidad biológica y proporciona información fundamental sobre la complejidad florística de los ecosistemas dunares.
+
+**Índice de Shannon** (H') incorpora tanto la diversidad vegetal como la abundancia relativa de especies:
+
+H' = -Σ(pi × ln(pi))
+
+donde pi es la proporción de cada especie en la comunidad. Valores altos indican mayor diversidad.
+
+**Equitatividad de Pielou** (J') mide qué tan uniformemente están distribuidas las abundancias entre especies:
+
+J' = H' / ln(S)
+
+donde S es el número de especies. Valores cercanos a 1 indican distribución uniforme de abundancias.
+
+## Estandarización de Datos
+
+Como parte del preprocesamiento necesario para aplicar análisis multivariantes, se realizó una conversión sistemática de los datos de abundancia expresados en la escala de Braun-Blanquet a valores porcentuales de cobertura. Esta transformación permite adaptar los datos semicuantitativos a un formato numérico continuo, adecuado para métodos estadísticos más robustos.
+
+La función utilizada aplica una correspondencia entre los valores ordinales y los puntos medios de los intervalos de cobertura asociados a cada clase. Por ejemplo, el valor `2` (5–25%) se transforma en un 25% de cobertura. El esquema de conversión adoptado fue:
+**(0, 1, 2, 3, 4, 5) → (0%, 5%, 25%, 50%, 75%, 100%)**.
+Este enfoque mantiene la coherencia ecológica de los datos originales y facilita su análisis en herramientas estadísticas que requieren valores numéricos continuos.
+
+Aunque esta conversión no representa un aporte metodológico original, se considera un paso necesario para integrar los datos de diversidad vegetal en un marco de análisis cuantitativo reproducible.
+
+{{< include 03_01_exploration_validation.qmd >}}
+{{< include 03_02_split_provinces.qmd >}}
+
+### Agregación Espacial
+
+Los datos originales se registraron a nivel de transecto. Para el análisis se agregaron a nivel de playa calculando la cobertura media de cada especie. Esta agregación elimina la dependencia espacial entre transectos de la misma playa y proporciona una unidad de análisis coherente con la escala de gestión.
+
+## Métodos de Análisis
+
+### Escalamiento Multidimensional No Métrico (NMDS)
+
+El Escalamiento Multidimensional No Métrico (NMDS) es una técnica de ordenación que permite representar las similitudes entre comunidades vegetales en un espacio de dimensión reducida, preservando las relaciones de distancia originales sin asumir relaciones lineales entre especies y gradientes ambientales. Este método es especialmente apropiado para datos ecológicos que no cumplen con los supuestos de normalidad requeridos por métodos paramétricos.
+
+El algoritmo minimiza el estrés, una medida de qué tan bien las distancias en el espacio de ordenación representan las distancias originales entre sitios. Valores de estrés inferiores a 0.1 indican una representación aceptable, mientras que valores por debajo de 0.05 sugieren una excelente representación.
+
+**Aplicación metodológica en este estudio:**
+Se aplicó NMDS a matrices de abundancia de especies convertidas de escala Braun-Blanquet. Los datos se agregaron por playa calculando la cobertura media por especie. Las coordenadas NMDS resultantes se sometieron un agrupamiento para clasificar tipos de hábitat, identificando especies indicadoras mediante análisis de dominancia.
+
+### Análisis de Correspondencias Canónicas (CCA)
+
+El Análisis de Correspondencias Canónicas (CCA) es una técnica de ordenación restringida que relaciona directamente la composición de especies con gradientes ambientales, extrayendo únicamente la variación en especies explicada por las variables ambientales. Asume respuestas unimodales de las especies a los gradientes ambientales, siendo apropiado cuando las especies muestran óptimos ecológicos a lo largo de gradientes extensos.
+
+El método combina análisis de correspondencias con regresión múltiple, maximizando la correlación entre combinaciones lineales de especies y variables ambientales. Los ejes canónicos representan gradientes ambientales interpretables ecológicamente.
+
+**Aplicación metodológica en este estudio:**
+Se ejecutó CCA relacionando matrices de especies (transformadas a porcentajes y agregadas por playa) con variables de cobertura del suelo extraídas en radios de 50m y 100m. Se seleccionaron variables con varianza >0.01 y se evaluó significancia mediante múltiples permutaciones. Se realizaron análisis separados por región y un análisis combinado, empleando selección forward de variables ambientales para identificar predictores más importantes del patrón de vegetación.
+
+### Análisis de Redundancia (RDA)
+
+El Análisis de Redundancia (RDA) es una técnica de ordenación restringida basada en análisis de componentes principales que asume respuestas lineales de las especies a los gradientes ambientales. Es el equivalente euclidiano del CCA, apropiado para gradientes ambientales cortos donde las respuestas de especies pueden aproximarse mediante relaciones lineales.
+
+El RDA maximiza la varianza en la composición de especies explicada por las variables ambientales, proporcionando una medida directa de la varianza explicada y permitiendo la partición de efectos cuando se incluyen múltiples grupos de variables.
+
+**Aplicación metodológica en este estudio:**
+Se aplicó RDA a matrices de especies con transformación Hellinger previa para estabilizar varianzas. Las variables de gestión se estandarizaron y se agregaron por playa. Se realizó análisis combinado controlando efectos regionales mediante RDA condicional (gestión | región), aplicando partición de varianza para separar efectos puros de gestión, región y compartidos. Se empleó selección forward para identificar variables de gestión más influyentes.
+
+### Análisis de Similaridad Porcentual (SIMPER)
+
+El Análisis de Similaridad Porcentual (SIMPER) es una técnica de análisis multivariante que identifica las especies que contribuyen más a las similitudes dentro de grupos y a las diferencias entre grupos de sitios. Cuantifica la contribución porcentual de cada especie a la disimilitud media entre grupos, siendo especialmente útil para identificar especies indicadoras o diagnósticas.
+
+El método descompone la disimilitud total entre grupos en contribuciones individuales de especies, ordenándolas por importancia relativa. Permite establecer criterios objetivos para seleccionar especies características de cada grupo.
+
+**Aplicación metodológica en este estudio:**
+Se aplicó SIMPER a matrices de especies agregadas por playa con datos transformados a porcentajes. Se crearon grupos de gestión mediante cuartiles de intensidad calculados como promedio de variables de gestión. Se ejecutaron comparaciones pareadas entre grupos de intensidad usando distancia Bray-Curtis, estableciendo criterios de selección: contribución y presencia. Se validaron tamaños mínimos de grupo antes del análisis para asegurar robustez estadística.
+
+
+## Análisis por Escalas Espaciales
+
+Se realizaron análisis paralelos utilizando variables ambientales extraídas en radios de 50m y 100m alrededor de cada punto de muestreo. Esta aproximación permite evaluar la escala espacial más relevante para explicar la variación en las comunidades vegetales.
+
+## Interpretación de Resultados
+
+### Diagramas de Ordenación
+
+Los resultados se representaron mediante diagramas de ordenación (biplots) que muestran simultáneamente:
+- Sitios de muestreo.
+- Variables ambientales.
+- Especies seleccionadas.
+
+La interpretación sigue convenciones estándar: sitios cercanos indican composiciones similares, la dirección de las flechas indica gradientes ambientales crecientes, y las especies próximas a las flechas están asociadas con esas variables.
+
+### Análisis Comparativo Regional
+
+Se realizaron análisis separados por región (Barcelona, Girona, Tarragona) para identificar:
+- Patrones de diversidad específicos de cada región
+- Variables ambientales más importantes localmente
+- Especies características regionales
+
+## Marco de Reproducibilidad
+
+El trabajo implementa un marco robusto para garantizar la reproducibilidad y escalabilidad de los análisis:
+
+* Configuración estandarizada: Parámetros globales centralizados y documentados en un único fichero para ágil iteración.
+* Funciones modulares: El código en lenguaje de programación en R está ordenado por ficheros que representan un símil con cada sección del presente documento.
+* Documentación integrada: Todos los procedimientos componen un único [proyecto de quarto](https://quarto.org/docs/projects/quarto-projects.html), y cada sección se complementa y refuerza con el código presentado.
+* Control de versiones: Al ser un proyecto en código plano, permite ser alojado en un [repositorio público](https://github.com/vmchura/analysismanagementdunes) para visualizar el histórico de cambios o adecuarlo según sea necesario.
+
+Esta estructura facilita la adaptación y extensión de la metodología a nuevos datasets y contextos de estudio.
+
+## Limitaciones del Estudio
+
+**Limitaciones temporales:** Los datos corresponden a un único período de muestreo, limitando las inferencias sobre dinámicas temporales.
+
+**Limitaciones espaciales:** El tamaño de muestra varía entre regiones, afectando el poder estadístico de las comparaciones regionales.
+
+**Limitaciones metodológicas:** La conversión de datos ordinales introduce cierta incertidumbre, aunque sigue protocolos estándar en ecología vegetal.

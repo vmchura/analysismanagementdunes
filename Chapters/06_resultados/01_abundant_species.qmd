@@ -1,4 +1,9 @@
+Esta sección analiza las especies de plantas más abundantes en las tres regiones costeras catalanas (Tarragona,
+Barcelona y Girona). El análisis identifica las especies dominantes en cada región y compara sus patrones de cobertura,
+y la composición vegetal de los sistemas dunares.
+
 ```{r 06_01_setup, include=FALSE}
+library(here)
 # Configurar opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
   warning = FALSE,
@@ -7,31 +12,34 @@ knitr::opts_chunk$set(
 )
 ```
 
-Esta sección visualiza las especies de plantas más abundantes en las tres regiones (Tarragona, Barcelona y Girona). El gráfico muestra la abundancia media de las principales especies de plantas basada en la escala de Braun-Blanquet.
+
+
 ```{r}
-#| fig-cap: "Distribución de observaciones a través de las tres regiones"
+#| fig-cap: "Distribución del número total de observaciones de vegetación dunar a través de las tres regiones costeras catalanas. Los datos muestran la intensidad de muestreo en cada región del estudio."
 #| echo: false
 #| eval: true
-#| output: false
-# Cargar bibliotecas necesarias
+#| results: 'hide'
+#| message: false
+#| warning: false
+# Cargar librerías necesarias
 library(tidyverse)
 library(ggplot2)
 library(gridExtra) # para organizar múltiples gráficos
 library(RColorBrewer) # para paletas de colores
 
 # Cargar configuración global
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Cargar datos
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
 # --- Análisis de Patrones de Vegetación ---
 
 # Función para calcular la abundancia promedio para cada especie en una región
 # Convirtiendo valores de Braun-Blanquet a su cobertura porcentual máxima
 calculate_avg_abundance <- function(region_data) {
-  # Obtener columnas de especies - excluir "plot" y "id_beach"
+  # Obtener columnas de especies - excluir "plot" e "id_beach"
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
   
   # Crear un nuevo dataframe para almacenar los valores porcentuales
@@ -69,7 +77,7 @@ girona_abundance <- calculate_avg_abundance(beaches_by_region$Girona)
 barcelona_abundance <- calculate_avg_abundance(beaches_by_region$Barcelona)
 tarragona_abundance <- calculate_avg_abundance(beaches_by_region$Tarragona)
 
-# Obtener las 10 especies más abundantes en cada región
+# Obtener las 3 especies más abundantes en cada región
 top_girona <- girona_abundance %>% slice_head(n = 3)
 top_barcelona <- barcelona_abundance %>% slice_head(n = 3)
 top_tarragona <- tarragona_abundance %>% slice_head(n = 3)
@@ -93,17 +101,16 @@ plot_data <- bind_rows(
   prepare_plot_data(tarragona_abundance, "Tarragona", top_species)
 )
 ```
+
 ```{r}
-#| label: fig-regional-distribution
-#| fig-cap: "Distribución de observaciones a través de las tres regiones"
+#| label: fig-distribucion-regional
+#| fig-cap: "Cobertura media de las principales especies vegetales por región. Los valores están basados en la conversión de la escala Braun-Blanquet a porcentajes máximos de cobertura. Se muestran las especies con mayor abundancia identificadas en al menos una de las tres regiones costeras catalanas."
 #| echo: false
 #| eval: true
-#| output: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 #| fig-pos: "H"
-# Ordenar regiones según nuestro orden estándar
-plot_data <- order_provinces(plot_data, column_name = "region")
-
-
 # Ordenar regiones según nuestro orden estándar
 plot_data <- order_provinces(plot_data, column_name = "region")
 
@@ -113,12 +120,13 @@ p <- ggplot(plot_data, aes(x = reorder(species, mean_percentage), y = mean_perce
   geom_bar(stat = "identity", position = "dodge") +
   coord_flip() +
   theme_minimal() +
-  labs(title = "Cobertura Media de las Principales Especies Vegetales por Región",
+  labs(title = "Cobertura Media de las Principales Especies\nVegetales por Región",
        x = "Especies",
        y = "Cobertura Media (%)",
        fill = "Región") +
   theme(legend.position = "top",
-        axis.text.y = element_text(size = 8)) +
+        axis.text.y = element_text(size = 8),
+        plot.title = element_text(hjust = 0.5, size = 12)) +
   # Usar nuestros colores personalizados para provincias
   scale_fill_manual(values = PROVINCE_COLORS)
 
@@ -127,6 +135,16 @@ p <- apply_percentage_scale(p)
 p
 
 # Guardar el gráfico
-ggsave("../figures/top_species_by_region.png", width = 12, height = 8)
-
+ggsave(here("figures","top_species_by_region.png"), width = 12, height = 8)
 ```
+
+La @fig-distribucion-regional revela patrones distintivos en la composición de especies dominantes entre las tres
+regiones costeras. Las especies más abundantes incluyen *Elymus farctus* (grama de mar), *Ammophila arenaria* (barrón),
+*Medicago marina* (alfalfa marina), *Silene nicaeensis*, *Cakile maritima* (rúcula marina), *Echinophora spinosa* (
+zanahoria marina) y *Crucianella maritima*.
+
+Se observan diferencias regionales notables en la dominancia de especies: mientras que algunas especies como *Elymus
+farctus* muestran alta cobertura en Girona y presencia moderada en las otras regiones, otras especies como *Ammophila
+arenaria* presentan patrones de distribución más variables. Estas diferencias pueden reflejar variaciones en las
+condiciones ambientales locales, la gestión de las playas y los factores biogeográficos específicos de cada región
+costera catalana.

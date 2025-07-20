@@ -1,30 +1,34 @@
+### Análisis CCA con Cobertura del Suelo a 100m
+
+Esta sección presenta los resultados del Análisis de Correspondencia Canónica (CCA) usando variables de cobertura del suelo medidas a **100m de distancia** de los sitios de dunas costeras.
+
 ```{r 08_07_setup, include=FALSE}
-# Global knitr options - controls all code chunks
+# Opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
   echo = FALSE
 )
 
-# Load necessary libraries
+# Cargar librerías necesarias
 library(tidyverse)
 library(ggplot2)
-library(vegan)     # For CCA analysis
-library(gridExtra) # For arranging multiple plots
-library(RColorBrewer) # For color palettes
-library(patchwork)  # For combining plots
-library(ggrepel)   # For non-overlapping text labels
+library(vegan)     # Para análisis CCA
+library(gridExtra) # Para organizar múltiples gráficos
+library(RColorBrewer) # Para paletas de colores
+library(patchwork)  # Para combinar gráficos
+library(ggrepel)   # Para etiquetas de texto sin solapamiento
+library(here)
+# Cargar configuración global
+source(here("R","global_config.R"))
 
-# Load global configuration
-source("../R/global_config.R")
+# Cargar datos
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
-# Load data
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+# --- Análisis de Correspondencia Canónica (CCA) para Datos de Cobertura del Suelo a 100m ---
 
-# --- Canonical Correspondence Analysis (CCA) for 100m Land Cover Data ---
-
-# Function to prepare species data matrix for CCA analysis by region
+# Función para preparar matriz de datos de especies para análisis CCA por región
 prepare_species_matrix <- function(region_data) {
   non_species_cols <- c("plot", "id_beach", "region")
   species_cols <- setdiff(names(region_data), non_species_cols)
@@ -48,7 +52,7 @@ prepare_species_matrix <- function(region_data) {
   ))
 }
 
-# Function to prepare environmental data for 100m analysis
+# Función para preparar datos ambientales para análisis a 100m
 prepare_env_matrix_100m <- function(land_cover_region_data, region_species_data) {
   beach_ids <- region_species_data$id_beach
   
@@ -56,14 +60,14 @@ prepare_env_matrix_100m <- function(land_cover_region_data, region_species_data)
     filter(id_beach %in% beach_ids) %>%
     arrange(id_beach)
   
-  # Select 100m land cover variables
+  # Seleccionar variables de cobertura del suelo a 100m
   land_cover_cols <- grep("^x100m_.*_percent$", names(env_data), value = TRUE)
   
   env_matrix <- env_data %>%
     select(id_beach, all_of(land_cover_cols)) %>%
     select(where(~ var(., na.rm = TRUE) > 0.01))
   
-  # Clean column names
+  # Limpiar nombres de columnas
   numeric_cols <- setdiff(names(env_matrix), "id_beach")
   names(env_matrix)[names(env_matrix) %in% numeric_cols] <- 
     gsub("^x100m_(.*)_percent$", "\\1", numeric_cols)
@@ -74,12 +78,12 @@ prepare_env_matrix_100m <- function(land_cover_region_data, region_species_data)
   return(env_matrix)
 }
 
-# Function to run CCA analysis at 100m scale
+# Función para ejecutar análisis CCA a escala de 100m
 run_cca_analysis_100m <- function(region_data, land_cover_region_data, region_name) {
-  cat("Running CCA analysis (100m scale) for", region_name, "...\n")
+  cat("Ejecutando análisis CCA (escala 100m) para", region_name, "...\n")
   
   if(nrow(region_data) < 3) {
-    warning(paste("Not enough data for CCA analysis in", region_name))
+    warning(paste("No hay suficientes datos para análisis CCA en", region_name))
     return(NULL)
   }
   
@@ -88,7 +92,7 @@ run_cca_analysis_100m <- function(region_data, land_cover_region_data, region_na
   species_beach_ids <- species_result$beach_ids
   
   if(ncol(species_matrix) < 2) {
-    warning(paste("Not enough species for CCA analysis in", region_name))
+    warning(paste("No hay suficientes especies para análisis CCA en", region_name))
     return(NULL)
   }
   
@@ -100,7 +104,7 @@ run_cca_analysis_100m <- function(region_data, land_cover_region_data, region_na
   common_beaches <- intersect(species_beach_ids, env_matrix_matched$id_beach)
   
   if(length(common_beaches) < 3) {
-    warning(paste("Not enough matching beaches for CCA analysis in", region_name))
+    warning(paste("No hay suficientes playas coincidentes para análisis CCA en", region_name))
     return(NULL)
   }
   
@@ -116,7 +120,7 @@ run_cca_analysis_100m <- function(region_data, land_cover_region_data, region_na
   env_vars <- env_vars[, sapply(env_vars, var, na.rm = TRUE) > 0, drop = FALSE]
   
   if(ncol(env_vars) == 0) {
-    warning(paste("No environmental variables with variation found in", region_name))
+    warning(paste("No se encontraron variables ambientales con variación en", region_name))
     return(NULL)
   }
   
@@ -136,17 +140,17 @@ run_cca_analysis_100m <- function(region_data, land_cover_region_data, region_na
       region = region_name
     ))
   }, error = function(e) {
-    warning(paste("CCA analysis failed for", region_name, ":", e$message))
+    warning(paste("El análisis CCA falló para", region_name, ":", e$message))
     return(NULL)
   })
 }
 
-# Run CCA analyses
+# Ejecutar análisis CCA
 girona_cca_100m <- run_cca_analysis_100m(beaches_by_region$Girona, land_cover_data$Girona, "Girona")
 barcelona_cca_100m <- run_cca_analysis_100m(beaches_by_region$Barcelona, land_cover_data$Barcelona, "Barcelona")
 tarragona_cca_100m <- run_cca_analysis_100m(beaches_by_region$Tarragona, land_cover_data$Tarragona, "Tarragona")
 
-# Combined analysis
+# Análisis combinado
 all_species_data <- bind_rows(
   beaches_by_region$Girona %>% mutate(region = "Girona"),
   beaches_by_region$Barcelona %>% mutate(region = "Barcelona"),
@@ -159,9 +163,9 @@ all_land_cover <- bind_rows(
   land_cover_data$Tarragona %>% mutate(region = "Tarragona")
 )
 
-combined_cca_100m <- run_cca_analysis_100m(all_species_data, all_land_cover, "Combined")
+combined_cca_100m <- run_cca_analysis_100m(all_species_data, all_land_cover, "Combinado")
 
-# Function to create CCA biplots
+# Función para crear biplots CCA
 create_cca_biplot_100m <- function(cca_analysis, title_suffix = "") {
   if(is.null(cca_analysis)) return(NULL)
   
@@ -209,8 +213,8 @@ create_cca_biplot_100m <- function(cca_analysis, title_suffix = "") {
               max.overlaps = Inf) +
     theme_minimal() +
     labs(
-      title = paste("CCA Biplot (100m scale):", cca_analysis$region, title_suffix),
-      subtitle = paste("Explained variance:", round(cca_analysis$explained_variance, 1), "%"),
+      title = paste("Biplot CCA (escala 100m):", cca_analysis$region, title_suffix),
+      subtitle = paste("Varianza explicada:", round(cca_analysis$explained_variance, 1), "%"),
       x = paste("CCA1 (", round(100 * eigenvals(cca_result)[1] / sum(eigenvals(cca_result)), 1), "%)", sep = ""),
       y = paste("CCA2 (", round(100 * eigenvals(cca_result)[2] / sum(eigenvals(cca_result)), 1), "%)", sep = "")
     ) +
@@ -226,7 +230,7 @@ create_cca_biplot_100m <- function(cca_analysis, title_suffix = "") {
   return(p)
 }
 
-# Test significance
+# Probar significancia
 test_env_significance_100m <- function(cca_analysis) {
   if(is.null(cca_analysis)) return(NULL)
   
@@ -245,27 +249,28 @@ tarragona_sig_100m <- test_env_significance_100m(tarragona_cca_100m)
 combined_sig_100m <- test_env_significance_100m(combined_cca_100m)
 ```
 
-This section presents Canonical Correspondence Analysis (CCA) results using land cover variables measured at **100m distance** from coastal dune sites.
+
+
 
 
 ```{r}
 #| label: fig-cca-combined-100m
-#| fig-cap: "CCA biplot at 100m scale showing vegetation-landscape relationships across all coastal dune sites. Blue points represent beaches, red arrows show environmental gradients at 100m scale, and green points indicate key species."
+#| fig-cap: "Biplot CCA a escala de 100m mostrando relaciones vegetación-paisaje en todos los sitios de dunas costeras. Los puntos azules representan playas, las flechas rojas muestran gradientes ambientales a escala de 100m, y los puntos verdes indican especies clave."
 #| fig-width: 20
 #| fig-height: 20
 
 if(!is.null(combined_cca_100m)) {
-  p_combined_100m <- create_cca_biplot_100m(combined_cca_100m, "- All Regions")
+  p_combined_100m <- create_cca_biplot_100m(combined_cca_100m, "- Todas las Regiones")
   print(p_combined_100m)
-  ggsave("../figures/cca_combined_analysis_100m.png", p_combined_100m, width = 12, height = 8)
+  ggsave(here("figures","cca_combined_analysis_100m.png"), p_combined_100m, width = 12, height = 8)
 } else {
-  cat("Combined CCA analysis at 100m scale could not be performed.\n")
+  cat("No se pudo realizar el análisis CCA combinado a escala de 100m.\n")
 }
 ```
 
 ```{r}
 #| label: fig-cca-regional-100m  
-#| fig-cap: "Regional CCA biplots at 100m scale showing how broader landscape-vegetation relationships vary across the three coastal regions."
+#| fig-cap: "Biplots CCA regionales a escala de 100m mostrando cómo varían las relaciones paisaje-vegetación más amplias entre las tres regiones costeras."
 #| fig-width: 15
 #| fig-height: 45
 
@@ -294,14 +299,14 @@ if(length(regional_plots_100m) > 0) {
     }
     
     print(combined_regional_100m)
-    ggsave("../figures/cca_regional_analysis_100m.png", combined_regional_100m, width = 14, height = 12)
+    ggsave(here("figures","cca_regional_analysis_100m.png"), combined_regional_100m, width = 14, height = 12)
   }
 }
 ```
 
 ```{r}
 #| label: tbl-cca-summary-100m
-#| tbl-cap: "Summary of CCA results at 100m scale showing variance explained by broader landscape variables."
+#| tbl-cap: "Resumen de los resultados CCA a escala de 100m mostrando la varianza explicada por variables de paisaje más amplias."
 
 cca_summary_100m <- data.frame(
   Region = character(),
@@ -327,7 +332,7 @@ regions_100m <- list(
   list(name = "Girona", cca = girona_cca_100m, sig = girona_sig_100m),
   list(name = "Barcelona", cca = barcelona_cca_100m, sig = barcelona_sig_100m),
   list(name = "Tarragona", cca = tarragona_cca_100m, sig = tarragona_sig_100m),
-  list(name = "Combined", cca = combined_cca_100m, sig = combined_sig_100m)
+  list(name = "Combinado", cca = combined_cca_100m, sig = combined_sig_100m)
 )
 
 for(region in regions_100m) {
@@ -348,8 +353,8 @@ for(region in regions_100m) {
 
 if(nrow(cca_summary_100m) > 0) {
   knitr::kable(cca_summary_100m, 
-               col.names = c("Region", "Explained Variance (%)", "Env. Variables", 
-                           "Species", "F-value", "P-value"),
+               col.names = c("Región", "Varianza Explicada (%)", "Var. Ambientales", 
+                           "Especies", "Valor F", "Valor P"),
                align = c("l", "c", "c", "c", "c", "c"))
 }
 ```

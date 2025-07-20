@@ -1,4 +1,4 @@
-# Introducción {#sec-introduccio}
+# Introducción {#sec-introduccion}
 
 ## Contexto del Trabajo
 
@@ -14,11 +14,11 @@ La preservación de los sistemas dunares es fundamental, puesto que contribuyen 
 
 Diversos estudios han explorado los sistemas dunares, especialmente los de la costa catalana, centrándose en la evolución histórica, el estado actual y la potencial restauración [@garcia_lozano_2019], la gestión integrada de las playas y la restauración dunar, aportando nuevos indicadores de biodiversidad y percepción social, así como reafirmando la alta biodiversidad que poseen las playas [@pinto_et_al_2022]. También se han implementado técnicas de revegetación, control de especies invasoras y diseño de senderos para minimizar el impacto humano [@ministerio_medio_ambiente_2007], entre otros enfoques.
 
-Sin embargo, son limitados los estudios que evalúan la relación entre la gestión de las playas y la diversidad de especies vegetales en los sistemas dunares de la costa catalana. En este contexto, el interés del presente trabajo de investigación es explorar la relación entre la gestión de playas o actividad antrópica y la diversidad de especies vegetales en sistemas dunares de la costa de Catalunya.
+Sin embargo, son limitados los estudios que evalúan la relación entre la gestión de las playas y la diversidad de especies vegetales en los sistemas dunares de la costa catalana. En este contexto, el interés del presente trabajo de investigación es explorar la relación entre la gestión de playas o actividad antrópica y la diversidad de especies vegetales en sistemas dunares de la costa de Cataluña.
 
 ## Justificación del Estudio
 
-En la costa de Catalunya, donde el litoral desempeña un papel clave tanto a nivel ecológico como económico, resulta necesario comprender cómo las distintas formas de intervención humana impactan en la biodiversidad dunar. Este estudio se justifica por la necesidad de generar evidencia científica en relación a la gestión sostenible de los sistemas dunares y su impacto en las especies vegetales, permitiendo establecer un equilibrio entre el uso de las playas y la conservación de los ecosistemas.
+En la costa de Cataluña, donde el litoral desempeña un papel clave tanto a nivel ecológico como económico, resulta necesario comprender cómo las distintas formas de intervención humana impactan en la biodiversidad dunar. Este estudio se justifica por la necesidad de generar evidencia científica en relación a la gestión sostenible de los sistemas dunares y su impacto en las especies vegetales, permitiendo establecer un equilibrio entre el uso de las playas y la conservación de los ecosistemas.
 
 ## Objetivos del Trabajo
 
@@ -36,32 +36,31 @@ Analizar la relación entre las prácticas de gestión de playas y la diversidad
 
 ## Contribuciones del Trabajo
 
-**Recopilación de Datos**: Integración y estandarización de datos de 278 parcelas en 39 playas catalanas, incluyendo 147 especies vegetales (escala Braun-Blanquet), variables de cobertura del suelo a 50m y 100m, y prácticas de gestión costera.
+**Recopilación de Datos**: Integración y estandarización de datos de 278 parcelas en 39 playas catalanas, incluyendo 147 especies vegetales, variables de cobertura del suelo a 50m y 100m, y prácticas de gestión costera.
 
-**Desarrollo Metodológico**: Implementación de análisis multivariantes especializados (NMDS, CCA) para comunidades dunares, sistema automatizado de validación de datos, y conversión estandarizada de valores Braun-Blanquet a porcentajes.
+**Implementación Metodológica**: Formulación y aplicación de técnicas especializadas de análisis multivariante, como el *Análisis de Escalamiento No Métrico Multidimensional* (*Non-metric Multidimensional Scaling*, NMDS), el *Análisis de Correspondencias Canónicas* (*Canonical Correspondence Analysis*, CCA), el *Análisis de Similitudes por Porcentaje* (*Similarity Percentage Analysis*, SIMPER) y el *Análisis de Redundancia* (*Redundancy Analysis*, RDA), para el estudio de comunidades dunares.
+
+Además, se implementó un sistema automatizado de validación de datos y se realizó la conversión estandarizada de valores Braun-Blanquet —una escala semicuantitativa utilizada en estudios de vegetación para estimar la cobertura y abundancia de especies— a porcentajes.
+
 
 **Análisis Empírico**: Clasificación de hábitats dunares, evaluación de efectos de cobertura del suelo y prácticas de gestión sobre diversidad vegetal, y análisis comparativo entre regiones (Girona, Barcelona, Tarragona).
 
-**Herramientas de Visualización**: Desarrollo de biplots interpretativos y representaciones gráficas para comunicación de resultados a gestores costeros.
+**Herramientas de Visualización**: Aplicación de herramientas gráficas multivariantes como biplots y otras para la comunicación de resultados.
 
-## Resultados Principales
+## Resumen de Resultados Principales
 
-**Diversidad Regional**: Girona presenta mayor riqueza de especies (35-45 especies/playa), seguida de Tarragona (25-35) y Barcelona (15-25), reflejando un gradiente de presión antrópica.
+- **Patrones regionales**: Se identificaron diferencias claras en la diversidad vegetal entre regiones. Tarragona mostró mayor heterogeneidad, Barcelona valores intermedios y Girona la menor diversidad. El análisis NMDS y la clasificación en hábitats confirmaron patrones florísticos regionales.
 
-**Clasificación de Hábitats**: Identificación de cuatro tipos mediante NMDS: dunas frontales (25%), dunas traseras (35%), áreas mixtas (30%) y zonas perturbadas (10%), cada uno con especies indicadoras específicas.
+- **Cobertura del suelo**: La urbanización a 50 y 100 m de la costa influye fuertemente en las comunidades vegetales. El eje urbano-natural fue el gradiente ambiental más relevante según el análisis CCA.
 
-**Efectos de Cobertura del Suelo**: La cobertura urbana reduce significativamente la diversidad (r = -0.45), mientras que el matorral mediterráneo la favorece (r = 0.35). Los efectos son más pronunciados a 50m que a 100m.
-
-**Impacto de Gestión**: Los senderos gestionados y barreras de cuerda aumentan la riqueza de especies (20-30%), mientras que servicios estacionales e infraestructuras fijas la reducen (15-25%). Los efectos varían regionalmente.
+- **Gestión**: Las prácticas de gestión tuvieron efectos limitados sobre la composición vegetal. El análisis RDA indicó que solo el 4.3% de la varianza se explica exclusivamente por la gestión, siendo la mayoría atribuible a otros factores no medidos.
 
 ## Estructura del Documento
 
 Este trabajo se organiza en los siguientes capítulos:
 
-- **Capítulo 2 - Literatura Relacionada y Estado del Arte**: Revisa los trabajos previos relevantes sobre ecología dunar, gestión costera y metodologías de análisis
-- **Capítulo 3 - Preliminares**: Establece los conceptos fundamentales y la terminología necesaria
-- **Capítulo 4 - Planificación y Metodología**: Describe la metodología empleada y los recursos utilizados
-- **Capítulos 5-7**: Presentan el desarrollo metodológico, exploración de datos y análisis por regiones
-- **Capítulo 8 - Contribución Metodológica**: Detalla las principales aportaciones metodológicas
-- **Capítulo 9 - Resultados**: Expone los resultados obtenidos
-- **Capítulo 10 - Conclusiones**: Sintetiza las conclusiones, limitaciones y líneas futuras
+- **Capítulo 2 - Marco Teórico: Antecedentes y
+Estado del Arte**: Revisa los trabajos previos relevantes sobre ecología dunar, gestión costera y metodologías de análisis
+- **Capítulo 3 - Metodología**: Describe la metodología empleada y los recursos utilizados
+- **Capítulo 4 - Resultados**: Expone los resultados obtenidos a partir de los análisis realizados
+- **Capítulo 5 - Conclusiones**: Sintetiza las conclusiones, limitaciones y líneas futuras de investigación

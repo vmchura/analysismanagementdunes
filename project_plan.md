@@ -1,8 +1,8 @@
 # Project Plan: Coastal Dunes Analysis - TFM
 
 ## Project Overview
-**Title**: Análisis de la Relación entre la Gestión de Playas, la Cobertura del Suelo y la Diversidad Vegetal en Dunas Costeras de Catalunya  
-**Goal**: Explore relationships between beach management, land cover, and plant diversity in coastal dune systems of Catalunya to inform conservation strategies.
+**Title**: Análisis de la Relación entre la Gestión de Playas, la Cobertura del Suelo y la Diversidad Vegetal en Dunas Costeras de Cataluña  
+**Goal**: Explore relationships between beach management, land cover, and plant diversity in coastal dune systems of Cataluña to inform conservation strategies.
 
 ## Phased Implementation Plan
 

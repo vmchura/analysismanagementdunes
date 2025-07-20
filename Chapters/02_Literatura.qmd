@@ -1,4 +1,4 @@
-# Literatura Relacionada y Estado del Arte {#sec-literatura}
+# Marco Teórico: Antecedentes y Estado del Arte {#sec-literatura}
 
 ## Sistemas dunares litorales: Características y valores ecológicos
 
@@ -24,7 +24,7 @@ La estabilidad y equilibrio de los sistemas dunares depende por factores como el
 
 La importancia de conservar los sistemas dunares radica en que permite la protección sistema playa-duna frente a los temporales marítimos [@martin_prieto_et_al_2016].
 
-Un análisis multiparamétrico realizado en los sistemas playa-duna de la Costa Brava (Girona) durante los años 1956 - 2012, indica que desde el año 1956 existe una degradación y urbanización de los principales espacios urbanos con tendencias erosivas, vislumbrando una falta de planes y medidas de gestión. Entre los años 2005 y 2012 se observa que si bien el proceso degradación continua vigente, algunos ayuntamientos han iniciado el proceso de recuperación de las dunas a través de interferencia eólica, así como restricción de los accesos [@roig_munar_et_al_2013].
+Un análisis que considera simultáneamente múltiples variables físicas, ambientales y de uso del suelo, realizado en los sistemas playa-duna de la Costa Brava (Girona) durante el período 1956–2012, indica que desde 1956 se ha producido una degradación progresiva y urbanización de los principales espacios costeros, con tendencias erosivas y una evidente falta de planes y medidas de gestión. Entre los años 2005 y 2012, aunque el proceso de degradación continúa, se observa que algunos ayuntamientos han iniciado acciones de recuperación de las dunas mediante técnicas como la interferencia eólica y la restricción de accesos [@roig_munar_et_al_2013].
 
 ## Diversidad ecológica en sistemas dunares
 
@@ -34,9 +34,7 @@ La vegetación presente en los sistemas dunares es clave en la retención y tran
 
 La afectación de la superficie vegetal afecta negativamente al sistema dunar, impidiendo el trasvase natural de sedimentos de una zona a otra, así como afectando la morfología de la duna [@martin_prieto_rodriguez_1996].
 
-En Cataluña, la mayoría de los sistemas dunares poseen un desarrollo medio y bajo ecológico y geomorfológico, sin embargo, presentan valores altos de índice de restauración dunar [@garcia_lozano_et_al_2019]. Se han identificado diez hábitats dunares que albergan unas 37 especies vegetales (Figura \ref{fig:especies-vegetales}).
-
-FALTA AGREGAR IMAGEN
+En Cataluña, la mayoría de los sistemas dunares poseen un desarrollo medio y bajo ecológico y geomorfológico, sin embargo, presentan valores altos de índice de restauración dunar [@garcia_lozano_et_al_2019]. Se han identificado diez hábitats dunares que albergan unas 37 especies vegetales.
 
 ## Actividad antrópica e impacto en los ecosistemas dunares
 
@@ -60,7 +58,7 @@ Un estudio desarrollado en los sistemas dunares de la Costa Brava, a través del
 
 ### Proyecto de regeneración de dunas metropolitanas - Área metropolitana de Barcelona (AMB)
 
-Cuyo ámbito de acción es El Prat, Viladecans, Gavà y Castelldefels. Las acciones están enfocadas en restaurar la vegetación dunar con especies autóctonas, así como controlar los accesos y brindar educación ambiental. El proyecto, vigente actualmente, espera tener un impacto en la mejora de la biodiversidad vegetal y recuperación de hábitats degradados.
+El ámbito de acción de este proyecto es El Prat, Viladecans, Gavà y Castelldefels. Las acciones están enfocadas en restaurar la vegetación dunar con especies autóctonas, así como controlar los accesos y brindar educación ambiental. El proyecto, vigente actualmente, espera tener un impacto en la mejora de la biodiversidad vegetal y recuperación de hábitats degradados.
 
 ### Proyecto MASDUNAS (Gran Canaria)
 

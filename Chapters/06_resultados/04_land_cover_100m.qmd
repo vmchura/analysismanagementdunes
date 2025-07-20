@@ -1,25 +1,27 @@
+Análisis de la composición de cobertura del suelo a 100m de cada playa.
+
 ```{r 06_04_setup, include=FALSE}
-# Global knitr options - controls all code chunks
+# Opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
   echo = FALSE
 )
 
-# Load necessary libraries
+# Cargar librerías necesarias
 library(tidyverse)
 library(ggplot2)
-library(gridExtra) # for arranging multiple plots
-library(RColorBrewer) # for color palettes
+library(gridExtra) # para organizar múltiples gráficos
+library(RColorBrewer) # para paletas de colores
+library(here)
+# Cargar configuración global
+source(here("R","global_config.R"))
 
-# Load global configuration
-source("../R/global_config.R")
+# Cargar datos
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
-# Load data
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
-
-# Function to reshape land cover data for plotting
+# Función para reestructurar datos de cobertura del suelo para visualización
 prepare_land_cover <- function(region_data) {
   region_data %>%
     pivot_longer(
@@ -27,15 +29,15 @@ prepare_land_cover <- function(region_data) {
       names_to = "cover_type",
       values_to = "percentage"
     ) %>%
-    # Extract the distance (50m or 100m) from the column name
+    # Extraer la distancia (50m o 100m) del nombre de la columna
     mutate(
       distance = ifelse(grepl("^x50m", cover_type), "50m", "100m"),
-      # Clean up the cover type name by removing the distance prefix
+      # Limpiar el nombre del tipo de cobertura eliminando el prefijo de distancia
       cover_type = gsub("^x(50|100)m_(.+)_percent$", "\\2", cover_type)
     )
 }
 
-# Prepare land cover data for all regions
+# Preparar datos de cobertura del suelo para todas las regiones
 girona_land <- prepare_land_cover(land_cover_data$Girona) %>%
   mutate(region = "Girona")
 barcelona_land <- prepare_land_cover(land_cover_data$Barcelona) %>%
@@ -43,13 +45,13 @@ barcelona_land <- prepare_land_cover(land_cover_data$Barcelona) %>%
 tarragona_land <- prepare_land_cover(land_cover_data$Tarragona) %>%
   mutate(region = "Tarragona")
 
-# Combine all land cover data
+# Combinar todos los datos de cobertura del suelo
 all_land_cover <- bind_rows(girona_land, barcelona_land, tarragona_land)
 
-# Order regions according to our standard order
+# Ordenar regiones según nuestro orden estándar
 all_land_cover <- order_provinces(all_land_cover, column_name = "region")
 
-# Calculate average land cover percentages for each region and distance
+# Calcular porcentajes promedio de cobertura del suelo para cada región y distancia
 avg_land_cover <- all_land_cover %>%
   group_by(region, distance, cover_type) %>%
   summarise(
@@ -57,35 +59,46 @@ avg_land_cover <- all_land_cover %>%
     .groups = "drop"
   )
 
-# Ensure regions maintain the consistent order
+# Asegurar que las regiones mantengan el orden consistente
 avg_land_cover <- order_provinces(avg_land_cover, column_name = "region")
 
-# Define a consistent color palette for land cover types
-land_cover_colors <- colorRampPalette(brewer.pal(8, "Set3"))(length(unique(avg_land_cover$cover_type)))
-names(land_cover_colors) <- unique(avg_land_cover$cover_type)
+# Traducir tipos de cobertura del suelo para visualización
+avg_land_cover <- avg_land_cover %>%
+  mutate(cover_type_spanish = translate_labels(cover_type))
+
+# Definir una paleta de colores consistente para tipos de cobertura del suelo
+land_cover_colors <- colorRampPalette(brewer.pal(8, "Set3"))(length(unique(avg_land_cover$cover_type_spanish)))
+names(land_cover_colors) <- unique(avg_land_cover$cover_type_spanish)
 ```
 
+
+
 ```{r}
-#| label: fig-land-cover-100m
-#| fig-cap: "Distribution of land cover types within 100m of beaches across the three coastal regions, showing the broader environmental context of the dune ecosystems"
+#| label: fig-cobertura-suelo-100m
+#| fig-cap: "Distribución de tipos de cobertura del suelo dentro de 100m de las playas en las tres regiones costeras, mostrando el contexto ambiental más amplio de los ecosistemas dunares"
 #| echo: false
 #| eval: true
 #| output: true
 #| fig-pos: "H"
-# Plot land cover composition at 100m by region
+# Graficar composición de cobertura del suelo a 100m por región
 ggplot(avg_land_cover %>% filter(distance == "100m"),
-       aes(x = region, y = mean_percentage, fill = cover_type)) +
+       aes(x = region, y = mean_percentage, fill = cover_type_spanish)) +
   geom_bar(stat = "identity", position = "stack") +
   theme_minimal() +
   labs(
-    title = "Land cover composition within 100m of beaches",
-    x = "Region",
-    y = "Percentage (%)",
-    fill = "Land Cover Type"
+    title = "Composición de Cobertura del Suelo\ndentro de 100m de las Playas",
+    x = "Región",
+    y = "Porcentaje (%)",
+    fill = "Tipo de Cobertura del Suelo"
   ) +
   scale_fill_manual(values = land_cover_colors) +
-  theme(legend.position = "right")
+  theme(legend.position = "right",
+        plot.title = element_text(hjust = 0.5, size = 12))
 
-# Save the plot
-ggsave("../figures/land_cover_100m_by_region.png", width = 10, height = 6)
+# Guardar el gráfico
+ggsave(here("figures","land_cover_100m_by_region.png"), width = 10, height = 6)
 ```
+
+La @fig-cobertura-suelo-100m muestra la composición por región. Tarragona: urbano (60%), matorral (20%). Barcelona: urbano (65%), pastizal (20%). Girona: urbano (40%).
+
+Otros tipos de cobertura representan menos del 15% en cada región.

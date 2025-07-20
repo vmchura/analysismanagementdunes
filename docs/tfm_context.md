@@ -1,7 +1,7 @@
 # TFM Project Summary: Coastal Dunes Analysis
 
 ## Project Overview
-- **Title**: "Análisis de la Relación entre la Gestión de Playas, la Cobertura del Suelo y la Diversidad Vegetal en Dunas Costeras de Catalunya"
+- **Title**: "Análisis de la Relación entre la Gestión de Playas, la Cobertura del Suelo y la Diversidad Vegetal en Dunas Costeras de Cataluña"
 - **Focus**: Examining relationships between beach management practices, land cover, and plant diversity in coastal dune systems in Catalonia
 - **Goal**: Understand how beach management practices affect plant diversity to inform conservation strategies for coastal dune ecosystems
 

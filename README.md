@@ -1,4 +1,4 @@
-Títol: Análisis de la Relación entre la Gestión de Playas, la Cobertura del Suelo y la Diversidad Vegetal en Dunas Costeras de Catalunya
+Títol: Análisis de la Relación entre la Gestión de Playas, la Cobertura del Suelo y la Diversidad Vegetal en Dunas Costeras de Cataluña
 Data Creació: 04/03/2025
 Descripció:
 
@@ -8,13 +8,13 @@ Las playas y sus sistemas dunares representan ecosistemas frágiles y dinámicos
 
 # Objetivo general
 
-Explorar la relación entre la gestión de playas o actividad antrópica y la diversidad de especies vegetales en sistemas dunares de la costa de Catalunya. El estudio aportará información relevante para la conservación y manejo sostenible de estos ecosistemas costeros
+Explorar la relación entre la gestión de playas o actividad antrópica y la diversidad de especies vegetales en sistemas dunares de la costa de Cataluña. El estudio aportará información relevante para la conservación y manejo sostenible de estos ecosistemas costeros
 
 # Metodología
 
 ## Descripción de Datos Existentes
 
-El  Laboratorio de Análisis y Gestión del Paisaje (LAGP) en su investigación en proceso: “Analysis of human-induced beach transformations and climate change impacts on dune habitat biodiversity along the Catalan coast (northeast Spain) Ongoing statistical analysis report”  ha recolectado información acerca de la diversidad y abundancia de especies vegetales en las playas de Catalunya, el uso del suelo a 50 y 100 metros de la línea de la playa, así como también de las actividades de gestión (e.g., estrategia de limpieza, accesibilidad para bañistas). Utilizando la metodología de Braun Blanqued, se recolectaron datos de diversidad vegetal de acuerdo a la presencial vegetal en la muestra (5mx5m), así mismo, se relevó información de 39 playas de la costa de Catalunya en tres latitudes diferentes: Tarragona, Barcelona y Girona. En cada playa se evaluó la presencia o ausencia de algún tipo de gestión de mantenimiento de la playa y de las dunas.
+El  Laboratorio de Análisis y Gestión del Paisaje (LAGP) en su investigación en proceso: “Analysis of human-induced beach transformations and climate change impacts on dune habitat biodiversity along the Catalan coast (northeast Spain) Ongoing statistical analysis report”  ha recolectado información acerca de la diversidad y abundancia de especies vegetales en las playas de Cataluña, el uso del suelo a 50 y 100 metros de la línea de la playa, así como también de las actividades de gestión (e.g., estrategia de limpieza, accesibilidad para bañistas). Utilizando la metodología de Braun Blanqued, se recolectaron datos de diversidad vegetal de acuerdo a la presencial vegetal en la muestra (5mx5m), así mismo, se relevó información de 39 playas de la costa de Cataluña en tres latitudes diferentes: Tarragona, Barcelona y Girona. En cada playa se evaluó la presencia o ausencia de algún tipo de gestión de mantenimiento de la playa y de las dunas.
 
 De las 39 playas estudiadas, 278 plots fueron documentados a lo largo de los 168 transectos, lo que resulta en la identificación de 147 especies vegetales distintas.
 

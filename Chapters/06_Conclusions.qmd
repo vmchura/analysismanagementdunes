@@ -1,0 +1,27 @@
+# Conclusiones {#sec-conclusiones}
+
+## Patrones Regionales de Vegetación Dunar {#sec-patrones-regionales}
+
+El análisis de la vegetación dunar en las tres regiones costeras de Cataluña revela patrones distintivos tanto en composición específica como en diversidad (@sec-especies-abundantes).
+
+Los resultados muestran diferencias claras entre regiones en cuanto a los índices de diversidad vegetal. Tarragona presenta una mayor variabilidad en la diversidad vegetal, lo que sugiere una comunidad más heterogénea. Barcelona, en cambio, mantiene valores intermedios pero consistentes, lo que indica una distribución más uniforme de las especies. Girona, por su parte, exhibe los valores más bajos en todos los índices, reflejando una menor diversidad y dominancia de pocas especies (@sec-diversidad-vegetal-diversidad).
+
+El análisis NMDS regional confirma la diferenciación florística entre regiones, aunque con considerable solapamiento (@sec-clasificacion-region-content). La clasificación en 4 tipos de hábitat revela distribuciones regionales diferenciadas: Tarragona presenta distribución equilibrada entre los 4 hábitats, Barcelona y Girona muestran predominio un hábitat diferentes del resto (@sec-clasificacion-habitats-content).
+
+## Influencia de la Cobertura del Suelo en las Comunidades Vegetales {#sec-influencia-cobertura}
+
+El análisis de la cobertura del suelo revela un fuerte gradiente de urbanización que estructura las comunidades vegetales dunares. A 50m de las playas, la cobertura urbana domina significativamente (@sec-impacto-50m). Esta tendencia se mantiene a 100m, donde Barcelona prevalece con el mayor porcentaje de este tipo de suelo, evidenciando la presión metropolitana sobre los ecosistemas costeros (@sec-impacto-100m).
+
+El Análisis de Correspondencia Canónica (CCA) identifica el eje urbano-natural como el gradiente ambiental más importante. Las variables "Urbano" y "Vías de Comunicación" se oponen claramente a "Agua Dulce", "Pastizal" y "Matorral", confirmando el contraste fundamental entre desarrollo humano y hábitats naturales (@sec-cca-50m-content).
+
+## Efectos de las Prácticas de Gestión sobre la Vegetación {#sec-efectos-gestion}
+
+Las prácticas de gestión muestran efectos limitados pero detectables sobre la composición vegetal dunar. El análisis NMDS de gestión revela superposición considerable entre comunidades vegetales de diferentes intensidades de manejo, indicando que las prácticas de gestión tienen un efecto relativamente débil sobre la composición específica comparado con otros factores ambientales (@sec-nmds-management-analysis).
+
+La distribución de prácticas de gestión varía notablemente entre regiones: Barcelona presenta un patrón homogéneo con 100% de parcelas bajo gestión de baja intensidad. Las prácticas específicas también difieren regionalmente: Tarragona prioriza servicios fijos y estacionales y Girona destaca en servicios fijos (3.7) y vallado con cuerdas (@sec-nmds-management-analysis).
+
+El análisis SIMPER confirma la influencia limitada de la gestión, mostrando disimilitud muy baja entre grupos de gestión (0.1%) (@sec-simper-management-analysis). Sin embargo, ciertas especies muestran respuestas diferenciales; las especies de vegetal que más aportan a diferenciar de una con gestión alta son Cynodon Dactylon, Ammophila Arenaria, Elymus Farctus y Medicago Marina
+
+Los análisis regional-específicos muestran que senderos gestionados presenta las correlaciones más altas con vallado con cuerdas y senderos gestionados, indicando implementación coordinada de estas prácticas, mientras que los servicios estacionales presentan correlaciones débiles con senderos gestionados, sugiriendo independencia en su aplicación (@sec-nmds-management-analysis).
+
+El análisis de redundancia (RDA) confirma el efecto limitado de la gestión sobre la composición vegetal. Los modelos regionales no alcanzaron significancia estadística, y el análisis combinado revela que solo el 4.3% de la varianza puede atribuirse exclusivamente a factores de gestión, mientras que el 9% corresponde a efectos compartidos entre gestión y región. El 88.3% restante de la varianza permanece sin explicar, sugiriendo que otros factores no medidos ejercen influencia dominante sobre los patrones de vegetación dunar (@sec-rda-management-analysis).

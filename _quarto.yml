@@ -3,9 +3,9 @@ project:
   output-dir: .
 
 book:
-  title: Análisis de la Relación entre la Gestión de Playas, la Cobertura del Suelo y la Diversidad Vegetal en Dunas Costeras de Catalunya
+  title: Análisis de la Relación entre la Gestión de Playas, la Cobertura del Suelo y la Diversidad Vegetal en Dunas Costeras de Cataluña
   output-file: "tfm_victor_chura"
-  date: May, 2025
+  date: Julio 2025
   author:
     name: Victor Miguel Chura Quispe
   downloads: [pdf]
@@ -13,14 +13,11 @@ book:
     - index.qmd
     - Chapters/01_Introduccio.qmd
     - Chapters/02_Literatura.qmd
-    - Chapters/03_Preliminars.qmd
     - Chapters/04_Metodologia.qmd
-    - Chapters/05_Contribucio.qmd
-    - Chapters/06_Resultats.qmd
-    - Chapters/07_Conclusions.qmd
-    - references.qmd
+    - Chapters/05_Resultados.qmd
+    - Chapters/06_Conclusions.qmd
 
-  repo-url: https://github.com/nmfs-opensci/quarto-thesis
+  repo-url: https://github.com/vmchura/analysismanagementdunes
   repo-actions: [edit, source, issue]
   search: true
 
@@ -28,23 +25,55 @@ thesis:
   supervisor: 
     name: Dr. Javier Palarea Albaladejo
     url: https://www.udg.edu/ca/directori/pagina-personal?ID=180023
-  degree-name: Màster en Ciència de Dades
+  degree-name: Máster en Ciencia de Datos
   university: Universitat de Girona
   faculty: Escola Politècnica Superior
   logo: images/logo.png
-  logo-height: "3cm"
+  logo-height: "2cm"
 
 bibliography: [example.bib]
+cite-method: biblatex
+biblio-style: alphabetic
+biblio-title: "Bibliografía"
 
 execute:
   echo: false
   code-overflow: wrap
 
-# urlcolor changes the url color in the body of the PDF
-# linkcolor changes color of internal links (like to figures)
-# toclinkcolor changes color of toc, lof and lot links
+# Use lang to set main language
+lang: es
+
 format:
-  quarto-thesis-pdf: 
+  quarto-thesis-pdf:
+    classoption: ["11pt", "singlespacing", "headsepline"]
+    documentclass: MastersDoctoralThesis
     urlcolor: red
     toclinkcolor: black
     toc-depth: 2
+    # Load babel early with all required options before any other packages
+    include-before-body:
+      - text: |
+          \selectlanguage{spanish}
+    include-in-header:
+      - text: |
+          % Load babel with all required options at the very beginning
+          \PassOptionsToPackage{spanish,bidi=default}{babel}
+          % Spanish language customizations
+          \AtBeginDocument{
+            \addto\captionsspanish{
+              \renewcommand{\contentsname}{Índice de contenidos}
+              \renewcommand{\listfigurename}{Lista de figuras}
+              \renewcommand{\listtablename}{Lista de tablas}
+              \renewcommand{\figurename}{Figura}
+              \renewcommand{\tablename}{Tabla}
+              \renewcommand{\chaptername}{Capítulo}
+              \renewcommand{\appendixname}{Apéndice}
+              \renewcommand{\bibname}{Referencias}
+              \renewcommand{\indexname}{Índice}
+              \renewcommand{\abstractname}{Resumen}
+              \renewcommand{\partname}{Parte}
+              \renewcommand{\refname}{Referencias}
+              \renewcommand{\proofname}{Demostración}
+              \renewcommand{\supervisor}{Tutor}
+            }
+          }

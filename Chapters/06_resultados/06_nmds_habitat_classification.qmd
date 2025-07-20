@@ -1,92 +1,92 @@
 ```{r 06_06_setup, include=FALSE}
-# Global knitr options - controls all code chunks
+# Opciones globales de knitr - controla todos los chunks de código
 knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
   echo = FALSE
 )
 
-# Load necessary libraries
+# Cargar librerías necesarias
 library(tidyverse)
 library(ggplot2)
-library(vegan)     # For NMDS analysis
-library(gridExtra) # For arranging multiple plots
-library(RColorBrewer) # For color palettes
+library(vegan)     # Para análisis NMDS
+library(gridExtra) # Para organizar múltiples gráficos
+library(RColorBrewer) # Para paletas de colores
+library(here)
+# Cargar configuración global
+source(here("R","global_config.R"))
 
-# Load global configuration
-source("../R/global_config.R")
+# Cargar datos
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
-# Load data
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+# --- Análisis NMDS para Clasificación de Hábitats ---
 
-# --- NMDS Analysis for Habitat Classification ---
-
-# Function to prepare species data matrix for NMDS analysis
-# Converting Braun-Blanquet values to numeric percentage cover
+# Función para preparar matriz de datos de especies para análisis NMDS
+# Convirtiendo valores de Braun-Blanquet a cobertura porcentual numérica
 prepare_nmds_data <- function(region_data) {
-  # Get species columns - exclude non-species columns
+  # Obtener columnas de especies - excluir columnas que no son especies
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
 
-  # Create a matrix for NMDS analysis with percentage values
+  # Crear una matriz para análisis NMDS con valores porcentuales
   nmds_matrix <- region_data %>%
-    # Convert Braun-Blanquet values to percentages
+    # Convertir valores de Braun-Blanquet a porcentajes
     mutate(across(all_of(species_cols), bb_to_percentage)) %>%
-    # Select only species columns to create the species matrix
+    # Seleccionar solo columnas de especies para crear la matriz de especies
     select(all_of(species_cols))
 
-  # Convert to matrix
+  # Convertir a matriz
   as.matrix(nmds_matrix)
 }
 
-# Function to identify dominant species for each plot
+# Función para identificar especies dominantes para cada parcela
 get_dominant_species <- function(region_data) {
-  # Get species columns
+  # Obtener columnas de especies
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
 
-  # Create data frame with dominant species for each plot
+  # Crear data frame con especies dominantes para cada parcela
   region_data %>%
-    # Convert to long format
+    # Convertir a formato largo
     pivot_longer(
       cols = all_of(species_cols),
       names_to = "species",
       values_to = "bb_value"
     ) %>%
-    # Group by plot and get species with highest BB value
+    # Agrupar por parcela y obtener especies con mayor valor BB
     group_by(plot, id_beach) %>%
     filter(bb_value == max(bb_value, na.rm = TRUE) & !is.na(bb_value) & bb_value > 0) %>%
-    # In case of ties, keep first one (or could randomize)
+    # En caso de empates, mantener el primero (o se podría aleatorizar)
     slice(1) %>%
     ungroup()
 }
 
-# Prepare data for each region
+# Preparar datos para cada región
 girona_matrix <- prepare_nmds_data(beaches_by_region$Girona)
 barcelona_matrix <- prepare_nmds_data(beaches_by_region$Barcelona)
 tarragona_matrix <- prepare_nmds_data(beaches_by_region$Tarragona)
 
-# Combine all matrices for a comprehensive analysis
+# Combinar todas las matrices para un análisis comprensivo
 all_species_matrix <- rbind(
   girona_matrix,
   barcelona_matrix,
   tarragona_matrix
 )
 
-# Create a corresponding region identifier for each row
+# Crear un identificador de región correspondiente para cada fila
 all_regions <- c(
   rep("Girona", nrow(girona_matrix)),
   rep("Barcelona", nrow(barcelona_matrix)),
   rep("Tarragona", nrow(tarragona_matrix))
 )
 
-# Create a corresponding beach identifier for each row
+# Crear un identificador de playa correspondiente para cada fila
 all_beaches <- c(
   beaches_by_region$Girona$id_beach,
   beaches_by_region$Barcelona$id_beach,
   beaches_by_region$Tarragona$id_beach
 )
 
-# Prepare dominant species information
+# Preparar información de especies dominantes
 girona_dominant <- get_dominant_species(beaches_by_region$Girona) %>%
   mutate(region = "Girona")
 barcelona_dominant <- get_dominant_species(beaches_by_region$Barcelona) %>%
@@ -94,21 +94,21 @@ barcelona_dominant <- get_dominant_species(beaches_by_region$Barcelona) %>%
 tarragona_dominant <- get_dominant_species(beaches_by_region$Tarragona) %>%
   mutate(region = "Tarragona")
 
-# Combine dominant species data
+# Combinar datos de especies dominantes
 all_dominant_species <- bind_rows(girona_dominant, barcelona_dominant, tarragona_dominant)
 
-# Run the NMDS analysis
-# Using Bray-Curtis distance as it's appropriate for community composition data
-set.seed(123) # For reproducibility
+# Ejecutar el análisis NMDS
+# Usando distancia de Bray-Curtis ya que es apropiada para datos de composición de comunidades
+set.seed(123) # Para reproducibilidad
 nmds_result <- metaMDS(
   all_species_matrix,
   distance = "bray",
-  k = 2,        # Number of dimensions (2 for easy visualization)
-  trymax = 100,  # Maximum number of random starts
-  autotransform = FALSE # Data already transformed to percentages
+  k = 2,        # Número de dimensiones (2 para visualización fácil)
+  trymax = 100,  # Número máximo de intentos aleatorios
+  autotransform = FALSE # Datos ya transformados a porcentajes
 )
 
-# Create a data frame with NMDS results
+# Crear un data frame con resultados del NMDS
 nmds_data <- data.frame(
   NMDS1 = nmds_result$points[,1],
   NMDS2 = nmds_result$points[,2],
@@ -116,45 +116,47 @@ nmds_data <- data.frame(
   Beach = all_beaches
 )
 
-# Apply k-means clustering to identify habitat types
-# We'll use 4 clusters as mentioned in the context document
-set.seed(456) # For reproducibility
+# Aplicar agrupamiento k-means para identificar tipos de hábitat
+# Usaremos 4 grupos como se menciona en el documento de contexto
+set.seed(456) # Para reproducibilidad
 kmeans_result <- kmeans(nmds_result$points, centers = 4)
 nmds_data$Cluster <- as.factor(kmeans_result$cluster)
 
-# Define habitat type labels based on clusters
+# Definir etiquetas de tipos de hábitat basadas en grupos
 habitat_labels <- c(
-  "1" = "Front-dune",
-  "2" = "Back-dune",
-  "3" = "Mixed",
-  "4" = "Disturbed"
+  "1" = "Hábitat 1",
+  "2" = "Hábitat 2", 
+  "3" = "Hábitat 3",
+  "4" = "Hábitat 4"
 )
 
-# Map cluster numbers to habitat labels
+# Mapear números de grupos a etiquetas de hábitat
 nmds_data$Habitat <- habitat_labels[nmds_data$Cluster]
 
-# Order regions according to our standard order
+# Ordenar regiones según nuestro orden estándar
 nmds_data <- order_provinces(nmds_data, column_name = "Region")
 
-# Extract species scores (weighted average positions in NMDS space)
+# Extraer puntuaciones de especies (posiciones promedio ponderadas en el espacio NMDS)
 species_scores <- data.frame(
   species = colnames(all_species_matrix),
   NMDS1 = scores(nmds_result, "species")[,1],
   NMDS2 = scores(nmds_result, "species")[,2]
 )
 
-# Get the most important species to label in the plot (high absolute scores)
+# Obtener las especies más importantes para etiquetar en el gráfico (puntuaciones absolutas altas)
 top_species <- species_scores %>%
   mutate(distance = sqrt(NMDS1^2 + NMDS2^2)) %>%
   arrange(desc(distance)) %>%
   slice_head(n = 10)
 ```
 
-This section presents the results of a Non-metric Multidimensional Scaling (NMDS) analysis to classify coastal dune vegetation plots into distinct habitat types. NMDS is a powerful ordination technique that represents samples in a low-dimensional space while preserving the ecological distances between them.
+### Clasificación de Hábitats mediante NMDS {#sec-clasificacion-habitats-content}
+
+Análisis de ordenación NMDS para clasificar parcelas de vegetación en 4 tipos de hábitat basados en la composición de especies. Se utilizan 4 grupos para capturar la variabilidad principal de las comunidades dunares.
 
 ```{r}
 #| label: fig-nmds-plot
-#| fig-cap: "NMDS ordination plot showing the classification of vegetation plots into habitat types based on species composition. Points represent individual plots and are colored by region (Tarragona, Barcelona, Girona) and shaped by identified habitat type."
+#| fig-cap: "Gráfico de ordenación NMDS mostrando la clasificación de parcelas de vegetación en tipos de hábitat basados en la composición de especies. Los puntos representan parcelas individuales y están coloreados por región (Tarragona, Barcelona, Girona) y con formas según el tipo de hábitat identificado."
 #| echo: false
 #| eval: true
 #| output: true
@@ -164,51 +166,55 @@ This section presents the results of a Non-metric Multidimensional Scaling (NMDS
 
 # Create NMDS plot with habitat type clusters
 p_nmds <- ggplot(nmds_data, aes(x = NMDS1, y = NMDS2)) +
-  # Add points colored by region and shaped by habitat type
+  # Añadir puntos coloreados por región y con formas según el tipo de hábitat
   geom_point(aes(color = Region, shape = Habitat), size = 3, alpha = 0.8) +
-  # Add convex hulls to outline each habitat cluster
+  # Añadir envolturas convexas para delinear cada grupo de hábitat
   stat_ellipse(aes(group = Habitat, linetype = Habitat),
                type = "norm", level = 0.8, size = 0.8) +
-  # Add top species labels
+  # Añadir etiquetas de las principales especies
   geom_text(data = top_species,
             aes(x = NMDS1, y = NMDS2, label = species),
             size = 3, fontface = "italic", hjust = -0.1, vjust = -0.1) +
-  # Customize appearance
+  # Personalizar apariencia
   theme_minimal() +
   labs(
-    title = "NMDS Ordination of Coastal Dune Vegetation",
-    subtitle = paste("Stress =", round(nmds_result$stress, 3)),
+    title = "Ordenación NMDS de Vegetación\nde Dunas Costeras",
+    subtitle = paste("Estrés =", round(nmds_result$stress, 3)),
     x = "NMDS1",
     y = "NMDS2",
-    color = "Region",
-    shape = "Habitat Type"
+    color = "Región",
+    shape = "Tipo de Hábitat"
   ) +
-  # Use consistent region colors
+  # Usar colores consistentes de región
   scale_color_manual(values = PROVINCE_COLORS) +
-  # Add arrows for top species
+  # Añadir flechas para las principales especies
   geom_segment(data = top_species,
                aes(x = 0, y = 0, xend = NMDS1, yend = NMDS2),
                arrow = arrow(length = unit(0.2, "cm")),
                alpha = 0.5,
                color = "darkgrey") +
-  # Customize theme elements
+  # Personalizar elementos del tema
   theme(
     legend.position = "right",
     legend.box = "vertical",
     legend.title = element_text(face = "bold"),
     panel.grid.minor = element_blank(),
-    plot.title = element_text(face = "bold")
+    plot.title = element_text(face = "bold", hjust = 0.5, size = 12),
+    plot.subtitle = element_text(hjust = 0.5)
   )
 
 print(p_nmds)
 
-# Save the plot
-ggsave("../figures/nmds_habitat_classification.png", p_nmds, width = 12, height = 8)
+# Guardar el gráfico
+ggsave(here("figures","nmds_habitat_classification.png"), p_nmds, width = 12, height = 8)
 ```
+
+La @fig-nmds-plot muestra la clasificación de parcelas en 4 tipos de hábitat. Los hábitats muestran separación espacial clara, con diferentes
+especies características en cada grupo.
 
 ```{r}
 #| label: fig-habitat-region-distribution
-#| fig-cap: "Distribution of identified habitat types across the three regions of Catalonia, showing the proportion of plots classified into each habitat category within each region."
+#| fig-cap: "Distribución de tipos de hábitat identificados en las tres regiones de Cataluña, mostrando la proporción de parcelas clasificadas en cada categoría de hábitat dentro de cada región."
 #| echo: false
 #| eval: true
 #| output: true
@@ -216,7 +222,7 @@ ggsave("../figures/nmds_habitat_classification.png", p_nmds, width = 12, height 
 #| fig-height: 6
 #| fig-pos: "H"
 
-# Calculate the distribution of habitat types by region
+# Calcular la distribución de tipos de hábitat por región
 habitat_distribution <- nmds_data %>%
   group_by(Region, Habitat) %>%
   summarise(Count = n(), .groups = "drop") %>%
@@ -224,7 +230,7 @@ habitat_distribution <- nmds_data %>%
   mutate(Percentage = Count / sum(Count) * 100) %>%
   ungroup()
 
-# Create a stacked bar chart
+# Crear un gráfico de barras apiladas
 habitat_distribution %>%
   ggplot(aes(x = Region, y = Percentage, fill = Habitat)) +
   geom_bar(stat = "identity", position = "stack", color = "white") +
@@ -233,28 +239,30 @@ habitat_distribution %>%
             color = "white", fontface = "bold") +
   theme_minimal() +
   labs(
-    title = "Distribution of Habitat Types by Region",
-    x = "Region",
-    y = "Percentage of Plots",
-    fill = "Habitat Type"
+    title = "Distribución de Tipos de Hábitat por Región",
+    x = "Región",
+    y = "Porcentaje de Parcelas",
+    fill = "Tipo de Hábitat"
   ) +
-  # Apply custom theme
+  # Aplicar tema personalizado
   theme(
     axis.text.x = element_text(face = "bold"),
     legend.position = "right",
     plot.title = element_text(face = "bold"),
     panel.grid.major.x = element_blank()
   ) +
-  # Use a colorblind-friendly palette
+  # Usar una paleta amigable para daltónicos
   scale_fill_brewer(palette = "Set2")
 
-# Save the plot
-ggsave("../figures/habitat_distribution_by_region.png", width = 10, height = 6)
+# Guardar el gráfico
+ggsave(here("figures","habitat_distribution_by_region.png"), width = 10, height = 6)
 ```
+
+La @fig-habitat-region-distribution muestra diferencias en la composición de hábitats entre regiones. Tarragona presenta distribución equilibrada entre los 4 hábitats (23-28% cada uno). Barcelona muestra predominio del Hábitat 2 (38%) y menor presencia del Hábitat 3 (18%). Girona se caracteriza por alta concentración del Hábitat 4 (53%) y baja representación del Hábitat 3 (4%).
 
 ```{r}
 #| label: fig-species-indicators
-#| fig-cap: "Indicator species for each habitat type, showing the average abundance of key species across the four identified habitat types in coastal dune ecosystems."
+#| fig-cap: "Especies indicadoras para cada tipo de hábitat, mostrando la abundancia promedio de especies clave en los cuatro tipos de hábitat identificados en ecosistemas de dunas costeras."
 #| echo: false
 #| eval: true
 #| output: true
@@ -262,8 +270,8 @@ ggsave("../figures/habitat_distribution_by_region.png", width = 10, height = 6)
 #| fig-height: 8
 #| fig-pos: "H"
 
-# Create a mapping between original data and NMDS results
-# We'll create a data frame that links beach ID and plot to habitat type
+# Crear un mapeo entre los datos originales y los resultados del NMDS
+# Crearemos un data frame que vincule el ID de playa y parcela al tipo de hábitat
 plot_mapping <- data.frame(
   beach_id = all_beaches,
   habitat = nmds_data$Habitat,
@@ -271,7 +279,7 @@ plot_mapping <- data.frame(
   row_num = 1:nrow(nmds_data)
 )
 
-# Add row identifiers to original data so we can match to NMDS
+# Añadir identificadores de fila a los datos originales para poder emparejar con NMDS
 girona_with_rows <- beaches_by_region$Girona %>%
   mutate(region = "Girona", row_id = 1:nrow(beaches_by_region$Girona))
 barcelona_with_rows <- beaches_by_region$Barcelona %>%
@@ -279,23 +287,23 @@ barcelona_with_rows <- beaches_by_region$Barcelona %>%
 tarragona_with_rows <- beaches_by_region$Tarragona %>%
   mutate(region = "Tarragona", row_id = (nrow(beaches_by_region$Girona) + nrow(beaches_by_region$Barcelona) + 1):(nrow(beaches_by_region$Girona) + nrow(beaches_by_region$Barcelona) + nrow(beaches_by_region$Tarragona)))
 
-# Combine all regions with row IDs
+# Combinar todas las regiones con IDs de fila
 all_data_with_rows <- bind_rows(girona_with_rows, barcelona_with_rows, tarragona_with_rows)
 
-# Join the dominant species data with habitat information
-# First, join the dominant species with the all_data_with_rows to get row_id
+# Unir los datos de especies dominantes con información de hábitat
+# Primero, unir las especies dominantes con all_data_with_rows para obtener row_id
 dominant_with_data <- all_dominant_species %>%
   left_join(all_data_with_rows %>% select(plot, id_beach, region, row_id),
             by = c("plot", "id_beach", "region"))
 
-# Then join with plot_mapping to get habitat information
+# Luego unir con plot_mapping para obtener información de hábitat
 dominant_with_clusters <- dominant_with_data %>%
   left_join(plot_mapping %>% select(row_num, habitat, cluster),
             by = c("row_id" = "row_num"))
 
-# Find indicator species for each habitat type
-# These are species that are more frequently dominant in a specific habitat
-# We'll calculate the average BB value of each species in each habitat type
+# Encontrar especies indicadoras para cada tipo de hábitat
+# Estas son especies que son más frecuentemente dominantes en un hábitat específico
+# Calcularemos el valor BB promedio de cada especie en cada tipo de hábitat
 indicator_species <- dominant_with_clusters %>%
   group_by(habitat, species) %>%
   summarise(
@@ -304,29 +312,29 @@ indicator_species <- dominant_with_clusters %>%
     .groups = "drop"
   ) %>%
   filter(!is.na(habitat)) %>%
-  # Keep only species that appear at least twice in a habitat
+  # Mantener solo especies que aparecen al menos dos veces en un hábitat
   filter(count >= 2) %>%
-  # For each habitat, get the top 3 indicator species
+  # Para cada hábitat, obtener las 3 principales especies indicadoras
   group_by(habitat) %>%
   slice_max(order_by = mean_bb, n = 3) %>%
   ungroup() %>%
-  # Rename column to match expected names in downstream code
+  # Renombrar columna para coincidir con nombres esperados en código posterior
   rename(Habitat = habitat)
 
-# Create a bar plot of indicator species by habitat type
+# Crear un gráfico de barras de especies indicadoras por tipo de hábitat
 ggplot(indicator_species, aes(x = reorder(species, mean_bb), y = mean_bb, fill = Habitat)) +
   geom_bar(stat = "identity") +
   facet_wrap(~ Habitat, scales = "free_y") +
   coord_flip() +
   theme_minimal() +
   labs(
-    title = "Indicator Species for Each Habitat Type",
-    subtitle = "Based on species dominance pattern",
-    x = "Species",
-    y = "Mean Braun-Blanquet Value",
-    fill = "Habitat Type"
+    title = "Especies Indicadoras para Cada Tipo de Hábitat",
+    subtitle = "Basado en el patrón de dominancia de especies",
+    x = "Especies",
+    y = "Valor Medio de Braun-Blanquet",
+    fill = "Tipo de Hábitat"
   ) +
-  # Apply Braun-Blanquet scale
+  # Aplicar escala Braun-Blanquet
   apply_braun_blanquet_scale() +
   theme(
     legend.position = "none",
@@ -335,9 +343,13 @@ ggplot(indicator_species, aes(x = reorder(species, mean_bb), y = mean_bb, fill =
     axis.text.y = element_text(face = "italic"),
     plot.title = element_text(face = "bold")
   ) +
-  # Use color palette
+  # Usar paleta de colores
   scale_fill_brewer(palette = "Set2")
 
-# Save the plot
-ggsave("../figures/habitat_indicator_species.png", width = 14, height = 8)
+# Guardar el gráfico
+ggsave(here("figures","habitat_indicator_species.png"), width = 14, height = 8)
 ```
+
+La @fig-species-indicators identifica las especies características de cada hábitat. Hábitat 1: *Lotus creticus* (cuernecillo marino), *Parapholis filiformis*. Hábitat 2: *Ononis natrix* (melgó), *Asphodelus aestivus* (gamón). Hábitat 3: *Juncus acutus* (junco marino), *Eryngium barrelieri*. Hábitat 4: *Taraxacum officinale* (diente de león), *Medicago marina* (alfalfa marina).
+
+Las especies indicadoras muestran valores de Braun-Blanquet entre 2-4, indicando coberturas medias a altas en sus hábitats respectivos.

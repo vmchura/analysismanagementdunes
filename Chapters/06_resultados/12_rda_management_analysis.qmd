@@ -1,0 +1,1400 @@
+A diferencia de los métodos de ordenación no constrainados, el RDA modela explícitamente las relaciones lineales entre la matriz de especies y las variables ambientales explicativas, proporcionando una medida cuantitativa de la varianza explicada por factores de manejo.
+
+```{r 12_rda_setup, include=FALSE}
+library(here)
+
+# Global knitr options - controls all code chunks
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE
+)
+
+# Load necessary libraries
+library(tidyverse)
+library(ggplot2)
+library(vegan)     # For RDA analysis
+library(gridExtra) # For arranging multiple plots
+library(RColorBrewer) # For color palettes
+library(patchwork)  # For combining plots
+library(ggrepel)   # For non-overlapping text labels
+library(kableExtra)
+
+# Load global configuration
+source(here("R","global_config.R"))
+
+# Load data
+load(here("data","all_observations_split.RData"))
+load(here("data","all_management_data.RData"))
+
+```
+
+
+
+```{r}
+# --- PASO 1: CONFIGURACIÓN Y PREPARACIÓN DE DATOS ---
+
+# --- Funciones de preparación de datos para RDA ---
+
+# Función para preparar matriz de especies para análisis RDA por región
+prepare_rda_species_matrix <- function(region_data, aggregation_level = "beach") {
+  
+  # Obtener columnas de especies - excluir columnas no-especie
+  non_species_cols <- c("plot", "id_beach", "region")
+  species_cols <- setdiff(names(region_data), non_species_cols)
+  
+  if(aggregation_level == "beach") {
+    # Agregar datos de especies por playa (calcular media de cobertura por playa)
+    species_by_unit <- region_data %>%
+      # Convertir valores Braun-Blanquet a porcentajes primero
+      mutate(across(all_of(species_cols), bb_to_percentage)) %>%
+      # Agrupar por playa y calcular media de cobertura de especies
+      group_by(id_beach) %>%
+      summarise(across(all_of(species_cols), ~ mean(.x, na.rm = TRUE)), .groups = "drop") %>%
+      # Mantener id_beach para hacer match con datos de gestión
+      arrange(id_beach)
+  } else {
+    # Usar datos a nivel de parcela
+    species_by_unit <- region_data %>%
+      # Convertir valores Braun-Blanquet a porcentajes
+      mutate(across(all_of(species_cols), bb_to_percentage)) %>%
+      arrange(id_beach, plot)
+  }
+  
+  # Extraer solo las columnas de especies para la matriz
+  species_matrix <- species_by_unit %>%
+    select(all_of(species_cols)) %>%
+    as.matrix()
+  
+  # Remover especies que nunca están presentes
+  species_present <- colSums(species_matrix) > 0
+  species_matrix_final <- species_matrix[, species_present, drop = FALSE]
+  
+  # Verificar que tengamos suficientes especies
+  if(ncol(species_matrix_final) < 2) {
+    warning("Insuficientes especies para análisis RDA")
+    return(NULL)
+  }
+  
+  # Retornar tanto la matriz como los IDs para hacer match
+  if(aggregation_level == "beach") {
+    unit_ids <- species_by_unit$id_beach
+  } else {
+    unit_ids <- paste(region_data$id_beach, region_data$plot, sep = "_")
+  }
+  
+  return(list(
+    matrix = species_matrix_final,
+    unit_ids = unit_ids,
+    species_names = colnames(species_matrix_final)
+  ))
+}
+
+# Función para aplicar transformación Hellinger
+apply_hellinger_transformation <- function(species_matrix) {
+  
+  # Verificar que la matriz no tenga valores negativos
+  if(any(species_matrix < 0, na.rm = TRUE)) {
+    warning("La matriz de especies contiene valores negativos. Convirtiendo a 0.")
+    species_matrix[species_matrix < 0] <- 0
+  }
+  
+  # Aplicar transformación Hellinger usando vegan
+  hellinger_matrix <- decostand(species_matrix, method = "hellinger")
+  
+  # Verificar que la transformación fue exitosa
+  if(any(is.na(hellinger_matrix))) {
+    warning("La transformación Hellinger produjo valores NA")
+  }
+  
+  return(hellinger_matrix)
+}
+
+# Función para preparar matriz de variables de gestión para RDA
+prepare_rda_management_matrix <- function(management_region_data, unit_ids, aggregation_level = "beach") {
+  
+  # Asegurar que existe la columna id_beach y es numérica
+  if(!"id_beach" %in% names(management_region_data)) {
+    stop("No se encontró columna id_beach en datos de gestión")
+  }
+  
+  # Convertir id_beach a numérico si no lo es ya
+  management_region_data$id_beach <- as.numeric(management_region_data$id_beach)
+  
+  if(aggregation_level == "beach") {
+    # Usar IDs de playa directamente
+    numeric_unit_ids <- as.numeric(unit_ids)
+    
+    # Obtener datos de gestión para las playas en nuestros datos de especies
+    mgmt_data <- management_region_data %>%
+      filter(id_beach %in% numeric_unit_ids) %>%
+      arrange(id_beach)
+      
+  } else {
+    # Para datos a nivel de parcela, extraer IDs de playa de los IDs combinados
+    beach_ids_from_plots <- as.numeric(sapply(strsplit(unit_ids, "_"), `[`, 1))
+    
+    mgmt_data <- management_region_data %>%
+      filter(id_beach %in% unique(beach_ids_from_plots)) %>%
+      arrange(id_beach)
+    
+    # Expandir datos de gestión para cada parcela
+    plot_management <- data.frame()
+    for(unit_id in unit_ids) {
+      beach_id <- as.numeric(strsplit(unit_id, "_")[[1]][1])
+      beach_mgmt <- mgmt_data[mgmt_data$id_beach == beach_id, ]
+      if(nrow(beach_mgmt) > 0) {
+        beach_mgmt$unit_id <- unit_id
+        plot_management <- rbind(plot_management, beach_mgmt)
+      }
+    }
+    mgmt_data <- plot_management
+  }
+  
+  if(nrow(mgmt_data) == 0) {
+    stop("No se encontraron playas coincidentes entre datos de especies y gestión")
+  }
+  
+  # Identificar variables potenciales de gestión (columnas numéricas, excluyendo todas las columnas ID)
+  id_columns <- c("id_beach", "id_plot", "plot", "id_transect", "unit_id")
+  numeric_cols <- mgmt_data %>%
+    select(where(is.numeric)) %>%
+    select(-any_of(id_columns)) %>%
+    names()
+  
+  if(length(numeric_cols) == 0) {
+    stop("No se encontraron variables numéricas de gestión")
+  }
+  
+  # Crear matriz de gestión
+  if(aggregation_level == "beach") {
+    mgmt_matrix <- mgmt_data %>%
+      select(id_beach, all_of(numeric_cols)) %>%
+      # Convertir a numérico y manejar valores faltantes
+      mutate(across(all_of(numeric_cols), ~ as.numeric(.x))) %>%
+      # Reemplazar NA con 0 (asumiendo que sin datos significa sin gestión)
+      mutate(across(all_of(numeric_cols), ~ ifelse(is.na(.x), 0, .x)))
+  } else {
+    mgmt_matrix <- mgmt_data %>%
+      select(unit_id, all_of(numeric_cols)) %>%
+      # Convertir a numérico y manejar valores faltantes
+      mutate(across(all_of(numeric_cols), ~ as.numeric(.x))) %>%
+      # Reemplazar NA con 0
+      mutate(across(all_of(numeric_cols), ~ ifelse(is.na(.x), 0, .x)))
+  }
+  
+  # Remover variables con varianza cero
+  if(aggregation_level == "beach") {
+    variance_check <- mgmt_matrix %>%
+      select(-id_beach) %>%
+      summarise(across(everything(), ~ var(.x, na.rm = TRUE)))
+  } else {
+    variance_check <- mgmt_matrix %>%
+      select(-unit_id) %>%
+      summarise(across(everything(), ~ var(.x, na.rm = TRUE)))
+  }
+  
+  valid_vars <- names(variance_check)[variance_check > 0 & !is.na(variance_check)]
+  
+  if(length(valid_vars) == 0) {
+    stop("No hay variables de gestión con varianza > 0")
+  }
+  
+  if(aggregation_level == "beach") {
+    mgmt_matrix_final <- mgmt_matrix %>%
+      select(id_beach, all_of(valid_vars))
+  } else {
+    mgmt_matrix_final <- mgmt_matrix %>%
+      select(unit_id, all_of(valid_vars))
+  }
+  
+  # Limpiar nombres de columnas para mejor legibilidad usando diccionario global de traducción
+  clean_names <- valid_vars
+  
+  # Aplicar mapeo de nombres solo si los nombres originales coinciden con patrones esperados
+  name_mappings <- c(
+    "surface area occupied by seasonal services and amenities on or less than 5 m from the dunes" = "Servicios Estacionales (≤5m de Dunas)",
+    "surface area of parking or other fixed services on or less than 5 m from the dunes" = "Servicios Fijos (≤5m de Dunas)",
+    "managed paths" = "Senderos Gestionados",
+    "rope fences" = "Vallado con Cuerdas",
+    "mechanical cleaning" = "Limpieza Mecánica",
+    "protection of the system and the immediate environment" = "Protección del Sistema",
+    "degree of protection according to the iucn classification" = "Protección IUCN"
+  )
+  
+  # Aplicar traducciones para variables conocidas
+  for(old_name in names(name_mappings)) {
+    if(old_name %in% clean_names) {
+      clean_names[clean_names == old_name] <- name_mappings[old_name]
+    }
+  }
+  
+  # Para variables restantes no traducidas, usar el sistema global de traducción
+  remaining_vars <- clean_names[!clean_names %in% name_mappings]
+  if(length(remaining_vars) > 0) {
+    # Verificar si alguna variable sigue en inglés (contiene palabras comunes en inglés)
+    english_pattern <- "(surface|area|occupied|seasonal|services|amenities|parking|fixed|managed|paths|rope|fences|mechanical|cleaning|protection|system|environment|degree|classification)"
+    english_vars <- remaining_vars[grepl(english_pattern, remaining_vars, ignore.case = TRUE)]
+    
+    if(length(english_vars) > 0) {
+      # Intentar traducir variables en inglés usando el sistema global
+      tryCatch({
+        translated_english <- translate_labels(english_vars, debug = FALSE)
+        # Reemplazar las variables en inglés con sus traducciones
+        for(i in seq_along(english_vars)) {
+          clean_names[clean_names == english_vars[i]] <- translated_english[i]
+        }
+      }, error = function(e) {
+        # Si falla la traducción, usar versión limpia
+        warning(paste("No se pudieron traducir algunas variables de gestión:", paste(english_vars, collapse = ", ")))
+        clean_names[clean_names %in% english_vars] <- tools::toTitleCase(gsub("_", " ", english_vars))
+      })
+    }
+  }
+  
+  # Actualizar nombres de columnas
+  names(mgmt_matrix_final)[names(mgmt_matrix_final) %in% valid_vars] <- clean_names
+  
+  return(mgmt_matrix_final)
+}
+
+# Función para estandarizar variables de gestión (Z-score)
+standardize_management_vars <- function(mgmt_matrix, id_col = "id_beach") {
+  
+  # Separar columna ID de variables de gestión
+  if(id_col %in% names(mgmt_matrix)) {
+    id_data <- mgmt_matrix %>% select(all_of(id_col))
+    mgmt_vars <- mgmt_matrix %>% select(-all_of(id_col))
+  } else {
+    stop(paste("Columna ID", id_col, "no encontrada en matriz de gestión"))
+  }
+  
+  # Aplicar estandarización Z-score (media=0, sd=1) a variables de gestión
+  mgmt_standardized <- mgmt_vars %>%
+    mutate(across(everything(), ~ scale(.x)[,1]))
+  
+  # Verificar que no hay NaN (que ocurren cuando sd=0)
+  mgmt_standardized <- mgmt_standardized %>%
+    mutate(across(everything(), ~ ifelse(is.nan(.x), 0, .x)))
+  
+  # Combinar de vuelta con ID
+  result <- bind_cols(id_data, mgmt_standardized)
+  
+  return(result)
+}
+
+# Función principal para preparar datos completos para RDA
+prepare_rda_data <- function(region_data, mgmt_region_data, region_name, aggregation_level = "beach") {
+  
+  if (interactive()) cat("Preparando datos RDA para región:", region_name, "\n")
+
+  # Verificar que tenemos suficientes datos
+  if(nrow(region_data) < 3) {
+    warning(paste("Datos insuficientes para análisis RDA en", region_name))
+    return(NULL)
+  }
+
+  # Preparar matriz de especies
+  tryCatch({
+    species_result <- prepare_rda_species_matrix(region_data, aggregation_level)
+    if(is.null(species_result)) {
+      return(NULL)
+    }
+    species_matrix <- species_result$matrix
+    unit_ids <- species_result$unit_ids
+    species_names <- species_result$species_names
+
+    if (interactive()) cat("  - Especies encontradas:", length(species_names), "\n")
+    if (interactive()) cat("  - Unidades de muestreo:", length(unit_ids), "\n")
+
+  }, error = function(e) {
+    warning(paste("Error preparando datos de especies para", region_name, ":", e$message))
+    return(NULL)
+  })
+
+  # Aplicar transformación Hellinger a datos de especies
+  tryCatch({
+    species_hellinger <- apply_hellinger_transformation(species_matrix)
+    if (interactive()) cat("  - Transformación Hellinger aplicada exitosamente\n")
+  }, error = function(e) {
+    warning(paste("Error en transformación Hellinger para", region_name, ":", e$message))
+    return(NULL)
+  })
+
+  if(ncol(species_hellinger) < 2) {
+    warning(paste("Insuficientes especies para análisis RDA en", region_name))
+    return(NULL)
+  }
+
+  # Preparar matriz de gestión
+  tryCatch({
+    mgmt_matrix <- prepare_rda_management_matrix(mgmt_region_data, unit_ids, aggregation_level)
+    if (interactive()) cat("  - Variables de gestión encontradas:", ncol(mgmt_matrix)-1, "\n")
+  }, error = function(e) {
+    warning(paste("Error preparando datos de gestión para", region_name, ":", e$message))
+    return(NULL)
+  })
+
+  if(is.null(mgmt_matrix)) {
+    return(NULL)
+  }
+
+  # Hacer match entre datos de gestión y datos de especies agregados
+  if(aggregation_level == "beach") {
+    mgmt_matrix_matched <- mgmt_matrix %>%
+      filter(id_beach %in% unit_ids) %>%
+      arrange(id_beach)
+    id_col <- "id_beach"
+  } else {
+    mgmt_matrix_matched <- mgmt_matrix %>%
+      filter(unit_id %in% unit_ids) %>%
+      arrange(unit_id)
+    id_col <- "unit_id"
+  }
+
+  # Asegurar que ambos datasets tienen las mismas unidades en el mismo orden
+  if(aggregation_level == "beach") {
+    common_units <- intersect(unit_ids, mgmt_matrix_matched$id_beach)
+  } else {
+    common_units <- intersect(unit_ids, mgmt_matrix_matched$unit_id)
+  }
+
+  if(length(common_units) < 3) {
+    warning(paste("Unidades coincidentes insuficientes para análisis RDA en", region_name))
+    return(NULL)
+  }
+
+  # Filtrar ambos datasets a unidades comunes y asegurar mismo orden
+  unit_order <- sort(common_units)
+
+  # Reordenar matriz de especies para hacer match con orden de unidades
+  if(aggregation_level == "beach") {
+    species_order <- match(unit_order, unit_ids)
+  } else {
+    species_order <- match(unit_order, unit_ids)
+  }
+  species_hellinger_final <- species_hellinger[species_order, , drop = FALSE]
+
+  # Reordenar matriz de gestión para hacer match con orden de unidades
+  if(aggregation_level == "beach") {
+    mgmt_matrix_final <- mgmt_matrix_matched %>%
+      filter(id_beach %in% unit_order) %>%
+      arrange(id_beach)
+  } else {
+    mgmt_matrix_final <- mgmt_matrix_matched %>%
+      filter(unit_id %in% unit_order) %>%
+      arrange(unit_id)
+  }
+
+  # Estandarizar variables de gestión (Z-score)
+  tryCatch({
+    mgmt_standardized <- standardize_management_vars(mgmt_matrix_final, id_col)
+    if (interactive()) cat("  - Variables de gestión estandarizadas\n")
+  }, error = function(e) {
+    warning(paste("Error estandarizando variables de gestión para", region_name, ":", e$message))
+    return(NULL)
+  })
+
+  # Remover columna ID de matriz de gestión para análisis
+  mgmt_vars_final <- mgmt_standardized %>% select(-all_of(id_col))
+
+  # Verificar dimensiones finales
+  if (interactive()) cat("  - Dimensiones finales:\n")
+  if (interactive()) cat("    * Matriz de especies (Hellinger):", nrow(species_hellinger_final), "x", ncol(species_hellinger_final), "\n")
+  if (interactive()) cat("    * Matriz de gestión (estandarizada):", nrow(mgmt_vars_final), "x", ncol(mgmt_vars_final), "\n")
+
+  # Verificar que las dimensiones coinciden
+  if(nrow(species_hellinger_final) != nrow(mgmt_vars_final)) {
+    stop(paste("Dimensiones de matrices no coinciden en", region_name))
+  }
+
+  return(list(
+    species_matrix = species_hellinger_final,
+    management_matrix = mgmt_vars_final,
+    unit_ids = unit_order,
+    species_names = colnames(species_hellinger_final),
+    management_names = colnames(mgmt_vars_final),
+    region = region_name,
+    aggregation_level = aggregation_level,
+    n_units = length(unit_order),
+    n_species = ncol(species_hellinger_final),
+    n_management_vars = ncol(mgmt_vars_final)
+  ))
+}
+```
+
+
+```{r}
+#| echo: false
+#| eval: true
+#| output: true
+
+# Función para ejecutar análisis RDA para una región
+run_rda_analysis <- function(rda_dataset) {
+  if(is.null(rda_dataset)) {
+    return(NULL)
+  }
+
+  if (interactive()) cat("Ejecutando análisis RDA para región:", rda_dataset$region, "\n")
+
+  # Verificar dimensiones mínimas
+  if(rda_dataset$n_units < 3 || rda_dataset$n_species < 2 || rda_dataset$n_management_vars < 1) {
+    warning(paste("Datos insuficientes para RDA en", rda_dataset$region))
+    return(NULL)
+  }
+
+  tryCatch({
+    # Ejecutar RDA constrainado (especies ~ variables de gestión)
+    rda_result <- rda(rda_dataset$species_matrix ~ ., data = rda_dataset$management_matrix)
+
+    # Calcular eigenvalues y varianza explicada
+    eigenvals <- eigenvals(rda_result)
+    total_inertia <- sum(eigenvals)
+    constrained_inertia <- sum(eigenvals[1:min(length(eigenvals), ncol(rda_dataset$management_matrix))])
+    explained_variance <- constrained_inertia / total_inertia * 100
+
+    # Calcular varianza explicada por cada eje canónico
+    canonical_axes <- min(ncol(rda_dataset$management_matrix), nrow(rda_dataset$species_matrix) - 1)
+    if(canonical_axes > 0) {
+      axis_variances <- eigenvals[1:canonical_axes] / total_inertia * 100
+    } else {
+      axis_variances <- numeric(0)
+    }
+
+    if (interactive()) cat("  - Varianza total explicada:", round(explained_variance, 2), "%\n")
+    if (interactive()) cat("  - Número de ejes canónicos:", canonical_axes, "\n")
+    if(length(axis_variances) > 0) {
+      if (interactive()) cat("  - Varianza RDA1:", round(axis_variances[1], 2), "%\n")
+      if(length(axis_variances) > 1) {
+        if (interactive()) cat("  - Varianza RDA2:", round(axis_variances[2], 2), "%\n")
+      }
+    }
+
+    return(list(
+      rda = rda_result,
+      species_matrix = rda_dataset$species_matrix,
+      management_matrix = rda_dataset$management_matrix,
+      explained_variance = explained_variance,
+      axis_variances = axis_variances,
+      total_inertia = total_inertia,
+      constrained_inertia = constrained_inertia,
+      unit_ids = rda_dataset$unit_ids,
+      species_names = rda_dataset$species_names,
+      management_names = rda_dataset$management_names,
+      region = rda_dataset$region
+    ))
+  }, error = function(e) {
+    warning(paste("Error en análisis RDA para", rda_dataset$region, ":", e$message))
+    return(NULL)
+  })
+}
+
+# Función para probar significancia de análisis RDA
+test_rda_significance <- function(rda_analysis) {
+  if(is.null(rda_analysis)) {
+    return(NULL)
+  }
+
+  if (interactive()) cat("Probando significancia RDA para región:", rda_analysis$region, "\n")
+
+  tryCatch({
+    # Test de significancia global del modelo
+    model_test <- anova(rda_analysis$rda, permutations = 999)
+
+    # Test de significancia de ejes individuales (si hay múltiples ejes)
+    axes_test <- NULL
+    if(length(rda_analysis$axis_variances) > 1) {
+      axes_test <- anova(rda_analysis$rda, by = "axis", permutations = 999)
+    }
+
+    # Test de significancia de variables individuales
+    terms_test <- anova(rda_analysis$rda, by = "terms", permutations = 999)
+
+    if (interactive()) cat("  - Significancia modelo global: p =", round(model_test$`Pr(>F)`[1], 3), "\n")
+
+    return(list(
+      model = model_test,
+      axes = axes_test,
+      terms = terms_test,
+      region = rda_analysis$region
+    ))
+  }, error = function(e) {
+    warning(paste("Error en test de significancia RDA para", rda_analysis$region, ":", e$message))
+    return(NULL)
+  })
+}
+
+# Función para selección de variables usando forward selection
+perform_variable_selection <- function(rda_dataset) {
+  if(is.null(rda_dataset)) {
+    return(NULL)
+  }
+
+  if (interactive()) cat("Realizando selección de variables para región:", rda_dataset$region, "\n")
+
+  # Verificar que tenemos suficientes variables y datos
+  if(rda_dataset$n_management_vars < 2 || rda_dataset$n_units < 4) {
+    if (interactive()) cat("  - Datos insuficientes para selección de variables\n")
+    return(NULL)
+  }
+
+  tryCatch({
+    # Forward selection usando ordiR2step
+    # Modelo nulo (sin constraintas)
+    rda_null <- rda(rda_dataset$species_matrix ~ 1, data = rda_dataset$management_matrix)
+
+    # Modelo completo (todas las variables)
+    rda_full <- rda(rda_dataset$species_matrix ~ ., data = rda_dataset$management_matrix)
+
+    # Forward selection con criterio de parada basado en R2 ajustado
+    forward_selection <- ordiR2step(rda_null, scope = formula(rda_full),
+                                   direction = "forward", permutations = 999)
+
+    # Extraer variables seleccionadas
+    selected_vars <- all.vars(formula(forward_selection))[-1]  # Remover variable respuesta
+
+    if (interactive()) cat("  - Variables seleccionadas:", length(selected_vars), "de", rda_dataset$n_management_vars, "\n")
+    if(length(selected_vars) > 0) {
+      if (interactive()) cat("  - Variables importantes:", paste(selected_vars, collapse = ", "), "\n")
+    }
+
+    return(list(
+      selected_model = forward_selection,
+      selected_variables = selected_vars,
+      null_model = rda_null,
+      full_model = rda_full,
+      region = rda_dataset$region
+    ))
+  }, error = function(e) {
+    warning(paste("Error en selección de variables para", rda_dataset$region, ":", e$message))
+    return(NULL)
+  })
+}
+
+# Función para crear biplot RDA
+create_rda_biplot <- function(rda_analysis, title_suffix = "") {
+  if(is.null(rda_analysis)) {
+    return(NULL)
+  }
+
+  rda_result <- rda_analysis$rda
+
+  # Verificar que tenemos al menos 2 ejes canónicos para el biplot
+  if(length(rda_analysis$axis_variances) < 2) {
+    warning(paste("Insuficientes ejes canónicos para biplot en", rda_analysis$region))
+    return(NULL)
+  }
+
+  tryCatch({
+    # Extraer scores de sitios (unidades de muestreo)
+    site_scores <- data.frame(
+      RDA1 = scores(rda_result, display = "sites")[, 1],
+      RDA2 = scores(rda_result, display = "sites")[, 2],
+      Unit = rda_analysis$unit_ids
+    )
+
+    # Extraer scores de especies
+    species_scores <- data.frame(
+      RDA1 = scores(rda_result, display = "species")[, 1],
+      RDA2 = scores(rda_result, display = "species")[, 2],
+      Species = rownames(scores(rda_result, display = "species"))
+    )
+
+    # Extraer scores de variables de gestión (biplot scores)
+    mgmt_scores <- data.frame(
+      RDA1 = scores(rda_result, display = "bp")[, 1],
+      RDA2 = scores(rda_result, display = "bp")[, 2],
+      Variable = rownames(scores(rda_result, display = "bp"))
+    )
+
+    # Seleccionar principales especies por distancia desde el origen
+    species_scores$distance <- sqrt(species_scores$RDA1^2 + species_scores$RDA2^2)
+    top_species <- species_scores %>%
+      arrange(desc(distance)) %>%
+      slice_head(n = 8)
+
+    # Crear el biplot
+    p <- ggplot() +
+      # Añadir puntos de sitios
+      geom_point(data = site_scores, aes(x = RDA1, y = RDA2),
+                 color = "blue", alpha = 0.7, size = 4) +
+      # Añadir flechas de variables de gestión
+      geom_segment(data = mgmt_scores,
+                   aes(x = 0, y = 0, xend = RDA1 * 2, yend = RDA2 * 2),
+                   arrow = arrow(length = unit(0.7, "cm")),
+                   color = "red", size = 1.5, alpha = 0.8) +
+      # Añadir etiquetas de variables de gestión
+      ggrepel::geom_text_repel(data = mgmt_scores,
+                aes(x = RDA1 * 2.3, y = RDA2 * 2.3, label = Variable),
+                color = "red", fontface = "bold", size = 7,
+                max.overlaps = Inf,
+                box.padding = 0.5,
+                point.padding = 0.3,
+                segment.color = "red",
+                segment.alpha = 0.5) +
+      # Añadir puntos de principales especies
+      geom_point(data = top_species, aes(x = RDA1, y = RDA2),
+                 color = "darkgreen", alpha = 0.8, size = 3) +
+      # Añadir etiquetas de principales especies
+      ggrepel::geom_text_repel(data = top_species,
+                aes(x = RDA1, y = RDA2, label = Species),
+                color = "darkgreen", fontface = "italic", size = 5,
+                max.overlaps = Inf,
+                box.padding = 0.5,
+                point.padding = 0.3,
+                segment.color = "darkgreen",
+                segment.alpha = 0.5) +
+      # Personalizar apariencia
+      theme_minimal() +
+      labs(
+        title = paste("Biplot RDA:", rda_analysis$region, title_suffix),
+        subtitle = paste("Varianza explicada:", round(rda_analysis$explained_variance, 1), "%"),
+        x = paste("RDA1 (", round(rda_analysis$axis_variances[1], 1), "%)", sep = ""),
+        y = paste("RDA2 (", round(rda_analysis$axis_variances[2], 1), "%)", sep = "")
+      ) +
+      theme(
+        plot.title = element_text(face = "bold", size = 20),
+        plot.subtitle = element_text(size = 16),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        panel.grid.minor = element_blank(),
+        aspect.ratio = 1
+      )
+
+    return(p)
+  }, error = function(e) {
+    warning(paste("Error creando biplot RDA para", rda_analysis$region, ":", e$message))
+    return(NULL)
+  })
+}
+
+# Función para mostrar resumen de resultados RDA
+summarize_rda_results <- function(rda_analyses, rda_significances, variable_selections) {
+  summary_data <- data.frame(
+    Region = character(),
+    Total_Variance_Explained = numeric(),
+    RDA1_Variance = numeric(),
+    RDA2_Variance = numeric(),
+    N_Management_Vars = integer(),
+    N_Selected_Vars = integer(),
+    Model_F_Value = numeric(),
+    Model_P_Value = numeric(),
+    stringsAsFactors = FALSE
+  )
+
+  for(region_name in names(rda_analyses)) {
+    if(!is.null(rda_analyses[[region_name]])) {
+      rda_result <- rda_analyses[[region_name]]
+      sig_result <- rda_significances[[region_name]]
+      var_result <- variable_selections[[region_name]]
+
+      # Extraer información de significancia
+      f_val <- if(!is.null(sig_result)) sig_result$model$F[1] else NA
+      p_val <- if(!is.null(sig_result)) sig_result$model$`Pr(>F)`[1] else NA
+
+      # Extraer número de variables seleccionadas
+      n_selected <- if(!is.null(var_result)) length(var_result$selected_variables) else NA
+
+      summary_data <- rbind(summary_data, data.frame(
+        Region = region_name,
+        Total_Variance_Explained = round(rda_result$explained_variance, 1),
+        RDA1_Variance = round(rda_result$axis_variances[1], 1),
+        RDA2_Variance = if(length(rda_result$axis_variances) > 1) round(rda_result$axis_variances[2], 1) else NA,
+        N_Management_Vars = length(rda_result$management_names),
+        N_Selected_Vars = n_selected,
+        Model_F_Value = round(f_val, 2),
+        Model_P_Value = round(p_val, 3),
+        stringsAsFactors = FALSE
+      ))
+    }
+  }
+
+  return(summary_data)
+}
+```
+
+```{r}
+#| echo: false
+#| eval: true
+#| output: false
+# --- Ejecutar Análisis RDA por Región ---
+
+# Preparar datos RDA para cada región
+if (interactive()) cat("=== PREPARACIÓN DE DATOS RDA ===\n")
+
+rda_datasets <- list()
+
+# Girona
+if("Girona" %in% names(management_data) && "Girona" %in% names(beaches_by_region)) {
+  rda_datasets$Girona <- prepare_rda_data(
+    beaches_by_region$Girona,
+    management_data$Girona,
+    "Girona"
+  )
+}
+
+# Barcelona
+if("Barcelona" %in% names(management_data) && "Barcelona" %in% names(beaches_by_region)) {
+  rda_datasets$Barcelona <- prepare_rda_data(
+    beaches_by_region$Barcelona,
+    management_data$Barcelona,
+    "Barcelona"
+  )
+}
+
+# Tarragona
+if("Tarragona" %in% names(management_data) && "Tarragona" %in% names(beaches_by_region)) {
+  rda_datasets$Tarragona <- prepare_rda_data(
+    beaches_by_region$Tarragona,
+    management_data$Tarragona,
+    "Tarragona"
+  )
+}
+
+# Filtrar datasets válidos
+valid_rda_datasets <- rda_datasets[!sapply(rda_datasets, is.null)]
+
+if (interactive()) cat("\n=== RESUMEN DE PREPARACIÓN ===\n")
+if (interactive()) cat("Regiones con datos válidos:", length(valid_rda_datasets), "\n")
+for(region in names(valid_rda_datasets)) {
+  dataset <- valid_rda_datasets[[region]]
+  if (interactive()) cat(sprintf("- %s: %d sitios, %d especies, %d variables de gestión\n",
+              region, dataset$n_units, dataset$n_species, dataset$n_management_vars))
+}
+
+# Ejecutar análisis RDA
+if (interactive()) cat("\n=== ANÁLISIS RDA POR REGIÓN ===\n")
+
+rda_analyses <- list()
+for(region_name in names(valid_rda_datasets)) {
+  rda_analyses[[region_name]] <- run_rda_analysis(valid_rda_datasets[[region_name]])
+}
+
+# Filtrar análisis exitosos
+valid_rda_analyses <- rda_analyses[!sapply(rda_analyses, is.null)]
+
+# Probar significancia
+if (interactive()) cat("\n=== TESTS DE SIGNIFICANCIA ===\n")
+
+rda_significances <- list()
+for(region_name in names(valid_rda_analyses)) {
+  rda_significances[[region_name]] <- test_rda_significance(valid_rda_analyses[[region_name]])
+}
+
+# Selección de variables
+if (interactive()) cat("\n=== SELECCIÓN DE VARIABLES ===\n")
+
+variable_selections <- list()
+for(region_name in names(valid_rda_datasets)) {
+  variable_selections[[region_name]] <- perform_variable_selection(valid_rda_datasets[[region_name]])
+}
+
+# Crear resumen de resultados
+rda_summary <- summarize_rda_results(valid_rda_analyses, rda_significances, variable_selections)
+
+if (interactive()) cat("\n=== PASO 2 RDA COMPLETADO ===\n")
+if (interactive()) cat("Análisis RDA exitosos:", nrow(rda_summary), "\n")
+```
+
+
+La @tbl-rda-summary presenta los resultados principales del análisis de redundancia (RDA) aplicado por separado a cada región. La significancia estadística indica que las relaciones observadas entre gestión y vegetación no alcanzan la significancia estadística. El número de variables de gestión seleccionadas mediante forward selection varió entre regiones, sugiriendo diferentes patrones de influencia de las prácticas de manejo.
+
+```{r}
+#| label: tbl-rda-summary
+#| tbl-cap: "Resumen de resultados del análisis de redundancia (RDA) por región mostrando varianza explicada, significancia estadística y número de variables de gestión utilizadas y seleccionadas."
+#| echo: false
+#| eval: true
+#| output: true
+
+if(exists("rda_summary") && nrow(rda_summary) > 0) {
+  # Crear tabla formateada
+  rda_summary_display <- rda_summary %>%
+    mutate(
+      Region = factor(Region, levels = c("Girona", "Barcelona", "Tarragona")),
+      Variance_Total = paste0(Total_Variance_Explained, "%"),
+      Variance_RDA1 = paste0(RDA1_Variance, "%"),
+      Variance_RDA2 = ifelse(is.na(RDA2_Variance), "—", paste0(RDA2_Variance, "%")),
+      Variables_Used = paste(N_Management_Vars, "/", N_Selected_Vars),
+      Significance = ifelse(is.na(Model_P_Value), "—",
+                           ifelse(Model_P_Value < 0.001, "***",
+                                 ifelse(Model_P_Value < 0.01, "**",
+                                       ifelse(Model_P_Value < 0.05, "*", "ns"))))
+    ) %>%
+    select(Region, Variance_Total, Variance_RDA1, Variance_RDA2, Variables_Used, Model_F_Value, Significance)
+
+  knitr::kable(rda_summary_display,
+               col.names = c("Región", "Var. Total", "RDA1", "RDA2", "Var. (Total/Selec.)", "F", "Sig."),
+               align = c("l", "c", "c", "c", "c", "c", "c")) %>%
+    kableExtra::kable_styling(latex_options = c("hold_position", "scale_down")) %>%
+    kableExtra::footnote(general = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, ns = no significativo")
+} else {
+  if (interactive()) cat("No se pudieron generar resultados RDA para mostrar en tabla.\n")
+}
+```
+
+Los biplots RDA de la @fig-rda-biplots visualizan las relaciones entre la composición de especies y las variables de gestión para cada región. En Girona, las variables 'Senderos Gestionados' es opuesta a ‘Servicios Estacionales (<=5m de Dunas)‘ y ambas casi perpendicular a 'Protección del Sistema', se les podría considerar factores de gestión más determinantes. Barcelona presenta la misma relación para las variables 'Senderos Gestionados' y ‘Servicios Estacionales (<=5m de Dunas)‘. Tarragona muestra el patrón más complejo, con múltiples variables de gestión influyendo de manera similar en la composición vegetal, sin alguna variable clara predominante.
+
+```{r}
+#| label: fig-rda-biplots
+#| fig-cap: "Biplots del análisis de redundancia (RDA) por región. Las flechas rojas indican variables de gestión (longitud = importancia), puntos verdes muestran especies principales y puntos azules representan playas. La disposición espacial refleja las asociaciones entre gestión y composición vegetal."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 11
+#| fig-height: 33
+#| fig-pos: "H"
+
+if(length(valid_rda_analyses) > 0) {
+  # Crear biplots RDA para cada región
+  rda_plots <- list()
+
+  for(region_name in names(valid_rda_analyses)) {
+    p <- create_rda_biplot(valid_rda_analyses[[region_name]])
+    if(!is.null(p)) {
+      rda_plots[[region_name]] <- p
+    }
+  }
+
+  # Combinar gráficos
+  if(length(rda_plots) > 0) {
+    # Filtrar plots NULL
+    valid_plots <- rda_plots[!sapply(rda_plots, is.null)]
+
+    if(length(valid_plots) > 0) {
+      if(length(valid_plots) == 1) {
+        combined_rda_plot <- valid_plots[[1]]
+      } else if(length(valid_plots) == 2) {
+        combined_rda_plot <- valid_plots[[1]] / valid_plots[[2]]
+      } else if(length(valid_plots) >= 3) {
+        combined_rda_plot <- valid_plots[[1]] / valid_plots[[2]] / valid_plots[[3]]
+      }
+
+      print(combined_rda_plot)
+
+      # Guardar el gráfico
+      ggsave(here("figures","rda_regional_analysis.png"), combined_rda_plot,
+             width = 14, height = 16)
+    }
+  } else {
+    if (interactive()) cat("No se pudieron crear biplots RDA.\n")
+  }
+} else {
+  if (interactive()) cat("No hay análisis RDA válidos para crear visualizaciones.\n")
+}
+```
+
+```{r}
+#| label: fig-management-variable-importance
+#| fig-cap: "Importancia relativa de variables de gestión por región basada en la longitud de vectores en el espacio de ordenación RDA. Variables con mayor longitud del vector ejercen mayor influencia en la estructuración de la composición vegetal."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 8
+#| fig-pos: "H"
+
+if(length(valid_rda_analyses) > 0) {
+  # Extraer importancia de variables de gestión
+  var_importance_data <- data.frame()
+
+  for(region_name in names(valid_rda_analyses)) {
+    rda_result <- valid_rda_analyses[[region_name]]
+
+    # Obtener biplot scores (que reflejan la importancia de cada variable)
+    bp_scores <- scores(rda_result$rda, display = "bp")
+
+    if(!is.null(bp_scores) && nrow(bp_scores) > 0) {
+      # Calcular importancia como la longitud del vector en el espacio RDA
+      importance <- sqrt(rowSums(bp_scores^2))
+
+      temp_df <- data.frame(
+        Region = region_name,
+        Variable = names(importance),
+        Importance = importance,
+        stringsAsFactors = FALSE
+      )
+
+      var_importance_data <- rbind(var_importance_data, temp_df)
+    }
+  }
+
+  if(nrow(var_importance_data) > 0) {
+    # Crear gráfico de importancia
+    ggplot(var_importance_data, aes(x = reorder(Variable, Importance), y = Importance, fill = Region)) +
+      geom_col(alpha = 0.8) +
+      facet_wrap(~ Region, scales = "free_y") +
+      coord_flip() +
+      theme_minimal() +
+      theme(
+        axis.text.y = element_text(size = 10),
+        strip.text = element_text(face = "bold"),
+        strip.background = element_rect(fill = "gray90"),
+        legend.position = "none",
+        plot.title = element_text(face = "bold")
+      ) +
+      labs(
+        title = "Importancia de Variables de Gestión en Análisis RDA",
+        subtitle = "Basada en longitud de vectores en biplot RDA (mayor longitud = mayor importancia)",
+        x = "Variables de Gestión",
+        y = "Importancia Relativa"
+      ) +
+      scale_fill_brewer(type = "qual", palette = "Set2")
+
+    # Guardar gráfico
+    ggsave(here("figures","management_variable_importance.png"), width = 12, height = 8)
+  } else {
+    if (interactive()) cat("No se pudieron extraer datos de importancia de variables.\n")
+  }
+} else {
+  if (interactive()) cat("No hay análisis RDA válidos para extraer importancia de variables.\n")
+}
+
+```
+
+
+```{r}
+#| echo: false
+#| eval: true
+#| output: false
+
+# --- PASO 3: ANÁLISIS RDA COMBINADO CON CONTROL REGIONAL ---
+
+# Función para ejecutar análisis RDA combinado con control regional
+run_combined_rda <- function(all_region_datasets, verbose = TRUE) {
+  if (verbose && interactive()) cat("=== EJECUTANDO ANÁLISIS RDA COMBINADO ===\n")
+
+  # Verificar que tenemos datos válidos para múltiples regiones
+  valid_regions <- names(all_region_datasets)[!sapply(all_region_datasets, is.null)]
+
+  if(length(valid_regions) < 2) {
+    warning("Se necesitan al menos 2 regiones para análisis RDA combinado")
+    return(NULL)
+  }
+
+  if (verbose && interactive()) cat("Regiones válidas para análisis combinado:", paste(valid_regions, collapse = ", "), "\n")
+
+  # Combinar matrices de especies de todas las regiones
+  combined_species_matrix <- NULL
+  combined_management_matrix <- NULL
+  combined_region_indicators <- NULL
+  combined_unit_ids <- NULL
+
+  for(region_name in valid_regions) {
+    dataset <- all_region_datasets[[region_name]]
+
+    # Combinar matrices de especies
+    if(is.null(combined_species_matrix)) {
+      combined_species_matrix <- dataset$species_matrix
+    } else {
+      # Encontrar especies comunes
+      common_species <- intersect(colnames(combined_species_matrix), colnames(dataset$species_matrix))
+
+      if(length(common_species) < 5) {
+        warning("Insuficientes especies comunes entre regiones para análisis combinado")
+        return(NULL)
+      }
+
+      # Combinar solo especies comunes
+      combined_species_matrix <- rbind(
+        combined_species_matrix[, common_species, drop = FALSE],
+        dataset$species_matrix[, common_species, drop = FALSE]
+      )
+    }
+
+    # Combinar matrices de gestión
+    if(is.null(combined_management_matrix)) {
+      combined_management_matrix <- dataset$management_matrix
+    } else {
+      # Encontrar variables comunes de gestión
+      common_management <- intersect(colnames(combined_management_matrix), colnames(dataset$management_matrix))
+
+      if(length(common_management) < 2) {
+        warning("Insuficientes variables de gestión comunes entre regiones")
+        return(NULL)
+      }
+
+      # Combinar solo variables comunes
+      combined_management_matrix <- rbind(
+        combined_management_matrix[, common_management, drop = FALSE],
+        dataset$management_matrix[, common_management, drop = FALSE]
+      )
+    }
+
+    # Crear indicadores de región
+    region_indicators <- rep(region_name, dataset$n_units)
+    combined_region_indicators <- c(combined_region_indicators, region_indicators)
+
+    # Combinar IDs de unidades (agregando prefijo de región para evitar duplicados)
+    unit_ids_with_region <- paste(region_name, dataset$unit_ids, sep = "_")
+    combined_unit_ids <- c(combined_unit_ids, unit_ids_with_region)
+  }
+
+  if (verbose && interactive()) cat("Dimensiones de datos combinados:\n")
+  if (verbose && interactive()) cat("  - Especies:", nrow(combined_species_matrix), "x", ncol(combined_species_matrix), "\n")
+  if (verbose && interactive()) cat("  - Gestión:", nrow(combined_management_matrix), "x", ncol(combined_management_matrix), "\n")
+  if (verbose && interactive()) cat("  - Regiones:", length(unique(combined_region_indicators)), "\n")
+
+  # Crear variable de región como factor
+  region_factor <- factor(combined_region_indicators)
+
+  # Crear matriz combinada de variables explicativas (gestión + región)
+  combined_env_matrix <- data.frame(
+    combined_management_matrix,
+    Region = region_factor
+  )
+
+  tryCatch({
+    # 1. RDA con solo variables de gestión (sin control regional)
+    rda_management_only <- rda(combined_species_matrix ~ .,
+                              data = combined_management_matrix)
+
+    # 2. RDA con solo región
+    rda_region_only <- rda(combined_species_matrix ~ Region,
+                          data = combined_env_matrix)
+
+    # 3. RDA completo con gestión + región
+    rda_full <- rda(combined_species_matrix ~ .,
+                   data = combined_env_matrix)
+
+    # 4. RDA con gestión controlando por región (gestión | región)
+    rda_management_conditional <- rda(combined_species_matrix ~ . + Condition(Region),
+                                     data = combined_env_matrix)
+
+    # Calcular eigenvalues y varianzas
+    eigenvals_mgmt <- eigenvals(rda_management_only)
+    eigenvals_region <- eigenvals(rda_region_only)
+    eigenvals_full <- eigenvals(rda_full)
+    eigenvals_conditional <- eigenvals(rda_management_conditional)
+
+    total_inertia <- sum(eigenvals_mgmt)
+
+    # Varianza explicada por cada componente
+    variance_management_only <- sum(eigenvals_mgmt[1:min(length(eigenvals_mgmt), ncol(combined_management_matrix))]) / total_inertia * 100
+    variance_region_only <- sum(eigenvals_region[1:1]) / total_inertia * 100  # Solo 1 eje para región
+    variance_full <- sum(eigenvals_full[1:min(length(eigenvals_full), ncol(combined_env_matrix)-1)]) / total_inertia * 100
+    variance_conditional <- sum(eigenvals_conditional) / total_inertia * 100
+
+    if (verbose && interactive()) cat("Varianza explicada:\n")
+    if (verbose && interactive()) cat("  - Solo gestión:", round(variance_management_only, 2), "%\n")
+    if (verbose && interactive()) cat("  - Solo región:", round(variance_region_only, 2), "%\n")
+    if (verbose && interactive()) cat("  - Gestión + región:", round(variance_full, 2), "%\n")
+    if (verbose && interactive()) cat("  - Gestión | región:", round(variance_conditional, 2), "%\n")
+
+    return(list(
+      rda_management_only = rda_management_only,
+      rda_region_only = rda_region_only,
+      rda_full = rda_full,
+      rda_conditional = rda_management_conditional,
+      species_matrix = combined_species_matrix,
+      management_matrix = combined_management_matrix,
+      region_indicators = combined_region_indicators,
+      unit_ids = combined_unit_ids,
+      variance_management_only = variance_management_only,
+      variance_region_only = variance_region_only,
+      variance_full = variance_full,
+      variance_conditional = variance_conditional,
+      total_inertia = total_inertia,
+      n_regions = length(valid_regions),
+      n_units = nrow(combined_species_matrix),
+      n_species = ncol(combined_species_matrix),
+      n_management_vars = ncol(combined_management_matrix)
+    ))
+
+  }, error = function(e) {
+    warning(paste("Error en análisis RDA combinado:", e$message))
+    return(NULL)
+  })
+}
+```
+```{r}
+#| label: fig-combined-rda-summary
+#| fig-cap: "Análisis de redundancia combinado controlando por efectos regionales. El modelo permite separar los efectos puros de gestión de aquellos confundidos con diferencias regionales, proporcionando una evaluación más precisa del impacto de las prácticas de manejo."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 10
+#| fig-height: 6
+#| fig-pos: "H"
+
+# Función para realizar partición de varianza
+perform_variance_partition <- function(combined_rda_result) {
+  if (is.null(combined_rda_result)) {
+    return(NULL)
+  }
+
+  if (interactive()) cat("=== REALIZANDO PARTICIÓN DE VARIANZA ===\n")
+
+  # Ensure matrices are in correct format
+  species_matrix <- as.matrix(combined_rda_result$species_matrix)
+  management_matrix <- as.data.frame(combined_rda_result$management_matrix)
+  region_indicators <- as.data.frame(combined_rda_result$region_indicators)
+
+  # Convert character or factor columns in region_indicators to dummy variables
+  region_matrix <- model.matrix(~ . - 1, data = region_indicators)
+
+  # Handle potential issues in matrix conversion
+  if (!is.numeric(species_matrix)) stop("species_matrix must be numeric")
+  if (!all(sapply(management_matrix, is.numeric))) stop("management_matrix must be fully numeric")
+  if (!is.matrix(region_matrix)) stop("region_indicators must be convertible to a numeric matrix")
+
+  # Usar varpart de vegan para partición formal
+  tryCatch({
+    varpart_result <- varpart(
+      species_matrix,
+      management_matrix,
+      region_matrix
+    )
+
+    # Extraer componentes de varianza
+    variance_components <- varpart_result$part
+
+    pure_management <- variance_components$indfract$Adj.R.squared[1] * 100
+    shared_variance <- variance_components$indfract$Adj.R.squared[2] * 100
+    pure_region <- variance_components$indfract$Adj.R.squared[3] * 100
+    residual <- 100 - (pure_management + shared_variance + pure_region)
+
+    if (interactive()) {
+      cat("Componentes de varianza:\n")
+      cat("  - Gestión pura:", round(pure_management, 2), "%\n")
+      cat("  - Compartida:", round(shared_variance, 2), "%\n")
+      cat("  - Región pura:", round(pure_region, 2), "%\n")
+      cat("  - Residual:", round(residual, 2), "%\n")
+    }
+
+    return(list(
+      varpart_result = varpart_result,
+      pure_management = pure_management,
+      shared_variance = shared_variance,
+      pure_region = pure_region,
+      residual = residual,
+      variance_components = variance_components
+    ))
+
+  }, error = function(e) {
+    warning(paste("Error en partición de varianza:", e$message))
+    return(NULL)
+  })
+}
+
+
+# Función para crear triplot RDA combinado
+create_combined_rda_triplot <- function(combined_rda_result, title_suffix = "") {
+  if(is.null(combined_rda_result)) {
+    return(NULL)
+  }
+
+  # Usar el modelo RDA condicional (gestión controlando por región)
+  rda_result <- combined_rda_result$rda_conditional
+
+  # Verificar que tenemos al menos 2 ejes canónicos
+  if(length(eigenvals(rda_result)) < 2) {
+    warning("Insuficientes ejes canónicos para triplot RDA combinado")
+    return(NULL)
+  }
+
+  tryCatch({
+    # Extraer scores de sitios
+    site_scores <- data.frame(
+      RDA1 = scores(rda_result, display = "sites")[, 1],
+      RDA2 = scores(rda_result, display = "sites")[, 2],
+      Region = combined_rda_result$region_indicators,
+      Unit = combined_rda_result$unit_ids
+    )
+
+    # Extraer scores de especies (seleccionar principales)
+    species_scores <- data.frame(
+      RDA1 = scores(rda_result, display = "species")[, 1],
+      RDA2 = scores(rda_result, display = "species")[, 2],
+      Species = rownames(scores(rda_result, display = "species"))
+    ) %>%
+      mutate(distance = sqrt(RDA1^2 + RDA2^2)) %>%
+      arrange(desc(distance)) %>%
+      slice_head(n = 8)
+
+    # Extraer scores de variables de gestión (biplot scores)
+    mgmt_scores <- data.frame(
+      RDA1 = scores(rda_result, display = "bp")[, 1],
+      RDA2 = scores(rda_result, display = "bp")[, 2],
+      Variable = rownames(scores(rda_result, display = "bp"))
+    )
+
+    # Calcular eigenvalues para etiquetas de ejes
+    eigenvals_rda <- eigenvals(rda_result)
+    total_var <- sum(eigenvals(combined_rda_result$rda_full))
+    axis1_var <- eigenvals_rda[1] / total_var * 100
+    axis2_var <- eigenvals_rda[2] / total_var * 100
+
+    # Crear el triplot
+    p <- ggplot() +
+      # Añadir puntos de sitios coloreados por región
+      geom_point(data = site_scores, aes(x = RDA1, y = RDA2, color = Region),
+                 size = 3, alpha = 0.8) +
+      # Añadir elipses de confianza por región
+      stat_ellipse(data = site_scores, aes(x = RDA1, y = RDA2, color = Region),
+                   type = "norm", level = 0.8, size = 1.2) +
+      # Añadir flechas de variables de gestión
+      geom_segment(data = mgmt_scores,
+                   aes(x = 0, y = 0, xend = RDA1 * 2.5, yend = RDA2 * 2.5),
+                   arrow = arrow(length = unit(0.2, "cm")),
+                   color = "red", size = 1.5, alpha = 0.9) +
+      # Añadir etiquetas de variables de gestión
+      ggrepel::geom_text_repel(data = mgmt_scores,
+                aes(x = RDA1 * 2.8, y = RDA2 * 2.8, label = Variable),
+                color = "red", fontface = "bold", size = 7,
+                max.overlaps = Inf,
+                box.padding = 0.6,
+                point.padding = 0.4,
+                segment.color = "red",
+                segment.alpha = 0.6) +
+      # Añadir puntos de especies principales
+      geom_point(data = species_scores, aes(x = RDA1, y = RDA2),
+                 color = "darkgreen", alpha = 0.9, size = 3) +
+      # Añadir etiquetas de especies principales
+      ggrepel::geom_text_repel(data = species_scores,
+                aes(x = RDA1, y = RDA2, label = Species),
+                color = "darkgreen", fontface = "italic", size = 5,
+                max.overlaps = Inf,
+                box.padding = 0.5,
+                point.padding = 0.3,
+                segment.color = "darkgreen",
+                segment.alpha = 0.5) +
+      # Personalizar apariencia
+      theme_minimal() +
+      labs(
+        title = paste("Triplot RDA Combinado - Gestión Controlando por Región", title_suffix),
+        subtitle = paste("Varianza gestión pura:", round(combined_rda_result$variance_conditional, 1),
+                        "% |", combined_rda_result$n_regions, "regiones,",
+                        combined_rda_result$n_units, "sitios"),
+        x = paste("RDA1 (", round(axis1_var, 1), "%)", sep = ""),
+        y = paste("RDA2 (", round(axis2_var, 1), "%)", sep = ""),
+        color = "Región"
+      ) +
+      # Usar colores consistentes de región
+      scale_color_manual(values = PROVINCE_COLORS) +
+      theme(
+        plot.title = element_text(face = "bold", size = 18),
+        plot.subtitle = element_text(size = 14),
+        axis.title.x = element_text(size = 14),
+        axis.title.y = element_text(size = 14),
+        axis.text.x = element_text(size = 12),
+        axis.text.y = element_text(size = 12),
+        legend.title = element_text(face = "bold"),
+        legend.text = element_text(size = 11),
+        panel.grid.minor = element_blank(),
+        aspect.ratio = 1
+      )
+
+    return(p)
+
+  }, error = function(e) {
+    warning(paste("Error creando triplot RDA combinado:", e$message))
+    return(NULL)
+  })
+}
+
+# Ejecutar análisis RDA combinado
+if (interactive()) cat("\n=== PASO 3: ANÁLISIS RDA COMBINADO ===\n")
+
+combined_rda_result <- run_combined_rda(valid_rda_datasets)
+# Realizar partición de varianza
+variance_partition_result <- perform_variance_partition(combined_rda_result)
+
+if (interactive()) cat("\n=== PASO 3 COMPLETADO ===\n")
+
+```
+
+#### RDA Combinado
+
+El análisis RDA combinado permite evaluar los efectos de gestión controlando por diferencias regionales inherentes. Este enfoque separa la varianza atribuible exclusivamente a prácticas de gestión de aquella que podría estar confundida con características regionales (clima, geología, historia de uso).
+
+La @fig-variance-partition cuantifica la contribución relativa de los efectos de gestión versus los efectos regionales en la variación de la composición vegetal. Esta partición de varianza revela que únicamente el 4.3% de la varianza puede atribuirse exclusivamente a factores de gestión, mientras que el 9% corresponde a efectos compartidos entre gestión y región. La región como factor puro no contribuye significativamente, y el 88.3% de la varianza permanece sin explicar por estos factores. Este resultado sugiere que otros factores no medidos (como condiciones microambientales, historia de perturbaciones, o procesos estocásticos) ejercen una influencia dominante sobre los patrones de vegetación dunar. En la @fig-combined-triplot se visualiza que no existen patrones en la distribución de especies definidas según los ejes de gestión.
+
+```{r}
+#| label: fig-variance-partition
+#| fig-cap: "Partición de varianza mediante análisis de redundancia combinado."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 8
+#| fig-pos: "H"
+
+if(!is.null(variance_partition_result)) {
+  # Crear data frame para visualización de partición de varianza
+  partition_data <- data.frame(
+    Componente = c("Gestión Pura", "Compartida", "Región Pura", "Residual"),
+    Varianza = c(
+      variance_partition_result$pure_management,
+      variance_partition_result$shared_variance,
+      variance_partition_result$pure_region,
+      variance_partition_result$residual
+    ),
+    Color = c("Gestión", "Compartida", "Región", "Residual"),
+    stringsAsFactors = FALSE
+  ) %>%
+    mutate(
+      Varianza = pmax(Varianza, 0),  # Evitar valores negativos
+      Porcentaje = paste0(round(Varianza, 1), "%")
+    )
+
+  # Crear gráfico de barras de partición
+  p_partition <- ggplot(partition_data, aes(x = reorder(Componente, Varianza), y = Varianza, fill = Color)) +
+    geom_col(alpha = 0.8, color = "white", size = 1) +
+    geom_text(aes(label = Porcentaje),
+              position = position_stack(vjust = 0.5),
+              color = "white", fontface = "bold", size = 5) +
+    coord_flip() +
+    theme_minimal() +
+    labs(
+      title = "Partición de Varianza: Gestión vs Región",
+      subtitle = "Descomposición de efectos puros, compartidos y residuales",
+      x = "Componente de Varianza",
+      y = "Varianza Explicada (%)",
+      fill = "Tipo de Efecto"
+    ) +
+    scale_fill_manual(values = c(
+      "Gestión" = "#E31A1C",
+      "Compartida" = "#FF7F00",
+      "Región" = "#1F78B4",
+      "Residual" = "#999999"
+    )) +
+    theme(
+      plot.title = element_text(face = "bold", size = 16),
+      plot.subtitle = element_text(size = 12),
+      axis.title = element_text(size = 12),
+      axis.text = element_text(size = 11),
+      legend.title = element_text(face = "bold"),
+      legend.position = "bottom",
+      panel.grid.minor = element_blank(),
+      panel.grid.major.y = element_blank()
+    )
+
+  print(p_partition)
+
+  # Guardar gráfico
+  ggsave(here("figures","rda_variance_partition.png"), p_partition,
+         width = 14, height = 8)
+         
+  # También crear y mostrar el triplot combinado si hay datos disponibles
+
+} else {
+  cat("No se pudo crear visualización de partición de varianza.\n")
+}
+```
+
+```{r}
+#| label: fig-combined-triplot
+#| fig-cap: "Plot del análisis de redundancia combinado."
+#| echo: false
+#| eval: true
+#| output: true
+#| fig-width: 12
+#| fig-height: 8
+#| fig-pos: "H"
+    combined_triplot <- create_combined_rda_triplot(combined_rda_result)
+      print(combined_triplot)
+      ggsave(here("figures","rda_combined_triplot.png"), combined_triplot,
+             width = 14, height = 10)
+```

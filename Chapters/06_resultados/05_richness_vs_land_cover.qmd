@@ -1,3 +1,5 @@
+Relación entre la diversidad vegetal y los tipos de cobertura del suelo a 50m y 100m de las playas.
+
 ```{r 06_05_setup, include=FALSE}
 # Opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
@@ -6,24 +8,24 @@ knitr::opts_chunk$set(
   echo = FALSE
 )
 
-# Cargar bibliotecas necesarias
+# Cargar librerías necesarias
 library(tidyverse)
 library(ggplot2)
 library(gridExtra) # para organizar múltiples gráficos
 library(RColorBrewer) # para paletas de colores
-
+library(here)
 # Cargar configuración global
-source("../R/global_config.R")
+source(here("R","global_config.R"))
 
 # Cargar datos
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
 # --- Funciones de Análisis de Riqueza de Especies y Cobertura del Suelo ---
 
-# Calcular riqueza de especies (número de especies presentes) para cada playa
+# Calcular diversidad vegetal de especies (número de especies presentes) para cada playa
 calculate_beach_richness <- function(region_data) {
-  # Obtener columnas de especies - excluir "plot" y "id_beach"
+  # Obtener columnas de especies - excluir "plot" e "id_beach"
   species_cols <- setdiff(names(region_data), c("plot", "id_beach"))
 
   # Agrupar por playa y calcular presencia de cada especie en toda la playa
@@ -36,7 +38,7 @@ calculate_beach_richness <- function(region_data) {
     mutate(richness = rowSums(across(all_of(species_cols))))
 }
 
-# Función para remodelar datos de cobertura del suelo para visualización
+# Función para reestructurar datos de cobertura del suelo para visualización
 prepare_land_cover <- function(region_data) {
   region_data %>%
     pivot_longer(
@@ -52,7 +54,7 @@ prepare_land_cover <- function(region_data) {
     )
 }
 
-# Calcular riqueza para cada región a nivel de playa
+# Calcular diversidad vegetal para cada región a nivel de playa
 girona_richness <- calculate_beach_richness(beaches_by_region$Girona) %>%
   mutate(region = "Girona")
 barcelona_richness <- calculate_beach_richness(beaches_by_region$Barcelona) %>%
@@ -102,20 +104,36 @@ all_richness <- order_provinces(all_richness, column_name = "region")
 # Seleccionar los tipos de cobertura del suelo más relevantes para el análisis
 relevant_cover_types <- c("urban", "forests", "scrubland", "crops", "grassland")
 
+# Crear diccionario de traducción para los tipos de cobertura relevantes
+cover_type_translation <- c(
+  "urban" = "Urbano",
+  "forests" = "Bosques", 
+  "scrubland" = "Matorral",
+  "crops" = "Cultivos",
+  "grassland" = "Pastizal"
+)
+
 richness_vs_land <- richness_land_cover_combined %>%
-  filter(cover_type %in% relevant_cover_types)
+  filter(cover_type %in% relevant_cover_types) %>%
+  # Traducir tipos de cobertura del suelo a español
+  mutate(cover_type_spanish = cover_type_translation[cover_type])
 
 # Asegurar que las regiones mantengan el orden consistente
 richness_vs_land <- order_provinces(richness_vs_land, column_name = "region")
 
-# Reordenar los niveles del factor para cover_type para controlar el orden de las columnas
-richness_vs_land$cover_type <- factor(richness_vs_land$cover_type, 
-                                     levels = relevant_cover_types)
+# Reordenar los niveles del factor para cover_type_spanish para controlar el orden de las columnas
+richness_vs_land$cover_type_spanish <- factor(richness_vs_land$cover_type_spanish, 
+                                              levels = cover_type_translation[relevant_cover_types])
+
+# Traducir etiquetas de distancia a español
+richness_vs_land <- richness_vs_land %>%
+  mutate(distance_spanish = ifelse(distance == "50m", "50m", "100m"))
 ```
 
+
 ```{r}
-#| label: fig-richness-vs-landcover
-#| fig-cap: "Relación entre la riqueza de especies y diferentes tipos de cobertura del suelo a distancias de 50m y 100m, comparando cómo el entorno circundante a diferentes escalas impacta la biodiversidad dunar"
+#| label: fig-diversidad-vegetal-vs-cobertura-suelo
+#| fig-cap: "Relación entre la diversidad vegetal y diferentes tipos de cobertura del suelo a distancias de 50m y 100m, comparando cómo el entorno circundante a diferentes escalas impacta la biodiversidad dunar"
 #| echo: false
 #| eval: true
 #| output: true
@@ -130,11 +148,11 @@ richness_vs_land$cover_type <- factor(richness_vs_land$cover_type,
 ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
   geom_point(alpha = 0.7, size = 2) +
   geom_smooth(method = "lm", formula = y ~ x, se = TRUE, linetype = "dashed") +
-  # Usar facet_grid para crear filas para distancias y columnas para tipos de cobertura
-  facet_grid(distance ~ cover_type) +
+  # Usar facet_grid para crear filas para distancias y columnas para tipos de cobertura (EN ESPAÑOL)
+  facet_grid(distance_spanish ~ cover_type_spanish) +
   theme_minimal() +
   labs(
-    title = "Riqueza de Especies vs. Tipos de Cobertura del Suelo a Diferentes Distancias",
+    title = "Diversidad Vegetal vs Tipos de Cobertura del Suelo\na Diferentes Distancias",
     x = "Porcentaje de Cobertura del Suelo (%)",
     y = "Número de Especies Presentes",
     color = "Región"
@@ -149,9 +167,13 @@ ggplot(richness_vs_land, aes(x = percentage, y = richness, color = region)) +
     strip.text = element_text(face = "bold"),
     axis.text.x = element_text(angle = 0),
     panel.spacing = unit(1, "lines"),
-    panel.border = element_rect(color = "gray80", fill = NA)
+    panel.border = element_rect(color = "gray80", fill = NA),
+    plot.title = element_text(hjust = 0.5, size = 12)
   )
 
 # Guardar el gráfico
-ggsave("../figures/richness_vs_land_cover_combined.png", width = 15, height = 8)
+ggsave(here("figures","richness_vs_land_cover_combined.png"), width = 15, height = 8)
 ```
+
+La @fig-diversidad-vegetal-vs-cobertura-suelo muestra las relaciones entre diversidad vegetal y cobertura del suelo. Se visualiza que en el tipo de cobertura de suelo de Urbano, Bosques, Cultivos y Pastizal, la región de Girona tiene menos diversidad vegetal que la región de Tarragona.
+Las tendencias son similares a 50m y 100m, con variabilidad regional en las respuestas.

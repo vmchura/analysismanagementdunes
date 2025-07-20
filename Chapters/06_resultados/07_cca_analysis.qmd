@@ -1,83 +1,89 @@
+### Análisis CCA con Cobertura del Suelo a 50m {#sec-cca-50m-content}
+
+Esta sección presenta los resultados del Análisis de Correspondencia Canónica (CCA) para explorar las relaciones entre la composición de vegetación de dunas costeras y las variables de cobertura del suelo por región. El CCA es una técnica de ordenación restringida que relaciona directamente la composición de especies con gradientes ambientales, ayudándonos a entender qué factores de cobertura del suelo explican mejor los patrones de vegetación en cada región (Girona, Barcelona y Tarragona).
+
+
+
 ```{r 07_07_setup, include=FALSE}
-# Global knitr options - controls all code chunks
+# Opciones globales de knitr - controla todos los fragmentos de código
 knitr::opts_chunk$set(
   warning = FALSE,
   message = FALSE,
   echo = FALSE
 )
 
-# Load necessary libraries
+# Cargar librerías necesarias
 library(tidyverse)
 library(ggplot2)
-library(vegan)     # For CCA analysis
-library(gridExtra) # For arranging multiple plots
-library(RColorBrewer) # For color palettes
-library(patchwork)  # For combining plots
-library(ggrepel)   # For non-overlapping text labels
+library(vegan)     # Para análisis CCA
+library(gridExtra) # Para organizar múltiples gráficos
+library(RColorBrewer) # Para paletas de colores
+library(patchwork)  # Para combinar gráficos
+library(ggrepel)   # Para etiquetas de texto sin solapamiento
+library(here)
+# Cargar configuración global
+source(here("R","global_config.R"))
 
-# Load global configuration
-source("../R/global_config.R")
+# Cargar datos
+load(here("data","all_observations_split.RData"))
+load(here("data","all_land_cover_data.RData"))
 
-# Load data
-load("../data/all_observations_split.RData")
-load("../data/all_land_cover_data.RData")
+# --- Análisis de Correspondencia Canónica (CCA) ---
 
-# --- Canonical Correspondence Analysis (CCA) ---
-
-# Function to prepare species data matrix for CCA analysis by region
-# Aggregates plot-level data to beach-level to match environmental data scale
+# Función para preparar matriz de datos de especies para análisis CCA por región
+# Agrega datos a nivel de parcela a nivel de playa para coincidir con la escala de datos ambientales
 prepare_species_matrix <- function(region_data) {
-  # Get species columns - exclude non-species columns (plot, id_beach, region)
+  # Obtener columnas de especies - excluir columnas que no son especies (plot, id_beach, region)
   non_species_cols <- c("plot", "id_beach", "region")
   species_cols <- setdiff(names(region_data), non_species_cols)
   
-  # Aggregate species data by beach (calculate mean cover per beach)
+  # Agregar datos de especies por playa (calcular cobertura media por playa)
   species_by_beach <- region_data %>%
-    # Convert Braun-Blanquet values to percentages first
+    # Convertir valores de Braun-Blanquet a porcentajes primero
     mutate(across(all_of(species_cols), bb_to_percentage)) %>%
-    # Group by beach and calculate mean species cover
+    # Agrupar por playa y calcular cobertura media de especies
     group_by(id_beach) %>%
     summarise(across(all_of(species_cols), ~ mean(.x, na.rm = TRUE)), .groups = "drop") %>%
-    # Keep id_beach for matching with environmental data
+    # Mantener id_beach para emparejar con datos ambientales
     arrange(id_beach)
   
-  # Extract just the species columns for the matrix
+  # Extraer solo las columnas de especies para la matriz
   species_matrix <- species_by_beach %>%
     select(all_of(species_cols)) %>%
     as.matrix()
   
-  # Remove species that are never present across all beaches
+  # Eliminar especies que nunca están presentes en todas las playas
   species_present <- colSums(species_matrix) > 0
   species_matrix_final <- species_matrix[, species_present, drop = FALSE]
   
-  # Return both the matrix and the beach IDs for matching
+  # Devolver tanto la matriz como los IDs de playa para emparejar
   return(list(
     matrix = species_matrix_final,
     beach_ids = species_by_beach$id_beach
   ))
 }
 
-# Function to prepare environmental (land cover) data by region
+# Función para preparar datos ambientales (cobertura del suelo) por región
 prepare_env_matrix <- function(land_cover_region_data, region_species_data) {
-  # Get the beach IDs from the species data
+  # Obtener los IDs de playa de los datos de especies
   beach_ids <- region_species_data$id_beach
   
-  # Get land cover data for the beaches in our species data
+  # Obtener datos de cobertura del suelo para las playas en nuestros datos de especies
   env_data <- land_cover_region_data %>%
     filter(id_beach %in% beach_ids) %>%
     arrange(id_beach)
   
-  # Select relevant land cover variables
-  # Focus on the most ecologically meaningful variables at 50m distance
+  # Seleccionar variables relevantes de cobertura del suelo
+  # Enfocarse en las variables más ecológicamente significativas a 50m de distancia
   land_cover_cols <- grep("^x50m_.*_percent$", names(env_data), value = TRUE)
   
-  # Remove variables with very low variation or all zeros
+  # Eliminar variables con muy poca variación o todos ceros
   env_matrix <- env_data %>%
     select(id_beach, all_of(land_cover_cols)) %>%
-    # Remove columns that are all zero or have very low variance
+    # Eliminar columnas que son todo ceros o tienen muy poca varianza
     select(where(~ var(., na.rm = TRUE) > 0.01))
   
-  # Clean up column names for better readability
+  # Limpiar nombres de columnas para mejor legibilidad
   numeric_cols <- setdiff(names(env_matrix), "id_beach")
   names(env_matrix)[names(env_matrix) %in% numeric_cols] <- 
     gsub("^x50m_(.*)_percent$", "\\1", numeric_cols)
@@ -89,93 +95,84 @@ prepare_env_matrix <- function(land_cover_region_data, region_species_data) {
 }
 ```
 ```{r}
-# Function to run CCA analysis for a region
+#| echo: false
+#| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
+# Función para ejecutar análisis CCA para una región
 run_cca_analysis <- function(region_data, land_cover_region_data, region_name) {
-  cat("Running CCA analysis for", region_name, "...\n")
-  
-  # Check if we have enough data
+  # Verificar si tenemos suficientes datos
   if(nrow(region_data) < 3) {
-    warning(paste("Not enough data for CCA analysis in", region_name))
+    warning(paste("No hay suficientes datos para análisis CCA en", region_name))
     return(NULL)
   }
   
-  # Prepare species matrix (aggregated by beach)
+  # Preparar matriz de especies (agregada por playa)
   species_result <- prepare_species_matrix(region_data)
   species_matrix <- species_result$matrix
   species_beach_ids <- species_result$beach_ids
   
   if(ncol(species_matrix) < 2) {
-    warning(paste("Not enough species for CCA analysis in", region_name))
+    warning(paste("No hay suficientes especies para análisis CCA en", region_name))
     return(NULL)
   }
   
-  cat("  Species matrix dimensions:", nrow(species_matrix), "beaches x", ncol(species_matrix), "species\n")
-  
-  # Prepare environmental matrix
+  # Preparar matriz ambiental
   env_matrix <- prepare_env_matrix(land_cover_region_data, region_data)
   
-  # Match environmental data to the aggregated species data
+  # Emparejar datos ambientales con los datos agregados de especies
   env_matrix_matched <- env_matrix %>% 
     filter(id_beach %in% species_beach_ids) %>%
     arrange(id_beach)
   
-  cat("  Environmental matrix dimensions:", nrow(env_matrix_matched), "beaches x", ncol(env_matrix_matched)-1, "variables\n")
-  
-  # Ensure both datasets have the same beaches in the same order
+  # Asegurar que ambos conjuntos de datos tengan las mismas playas en el mismo orden
   common_beaches <- intersect(species_beach_ids, env_matrix_matched$id_beach)
   
   if(length(common_beaches) < 3) {
-    warning(paste("Not enough matching beaches for CCA analysis in", region_name))
+    warning(paste("No hay suficientes playas coincidentes para análisis CCA en", region_name))
     return(NULL)
   }
   
-  # Filter both datasets to common beaches and ensure same order
+  # Filtrar ambos conjuntos de datos a playas comunes y asegurar el mismo orden
   beach_order <- sort(common_beaches)
   
-  # Reorder species matrix to match beach order
+  # Reordenar matriz de especies para coincidir con orden de playas
   species_order <- match(beach_order, species_beach_ids)
   species_matrix_final <- species_matrix[species_order, , drop = FALSE]
   
-  # Reorder environmental matrix to match beach order
+  # Reordenar matriz ambiental para coincidir con orden de playas
   env_matrix_final <- env_matrix_matched %>% 
     filter(id_beach %in% beach_order) %>%
     arrange(id_beach)
   
-  # Remove id_beach from environmental matrix for analysis
+  # Eliminar id_beach de la matriz ambiental para el análisis
   env_vars <- env_matrix_final %>% select(-id_beach)
   
-  # Remove environmental variables with zero variance
+  # Eliminar variables ambientales con varianza cero
   env_vars <- env_vars[, sapply(env_vars, var, na.rm = TRUE) > 0, drop = FALSE]
   
   if(ncol(env_vars) == 0) {
-    warning(paste("No environmental variables with variation found in", region_name))
+    warning(paste("No se encontraron variables ambientales con variación en", region_name))
     return(NULL)
   }
   
-  # Final check: ensure both matrices have the same number of rows
+  # Verificación final: asegurar que ambas matrices tengan el mismo número de filas
   if(nrow(species_matrix_final) != nrow(env_vars)) {
-    warning(paste("Final mismatch between species and environmental data rows in", region_name,
-                  "- Species:", nrow(species_matrix_final), "Environmental:", nrow(env_vars)))
+    warning(paste("Desajuste final entre filas de datos de especies y ambientales en", region_name,
+                  "- Especies:", nrow(species_matrix_final), "Ambientales:", nrow(env_vars)))
     return(NULL)
   }
   
-  cat("  Final matrix dimensions: Species", nrow(species_matrix_final), "x", ncol(species_matrix_final), 
-      ", Environmental", nrow(env_vars), "x", ncol(env_vars), "\n")
-  
-  # Run CCA
+  # Ejecutar CCA
   tryCatch({
     cca_result <- cca(species_matrix_final ~ ., data = env_vars)
     
-    # Calculate explained variance
+    # Calcular varianza explicada
     eigenvals <- eigenvals(cca_result)
     total_inertia <- sum(eigenvals)
     constrained_inertia <- sum(eigenvals[1:min(length(eigenvals), ncol(env_vars))])
     explained_variance <- constrained_inertia / total_inertia * 100
-    
-    cat("  Explained variance:", round(explained_variance, 2), "%\n")
-    cat("  Number of environmental variables:", ncol(env_vars), "\n")
-    cat("  Number of species:", ncol(species_matrix_final), "\n")
-    cat("  Number of beaches (sites):", nrow(species_matrix_final), "\n")
     
     return(list(
       cca = cca_result,
@@ -186,83 +183,87 @@ run_cca_analysis <- function(region_data, land_cover_region_data, region_name) {
       region = region_name
     ))
   }, error = function(e) {
-    warning(paste("CCA analysis failed for", region_name, ":", e$message))
+    warning(paste("El análisis CCA falló para", region_name, ":", e$message))
     return(NULL)
   })
 }
 ```
 ```{r}
-# Run CCA for each region
+#| echo: false
+#| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
+# Ejecutar CCA para cada región
 girona_cca <- run_cca_analysis(beaches_by_region$Girona, land_cover_data$Girona, "Girona")
-```
-```{r}
 barcelona_cca <- run_cca_analysis(beaches_by_region$Barcelona, land_cover_data$Barcelona, "Barcelona")
 tarragona_cca <- run_cca_analysis(beaches_by_region$Tarragona, land_cover_data$Tarragona, "Tarragona")
 
-# Combine all regions for a comprehensive analysis
-cat("Running combined CCA analysis...\n")
-
-# Prepare combined species matrix
+# Combinar todas las regiones para un análisis comprensivo
+# Preparar matriz combinada de especies
 all_species_data <- bind_rows(
   beaches_by_region$Girona %>% mutate(region = "Girona"),
   beaches_by_region$Barcelona %>% mutate(region = "Barcelona"),
   beaches_by_region$Tarragona %>% mutate(region = "Tarragona")
 )
 
-# Prepare combined land cover data
+# Preparar datos combinados de cobertura del suelo
 all_land_cover <- bind_rows(
   land_cover_data$Girona %>% mutate(region = "Girona"),
   land_cover_data$Barcelona %>% mutate(region = "Barcelona"),
   land_cover_data$Tarragona %>% mutate(region = "Tarragona")
 )
 
-# Run combined CCA
-combined_cca <- run_cca_analysis(all_species_data, all_land_cover, "Combined")
+# Ejecutar CCA combinado
+combined_cca <- run_cca_analysis(all_species_data, all_land_cover, "Combinado")
 
-# Function to create CCA biplot
+# Función para crear biplot CCA
 create_cca_biplot <- function(cca_analysis, title_suffix = "") {
   if(is.null(cca_analysis)) return(NULL)
   
   cca_result <- cca_analysis$cca
   
-  # Extract site scores (plots)
+  # Extraer puntuaciones de sitios (parcelas)
   site_scores <- data.frame(
     CCA1 = scores(cca_result, display = "sites")[, 1],
     CCA2 = scores(cca_result, display = "sites")[, 2],
     Beach = cca_analysis$beach_ids
   )
   
-  # Extract species scores
+  # Extraer puntuaciones de especies
   species_scores <- data.frame(
     CCA1 = scores(cca_result, display = "species")[, 1],
     CCA2 = scores(cca_result, display = "species")[, 2],
     Species = rownames(scores(cca_result, display = "species"))
   )
   
-  # Extract environmental variable scores (biplot arrows)
+  # Extraer puntuaciones de variables ambientales (flechas del biplot)
   env_scores <- data.frame(
     CCA1 = scores(cca_result, display = "bp")[, 1],
     CCA2 = scores(cca_result, display = "bp")[, 2],
     Variable = rownames(scores(cca_result, display = "bp"))
   )
   
-  # Select top species by distance from origin for labeling
+  # Traducir nombres de variables ambientales usando la función global
+  env_scores$Variable <- translate_labels(env_scores$Variable)
+  
+  # Seleccionar principales especies por distancia desde el origen para etiquetado
   species_scores$distance <- sqrt(species_scores$CCA1^2 + species_scores$CCA2^2)
   top_species <- species_scores %>%
     arrange(desc(distance)) %>%
     slice_head(n = 8)
   
-  # Create the biplot
+  # Crear el biplot
   p <- ggplot() +
-    # Add site points
+    # Añadir puntos de sitios
     geom_point(data = site_scores, aes(x = CCA1, y = CCA2), 
                color = "blue", alpha = 0.6, size = 5) +
-    # Add environmental arrows
+    # Añadir flechas ambientales
     geom_segment(data = env_scores, 
                  aes(x = 0, y = 0, xend = CCA1 * 2, yend = CCA2 * 2),
                  arrow = arrow(length = unit(0.8, "cm")), 
                  color = "red", size = 2, alpha = 0.8) +
-    # Add environmental variable labels with repelling
+    # Añadir etiquetas de variables ambientales con repulsión
     ggrepel::geom_text_repel(data = env_scores, 
               aes(x = CCA1 * 2.3, y = CCA2 * 2.3, label = Variable),
               color = "red", fontface = "bold", size = 8,
@@ -271,10 +272,10 @@ create_cca_biplot <- function(cca_analysis, title_suffix = "") {
               point.padding = 0.3,
               segment.color = "red",
               segment.alpha = 0.5) +
-    # Add top species points
+    # Añadir puntos de principales especies
     geom_point(data = top_species, aes(x = CCA1, y = CCA2), 
                color = "darkgreen", alpha = 0.8, size = 4) +
-    # Add top species labels with repelling to avoid overlap
+    # Añadir etiquetas de principales especies con repulsión para evitar solapamiento
     ggrepel::geom_text_repel(data = top_species, 
               aes(x = CCA1, y = CCA2, label = Species),
               color = "darkgreen", fontface = "italic", size = 6,
@@ -283,11 +284,11 @@ create_cca_biplot <- function(cca_analysis, title_suffix = "") {
               point.padding = 0.3,
               segment.color = "darkgreen",
               segment.alpha = 0.5) +
-    # Customize appearance
+    # Personalizar apariencia
     theme_minimal() +
     labs(
-      title = paste("CCA Biplot:", cca_analysis$region, title_suffix),
-      subtitle = paste("Explained variance:", round(cca_analysis$explained_variance, 1), "%"),
+      title = paste("Biplot CCA:", cca_analysis$region, title_suffix),
+      subtitle = paste("Varianza explicada:", round(cca_analysis$explained_variance, 1), "%"),
       x = paste("CCA1 (", round(100 * eigenvals(cca_result)[1] / sum(eigenvals(cca_result)), 1), "%)", sep = ""),
       y = paste("CCA2 (", round(100 * eigenvals(cca_result)[2] / sum(eigenvals(cca_result)), 1), "%)", sep = "")
     ) +
@@ -299,20 +300,20 @@ create_cca_biplot <- function(cca_analysis, title_suffix = "") {
       axis.text.x = element_text(size = 14),
       axis.text.y = element_text(size = 14),
       panel.grid.minor = element_blank(),
-      aspect.ratio = 1  # This makes the plot square
+      aspect.ratio = 1  # Esto hace el gráfico cuadrado
     )
   
   return(p)
 }
 
-# Function to test significance of environmental variables
+# Función para probar la significancia de variables ambientales
 test_env_significance <- function(cca_analysis) {
   if(is.null(cca_analysis)) return(NULL)
   
-  # Test overall model significance
+  # Probar significancia general del modelo
   model_test <- anova(cca_analysis$cca, permutations = 999)
   
-  # Test individual variable significance
+  # Probar significancia de variables individuales
   var_test <- anova(cca_analysis$cca, by = "terms", permutations = 999)
   
   return(list(
@@ -321,20 +322,22 @@ test_env_significance <- function(cca_analysis) {
   ))
 }
 
-# Test significance for each region
+# Probar significancia para cada región
 girona_sig <- test_env_significance(girona_cca)
 barcelona_sig <- test_env_significance(barcelona_cca)
 tarragona_sig <- test_env_significance(tarragona_cca)
 combined_sig <- test_env_significance(combined_cca)
 ```
 
-This section presents the results of Canonical Correspondence Analysis (CCA) to explore the relationships between coastal dune vegetation composition and land cover variables by region. CCA is a constrained ordination technique that directly relates species composition to environmental gradients, helping us understand which land cover factors best explain vegetation patterns in each region (Girona, Barcelona, and Tarragona).
 
-**Methodological Note**: The analysis aggregates plot-level species data to beach-level by calculating mean species cover per beach. This approach ensures that the species matrix matches the scale of the environmental data (one observation per beach) and avoids pseudoreplication issues that would arise from duplicating environmental values for multiple plots within the same beach.
 
+##### Análisis CCA Combinado para Todas las Regiones
+
+El análisis CCA combinado incluye 45 playas de las tres regiones catalanas, explicando el 23.4% de la varianza en composición de especies.
+La @fig-cca-combined identifica principalmente el eje Urbano-Natural; las flechas de "Urbano" y "Vías de Comunicación" se oponen a "Agua Dulce", "Pastizal" y "Matorral", indicando el contraste fundamental entre desarrollo humano y hábitats naturales.
 ```{r}
 #| label: fig-cca-combined
-#| fig-cap: "CCA biplot showing the relationship between vegetation composition and land cover variables across all coastal dune sites. Blue points represent sampling plots, red arrows show environmental gradients, and green points indicate key species. Arrow length indicates the strength of the environmental gradient."
+#| fig-cap: "Biplot CCA combinado mostrando las relaciones especies-ambiente en todas las regiones catalanas. Los puntos azules representan playas individuales, las flechas rojas indican gradientes de cobertura del suelo (mayor longitud = mayor influencia), y los puntos verdes muestran especies clave posicionadas según su afinidad ambiental."
 #| echo: false
 #| eval: true
 #| output: true
@@ -344,79 +347,24 @@ This section presents the results of Canonical Correspondence Analysis (CCA) to 
 
 # Create and display the combined CCA biplot
 if(!is.null(combined_cca)) {
-  p_combined <- create_cca_biplot(combined_cca, "- All Regions")
+  p_combined <- create_cca_biplot(combined_cca, "- Todas las Regiones")
   print(p_combined)
   
-  # Save the plot
-  ggsave("../figures/cca_combined_analysis.png", p_combined, width = 12, height = 8)
-} else {
-  cat("Combined CCA analysis could not be performed.\n")
+  # Guardar el gráfico
+  ggsave(here("figures","cca_combined_analysis.png"), p_combined, width = 12, height = 8)
 }
 ```
 
-## **How to Interpret CCA Biplots**
 
-Canonical Correspondence Analysis (CCA) biplots are powerful visualization tools that display the relationships between species composition, sampling sites, and environmental variables in a single plot. Understanding the different elements and their colors is crucial for interpreting the ecological patterns revealed by the analysis.
-
-### **Elements of the CCA Biplot**
-
-**Blue Points (Sampling Sites/Beaches):**
-- Each blue point represents a sampling location (beach) in the analysis
-- The position of each point in the biplot space reflects the overall species composition at that site
-- Sites that are close together have similar species compositions
-- Sites that are far apart have different species assemblages
-
-**Red Arrows (Environmental Variables):**
-- Red arrows represent environmental gradients (land cover variables such as urban cover, forest cover, agricultural land, etc.)
-- The **length** of each arrow indicates the **strength** of the environmental gradient - longer arrows represent variables that have stronger relationships with species composition
-- The **direction** of each arrow shows the direction of increasing values for that environmental variable
-- Variables with arrows pointing in similar directions are positively correlated with each other
-- Variables with arrows pointing in opposite directions are negatively correlated
-
-**Green Points and Labels (Plant Species):**
-- Green points represent individual plant species found in the study
-- Only the most ecologically important species (those with the strongest associations with environmental gradients) are labeled to avoid overcrowding
-- Species positioned **closer to the tip of an environmental arrow** are more strongly associated with that environmental condition
-- Species positioned on the **opposite side of the origin** from an arrow are negatively associated with that environmental variable
-
-### **Interpreting Spatial Relationships**
-
-**Species-Environment Associations:**
-- When a species (green) is positioned near the tip of an environmental arrow (red), it indicates that species is favored by high values of that environmental variable
-- Species positioned far from an arrow tip, especially on the opposite side of the plot center, are typically found where that environmental variable has low values
-
-**Site Characterization:**
-- Sampling sites (blue points) positioned near environmental arrows are characterized by high values of those environmental variables
-- Sites positioned in the direction of multiple arrows experience the combined influence of those environmental factors
-- Sites near the center of the biplot have average environmental conditions
-
-**Gradient Interpretation:**
-- The first axis (CCA1, horizontal) represents the primary environmental gradient that best explains species composition patterns
-- The second axis (CCA2, vertical) represents the secondary gradient, independent of the first
-- The percentage values in axis labels indicate how much of the total species-environment relationship each axis explains
-
-### **Practical Example of Interpretation**
-
-If you observe:
-- A **long red arrow** pointing toward "Urban Cover" → Urban development is a strong environmental driver
-- **Green species points** near this arrow tip → These species are adapted to or favored by urban environments
-- **Blue site points** in the same direction → These beaches have high urban development nearby
-- **Green species points** on the opposite side → These species avoid urban areas and prefer more natural conditions
-
-### **Regional Comparison Considerations**
-
-When comparing biplots across regions (Girona, Barcelona, Tarragona):
-- Different arrow lengths indicate that the same environmental variable may have different importance in each region
-- Different arrow directions show that environmental gradients may operate differently across regions
-- Species that appear in multiple regions may show different environmental associations depending on local conditions
-
-This interpretation framework allows you to understand how land cover patterns shape coastal dune vegetation communities and identify the key environmental drivers in each region of Catalonia.
 
 ```{r}
 #| label: fig-cca-regional
-#| fig-cap: "Regional CCA biplots showing how vegetation-environment relationships vary across the three coastal regions of Catalonia. Each plot shows the specific land cover gradients that structure vegetation communities in each region. Red arrows represent environmental gradients (land cover variables), green points and labels show plant species, and blue points represent sampling sites (beaches). Longer arrows indicate stronger environmental gradients, and species positioned closer to arrow tips are more strongly associated with those environmental conditions."
+#| fig-cap: "Biplots CCA regionales mostrando los gradientes ambientales específicos en Girona, Barcelona y Tarragona. Las diferencias entre regiones reflejan distintas presiones de uso del suelo: gradientes naturales en Girona, presión urbana en Barcelona, y influencia agrícola en Tarragona."
 #| echo: false
 #| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 #| output: true
 #| fig-width: 15
 #| fig-height: 45
@@ -453,23 +401,34 @@ if(length(regional_plots) > 0) {
     
     print(combined_regional)
     
-    # Save the combined regional plot
-    ggsave("../figures/cca_regional_analysis.png", combined_regional,
+    # Guardar el gráfico combinado regional
+    ggsave(here("figures","cca_regional_analysis.png"), combined_regional,
            width = 14, height = 12)
   }
 } else {
-  cat("No regional CCA analyses could be performed.\n")
+  cat("No se pudieron realizar análisis CCA regionales.\n")
 }
 ```
 
+##### Patrones Regionales Específicos
+
+**Girona** (47.4% varianza explicada): Dominan gradientes naturales con fuertes ejes de bosques y urbano. Las especies se distribuyen principalmente según la proximidad a bosques y otros tipo de suelos naturales.
+
+**Barcelona** (100.0% varianza explicada): El gradiente urbano es el factor dominante, con "Urbano" y "Vías de Comunicación" como vectores más largos. Existen especies que se posicionan en dirección opuesta a la  influencia metropolitana.
+
+**Tarragona** (52.9% varianza explicada): Muestra un patrón mixto con gradientes de humedad ("Lagunas y Marismas") y "Matorral" como principales estructuradores.
+
 ```{r}
 #| label: tbl-cca-summary
-#| tbl-cap: "Summary of CCA results showing the variance explained by land cover variables in each region and the overall significance of the species-environment relationships."
+#| tbl-cap: "Resumen de los resultados CCA mostrando la varianza explicada por las variables de cobertura del suelo en cada región y la significancia general de las relaciones especies-ambiente."
 #| echo: false
 #| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 #| output: true
 
-# Create summary table of CCA results
+# Crear tabla resumen de resultados CCA
 cca_summary <- data.frame(
   Region = character(),
   Explained_Variance_Percent = numeric(),
@@ -480,7 +439,7 @@ cca_summary <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Helper function to extract significance info
+# Función auxiliar para extraer información de significancia
 extract_sig_info <- function(sig_test) {
   if(is.null(sig_test) || is.null(sig_test$model)) {
     return(list(f_val = NA, p_val = NA))
@@ -492,12 +451,12 @@ extract_sig_info <- function(sig_test) {
   ))
 }
 
-# Add data for each region
+# Añadir datos para cada región
 regions <- list(
   list(name = "Girona", cca = girona_cca, sig = girona_sig),
   list(name = "Barcelona", cca = barcelona_cca, sig = barcelona_sig),
   list(name = "Tarragona", cca = tarragona_cca, sig = tarragona_sig),
-  list(name = "Combined", cca = combined_cca, sig = combined_sig)
+  list(name = "Combinado", cca = combined_cca, sig = combined_sig)
 )
 
 for(region in regions) {
@@ -516,25 +475,26 @@ for(region in regions) {
   }
 }
 
-# Display the table
+# Mostrar la tabla
 if(nrow(cca_summary) > 0) {
   knitr::kable(cca_summary, 
-               col.names = c("Region", "Explained Variance (%)", "Env. Variables", 
-                           "Species", "F-value", "P-value"),
+               col.names = c("Región", "Varianza Explicada (%)", "Var. Ambientales", 
+                           "Especies", "Valor F", "Valor P"),
                align = c("l", "c", "c", "c", "c", "c"))
-} else {
-  cat("No CCA results available for summary table.\n")
 }
 ```
 
 ```{r}
 #| label: tbl-env-variables
-#| tbl-cap: "Significance of individual environmental variables in the combined CCA model, showing which land cover types are most important for explaining vegetation patterns."
+#| tbl-cap: "Significancia de variables ambientales individuales en el modelo CCA combinado, mostrando qué tipos de cobertura del suelo son más importantes para explicar los patrones de vegetación."
 #| echo: false
 #| eval: true
+#| results: 'hide'
+#| message: false
+#| warning: false
 #| output: true
 
-# Create table of environmental variable significance
+# Crear tabla de significancia de variables ambientales
 if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
   env_var_table <- data.frame(
     Environmental_Variable = rownames(combined_sig$variables),
@@ -546,209 +506,48 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
                                      ifelse(combined_sig$variables$`Pr(>F)` < 0.1, ".", ""))))
   )
   
-  # Remove the 'Residual' row if it exists
+  # Eliminar la fila 'Residual' si existe
   env_var_table <- env_var_table[!is.na(env_var_table$F_Value), ]
   
-  # Sort by F-value (descending)
+  # Traducir nombres de variables ambientales usando el diccionario con manejo de errores
+  tryCatch({
+    env_var_table$Environmental_Variable <- translate_labels(env_var_table$Environmental_Variable)
+  }, error = function(e) {
+    # Si hay error en traducción, usar traducción manual para términos faltantes
+    env_var_table$Environmental_Variable <<- sapply(env_var_table$Environmental_Variable, function(var) {
+      # Diccionario de respaldo para variables específicas de CCA
+      backup_translations <- c(
+        "Forests" = "Bosques",
+        "Crops" = "Cultivos", 
+        "Scrubland" = "Matorral",
+        "Urban" = "Urbano",
+        "Grassland" = "Pastizal",
+        "Forestry Bare Soil" = "Suelo Desnudo Forestal",
+        "Freshwater" = "Agua Dulce",
+        "Lagoon And Salt Marshes" = "Lagunas y Marismas",
+        "Communication Routes" = "Vías de Comunicación"
+      )
+      
+      if (var %in% names(backup_translations)) {
+        return(backup_translations[var])
+      } else {
+        # Limpiar texto básico si no está en diccionario
+        cleaned <- gsub("_", " ", var)
+        cleaned <- tools::toTitleCase(cleaned)
+        return(cleaned)
+      }
+    })
+  })
+  
+  # Ordenar por valor F (descendente)
   env_var_table <- env_var_table[order(-env_var_table$F_Value), ]
   
   knitr::kable(env_var_table,
-               col.names = c("Environmental Variable", "F-value", "P-value", "Significance"),
+               col.names = c("Variable Ambiental", "Valor F", "Valor P", "Significancia"),
                align = c("l", "c", "c", "c"),
-               caption = "Significance codes: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1")
+               caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1",
+               row.names = FALSE)
 } else {
-  cat("Environmental variable significance test results not available.\n")
+  cat("Resultados de prueba de significancia de variables ambientales no disponibles.\n")
 }
 ```
-
-```{r}
-#| label: fig-species-environment-associations
-#| fig-cap: "Species-environment associations from CCA analysis, showing which species are most strongly associated with specific land cover types. Species positioned closer to environmental arrows are more strongly associated with those land cover variables."
-#| echo: false
-#| eval: true
-#| output: true
-#| fig-width: 20
-#| fig-height: 20
-#| fig-pos: "H"
-
-# Create a detailed species-environment association plot
-if(!is.null(combined_cca)) {
-  cca_result <- combined_cca$cca
-  
-  # Extract all species scores (not just top ones)
-  all_species_scores <- data.frame(
-    CCA1 = scores(cca_result, display = "species")[, 1],
-    CCA2 = scores(cca_result, display = "species")[, 2],
-    Species = rownames(scores(cca_result, display = "species"))
-  )
-  
-  # Calculate distance from origin for each species
-  all_species_scores$distance <- sqrt(all_species_scores$CCA1^2 + all_species_scores$CCA2^2)
-  
-  # Get top species for labeling (those with strongest associations)
-  top_species_detailed <- all_species_scores %>%
-    arrange(desc(distance)) %>%
-    slice_head(n = 12)
-  
-  # Extract environmental variable scores
-  env_scores_detailed <- data.frame(
-    CCA1 = scores(cca_result, display = "bp")[, 1],
-    CCA2 = scores(cca_result, display = "bp")[, 2],
-    Variable = rownames(scores(cca_result, display = "bp"))
-  )
-  
-  # Create detailed association plot
-  p_associations <- ggplot() +
-    # Add all species points (small, semi-transparent)
-    geom_point(data = all_species_scores, aes(x = CCA1, y = CCA2), 
-               color = "lightgreen", alpha = 0.4, size = 2) +
-    # Add top species points (larger, more visible)
-    geom_point(data = top_species_detailed, aes(x = CCA1, y = CCA2), 
-               color = "darkgreen", alpha = 0.8, size = 4) +
-    # Add species labels for top species with repelling
-    ggrepel::geom_text_repel(data = top_species_detailed, 
-              aes(x = CCA1, y = CCA2, label = Species),
-              color = "darkgreen", fontface = "italic", size = 8,
-              max.overlaps = Inf,
-              box.padding = 0.5,
-              point.padding = 0.3,
-              segment.color = "darkgreen",
-              segment.alpha = 0.5) +
-    # Add environmental arrows (thicker)
-    geom_segment(data = env_scores_detailed, 
-                 aes(x = 0, y = 0, xend = CCA1 * 2.5, yend = CCA2 * 2.5),
-                 arrow = arrow(length = unit(1.0, "cm")), 
-                 color = "red", size = 2.5, alpha = 0.9) +
-    # Add environmental variable labels with repelling
-    ggrepel::geom_text_repel(data = env_scores_detailed, 
-              aes(x = CCA1 * 2.8, y = CCA2 * 2.8, label = Variable),
-              color = "red", fontface = "bold", size = 10,
-              max.overlaps = Inf,
-              box.padding = 0.5,
-              point.padding = 0.3,
-              segment.color = "red",
-              segment.alpha = 0.5) +
-    # Add origin lines
-    geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
-    geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.5) +
-    # Customize appearance
-    theme_minimal() +
-    labs(
-      title = "Species-Environment Associations in Coastal Dunes",
-      subtitle = "Species positioned near environmental arrows show strong associations with those land cover types",
-      x = paste("CCA1 (", round(100 * eigenvals(cca_result)[1] / sum(eigenvals(cca_result)), 1), "%)", sep = ""),
-      y = paste("CCA2 (", round(100 * eigenvals(cca_result)[2] / sum(eigenvals(cca_result)), 1), "%)", sep = "")
-    ) +
-    theme(
-      plot.title = element_text(face = "bold", size = 28),
-      plot.subtitle = element_text(size = 22),
-      axis.title.x = element_text(size = 18),
-      axis.title.y = element_text(size = 18),
-      axis.text.x = element_text(size = 16),
-      axis.text.y = element_text(size = 16),
-      panel.grid.minor = element_blank(),
-      legend.position = "none"
-    ) +
-    # Expand plot limits to accommodate labels
-    expand_limits(x = c(-2, 2), y = c(-2, 2))
-  
-  print(p_associations)
-  
-  # Save the plot
-  ggsave("../figures/cca_species_environment_associations.png", p_associations,
-         width = 12, height = 8)
-} else {
-  cat("Species-environment association plot could not be created.\n")
-}
-```
-
-## **Interpretation of Regional CCA Results**
-
-The Canonical Correspondence Analysis reveals important relationships between coastal dune vegetation and land cover variables across the three regions of Catalonia:
-
-### **Regional Model Performance**
-The CCA models successfully explain the variation in species composition through land cover gradients, with explained variance percentages indicating the strength of species-environment relationships in each region:
-
-- **Girona**: Shows distinct environmental patterns typical of the northern coast
-- **Barcelona**: Reflects the high urbanization pressure of the metropolitan area  
-- **Tarragona**: Demonstrates southern coastal characteristics with different land use patterns
-
-### **Key Environmental Gradients by Region**
-The analysis identifies the most important land cover variables that structure vegetation communities in each region:
-
-#### **Regional Differences in Environmental Drivers**
-1. **Girona**: Natural vegetation gradients dominate, with forest and scrubland transitions being key drivers
-2. **Barcelona**: Urban-natural gradient is the primary structuring force due to metropolitan pressure
-3. **Tarragona**: Agricultural and coastal development gradients are most important
-
-#### **Common Gradients Across Regions**
-- **Urban-Natural Gradient**: The contrast between urban development and natural habitats appears as a major structuring force
-- **Vegetation Cover Gradient**: Different types of vegetation cover (forests, scrubland, grassland) create distinct habitat conditions
-- **Disturbance Gradient**: Areas with different levels of human disturbance support different species assemblages
-- **Moisture Gradient**: Freshwater and saltwater influences create specific environmental conditions
-
-### **Species-Environment Associations by Region**
-Regional analysis reveals how species respond differently to environmental pressures:
-
-#### **Regional Specialist Species**
-- **Girona specialists**: Species strongly associated with natural forest and scrubland environments
-- **Barcelona specialists**: Species adapted to urban-edge and fragmented habitats
-- **Tarragona specialists**: Species associated with agricultural matrices and developed coastlines
-
-#### **Regional Generalists**
-Species found across all regions but showing different environmental associations depending on local land cover patterns.
-
-#### **Indicator Species**
-Species that can serve as indicators of specific environmental conditions in each region, providing tools for monitoring ecosystem health.
-
-### **Conservation Implications by Region**
-
-#### **Girona Conservation Priorities**
-- Protect remaining natural vegetation gradients
-- Maintain forest-scrubland transitions that support specialized species
-- Focus on habitat connectivity in natural areas
-
-#### **Barcelona Conservation Priorities**  
-- Mitigate urban pressure effects on dune vegetation
-- Create buffer zones between urban areas and natural habitats
-- Restore fragmented coastal areas
-
-#### **Tarragona Conservation Priorities**
-- Balance agricultural land use with coastal habitat conservation
-- Manage development impacts on species assemblages
-- Maintain traditional land use practices that support biodiversity
-
-### **Management Recommendations by Region**
-
-#### **Regional Management Strategies**
-1. **Girona**: Focus on natural habitat preservation and connectivity
-2. **Barcelona**: Emphasize urban-nature interface management and restoration
-3. **Tarragona**: Balance agricultural practices with coastal conservation
-
-#### **Cross-Regional Coordination**
-The combined analysis shows that while each region has distinct characteristics, coordinated management across regions is needed to maintain the full spectrum of coastal dune vegetation communities.
-
-### **Statistical Significance and Reliability**
-The permutation tests confirm that the observed species-environment relationships are statistically significant in each region, providing confidence for management decisions. Regional differences in F-values and p-values indicate varying strengths of environmental control on vegetation patterns.
-
-### **Future Research Directions**
-The regional CCA results suggest several important research priorities:
-
-1. **Long-term Monitoring**: Establish region-specific monitoring protocols to track changes in species-environment relationships over time
-2. **Climate Change Adaptation**: Investigate how changing climate conditions may alter the environmental gradients identified in each region
-3. **Restoration Effectiveness**: Use the species-environment associations to guide and evaluate restoration projects in each region
-4. **Cross-Regional Connectivity**: Study gene flow and species movement between regions to inform corridor design
-
-### **Data Quality and Limitations**
-The CCA analysis is based on current land cover data and vegetation surveys. The strength of the analysis depends on:
-
-- **Sample Size**: Regions with more sampling sites show stronger statistical relationships
-- **Environmental Variation**: Areas with greater land cover diversity provide more robust environmental gradients
-- **Temporal Considerations**: Results represent current conditions and may change with ongoing coastal development
-
-### **Methodological Considerations**
-The 50m buffer zone used for land cover analysis captures the immediate environmental context of dune vegetation. This scale is appropriate for understanding direct land use effects but may not capture broader landscape influences that operate at larger scales.
-
-The CCA approach effectively identifies linear relationships between species composition and environmental variables. Non-linear relationships and complex interactions between environmental factors may require additional analytical approaches in future studies.
-
-This comprehensive regional analysis provides the quantitative foundation needed for evidence-based coastal dune conservation and management across the diverse landscapes of Catalonia.

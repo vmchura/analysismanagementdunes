@@ -4,22 +4,10 @@ Este documento presenta el Trabajo Final de Máster (TFM) titulado "Análisis y 
 
 El trabajo aplica metodologías de la ciencia de datos al estudio de los ecosistemas dunares costeros de Cataluña, con el objetivo de analizar las relaciones entre la biodiversidad vegetal, los factores ambientales y las prácticas de gestión.
 
-Este documento sigue la estructura recomendada por la Universidad de Girona para los Trabajos Finales de Máster, organizándose en los siguientes capítulos:
-
-- **Introducción**: Contextualiza el trabajo, presenta su relevancia y define los objetivos y preguntas de investigación.
-- **Literatura Relacionada y Estado del Arte**: Revisa los trabajos y conocimientos previos relevantes para el estudio.
-- **Preliminares**: Establece los conceptos básicos, la terminología y los fundamentos teóricos necesarios.
-- **Planificación y Metodología**: Describe la planificación del proyecto, la metodología empleada y los recursos utilizados.
-- **Exploración y Validación de Datos**: Detalla el proceso inicial de exploración y validación de los datos.
-- **División por Provincias**: Explica el proceso de división de los datos por regiones geográficas.
-- **Contribución Metodológica**: Presenta las principales aportaciones metodológicas del trabajo.
-- **Resultados**: Expone los resultados obtenidos a partir de los análisis realizados.
-- **Conclusiones**: Sintetiza las principales conclusiones, limitaciones y líneas futuras de investigación.
-
 La realización de este trabajo ha sido posible gracias al apoyo de diversas personas e instituciones, a las cuales quiero expresar mi agradecimiento:
 
 En primer lugar, al Dr. Javier Palarea Albaladejo, tutor de este TFM, por su orientación, apoyo y disponibilidad a lo largo de todo el proceso. Sus valiosos consejos y conocimientos han sido fundamentales para la realización de este trabajo.
 
-A las entidades e investigadores que han proporcionado datos e información para este estudio, especialmente a Claudia.
+A las entidades e investigadores que han proporcionado datos e información para este estudio, especialmente a Carla Garcia-Lozano.
 
 Este trabajo representa no solo la culminación del programa de máster, sino también una contribución al conocimiento científico y a la conservación de los ecosistemas dunares del litoral catalán, un patrimonio natural de alto valor que debe preservarse para las generaciones futuras.

@@ -1,30 +1,3 @@
-## Exploración y Validación de Datos {#sec-data-exploration-validation}
-
-### Visión General del Conjunto de Datos
-
-Este capítulo detalla el proceso inicial de exploración y validación de datos para el proyecto de análisis de vegetación dunar.
-El conjunto de datos consiste en un libro de Excel principal (`db_species_20250214.xlsx`) que contiene varias hojas con información sobre:
-
-1. Presencia/abundancia de especies en diferentes parcelas de muestreo (hoja `original_data`)
-2. Porcentajes de cobertura del suelo en radios de 50m y 100m desde los puntos de muestra (hojas específicas por provincia)
-3. Prácticas de gestión y estados de protección para áreas de playa (hojas específicas por provincia)
-
-Los datos están estructurados por región geográfica (provincias de Girona, Barcelona y Tarragona) y contienen información sobre diferentes playas, transectos y parcelas dentro de cada región.
-
-### Pasos de Procesamiento de Datos
-
-El flujo de trabajo para el procesamiento de datos sigue estos pasos clave:
-
-1. Carga y limpieza del conjunto de datos principal
-2. Procesamiento de datos de cobertura del suelo para cada provincia
-3. Procesamiento de datos de gestión para cada provincia
-4. Validación de los archivos de datos procesados
-
-Todo el procesamiento se implementó en R utilizando el ecosistema de paquetes tidyverse, con especial énfasis en la limpieza y transformación de datos.
-
-#### Carga del Conjunto de Datos Principal
-
-El conjunto de datos principal que contiene observaciones de especies se cargó desde la hoja `original_data` del libro de Excel.
 
 ```{r}
 #| label: load-packages
@@ -35,9 +8,9 @@ El conjunto de datos principal que contiene observaciones de especies se cargó 
 library(tidyverse)
 library(readxl)
 library(conflicted)
-library(ggplot2)
-library(janitor) # Para la función clean_names
+library(janitor)
 library(dplyr)
+library(here)
 ```
 
 ```{r}
@@ -46,18 +19,12 @@ library(dplyr)
 #| eval: true
 #| output: false
 ## Cargar el conjunto de datos principal
-main_data <- read_excel("../data/db_species_20250214.xlsx", sheet = "original_data")
+main_data <- read_excel(here("data","db_species_20250214.xlsx"), sheet = "original_data")
 main_data <- main_data %>% select(where(~ !all(is.na(.))))
 
-## Limpiar nombres de columnas usando el paquete janitor
+## Limpiar nombres de columnas
 main_data <- main_data %>% janitor::clean_names()
 ```
-
-Este proceso inicial de carga eliminó columnas completamente vacías y estandarizó los nombres de las columnas.
-
-#### Conversión a Columnas Numéricas
-
-Los datos de abundancia de especies necesitaban ser convertidos a formato numérico para el análisis.
 
 ```{r}
 #| label: numeric-conversion
@@ -67,160 +34,90 @@ Los datos de abundancia de especies necesitaban ser convertidos a formato numér
 ## Encontrar el índice de la columna EUNIS
 eunis_col_index <- which(grepl("eunis", names(main_data), ignore.case = TRUE))
 if(length(eunis_col_index) == 0) {
-  cat("Advertencia: No se pudo encontrar la columna 'EUNIS'. Se analizarán todas las columnas desde la segunda en adelante.\n")
-  eunis_col_index <- ncol(main_data) + 1  # Establecer más allá de la última columna
+  eunis_col_index <- ncol(main_data) + 1
 } else {
-  eunis_col_index <- min(eunis_col_index)  # Tomar la primera coincidencia si hay varias
+  eunis_col_index <- min(eunis_col_index)
 }
 
-## Convertir columnas desde la segunda hasta EUNIS a numéricas
+## Convertir columnas de abundancia a numéricas
 for(i in 2:min(ncol(main_data), eunis_col_index - 1)) {
-  col_name <- names(main_data)[i]
-  # Almacenar los valores originales para verificar problemas de conversión
-  original_values <- main_data[[i]]
-
-  # Intentar convertir a numérico
   main_data[[i]] <- as.numeric(as.character(main_data[[i]]))
-
-  # Comprobar si se perdieron valores no-NA
-  if(sum(!is.na(original_values)) > sum(!is.na(main_data[[i]]))) {
-    warning_msg <- paste("Advertencia: Algunos valores en la columna", col_name, "no pudieron ser convertidos a numéricos")
-    cat(warning_msg, "\n")
-
-    # Reportar los valores problemáticos
-    problematic <- original_values[!is.na(original_values) & is.na(main_data[[i]])]
-    if(length(problematic) > 0) {
-      cat("  Valores problemáticos:", toString(head(unique(problematic), 5)), "\n")
-    }
-  }
 }
 ```
-
-Este proceso de conversión incluyó verificaciones de validación para identificar cualquier valor que no pudiera convertirse adecuadamente a formato numérico, asegurando la calidad de los datos durante la transformación.
-
-#### Reordenamiento de Columnas
-
-Para asegurar la consistencia en la estructura de datos, las columnas fueron reordenadas para seguir un patrón específico: `"plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis", resto de columnas de especies`
 
 ```{r}
 #| label: column-reorder
 #| echo: false
 #| eval: true
 #| output: false
-## Identificar todas las columnas deseadas
+## Organizar columnas en orden lógico
 species_cols <- setdiff(names(main_data),
                       c("plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis"))
 
-## Crear el orden deseado de columnas
 ordered_cols <- c("plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis", species_cols)
-## Reordenar columnas (solo las que existen)
 main_data <- main_data %>% select(all_of(ordered_cols), everything())
 
 ## Guardar los datos principales procesados
-save(main_data, file = "../data/processed_data_clean.RData")
+save(main_data, file = here("data","processed_data_clean.RData"))
 ```
-
-La reordenación colocó las columnas de identificación primero, seguidas por las columnas de especies, haciendo que la estructura de datos sea más intuitiva para el análisis posterior.
-
-#### Procesamiento de Datos de Cobertura del Suelo
-
-Para cada provincia (Girona, Barcelona y Tarragona), los datos de cobertura del suelo se procesaron por separado.
 
 ```{r}
 #| label: land-cover-processing
 #| echo: false
 #| eval: true
 #| output: false
-## Función para procesar hojas de cobertura del suelo
+## Función para procesar datos de cobertura del suelo
 process_land_cover <- function(sheet_name) {
-  cat("Procesando hoja:", sheet_name, "\n")
-
-  # Leer la hoja
-  land_cover_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
-
-  # Limpiar nombres de columnas
+  land_cover_data <- read_excel(here("data","db_species_20250214.xlsx"), sheet = sheet_name)
   land_cover_data <- land_cover_data %>% janitor::clean_names()
-
-  # Seleccionar columna id_beach/id_plot
+  
+  ## Identificar columnas relevantes
   id_col <- grep("^id_beach$|^id_plot$", names(land_cover_data), value = TRUE)[1]
-  if(is.na(id_col)) {
-    id_col <- grep("id.*beach|beach.*id|id.*plot|plot.*id", names(land_cover_data), value = TRUE)[1]
-  }
-
-  # Obtener columnas de 50m y 100m
-  cols_50m <- grep("^(x)?50m_", names(land_cover_data), value = TRUE)
-  cols_100m <- grep("^(x)?100m_", names(land_cover_data), value = TRUE)
-
-  if(length(cols_50m) == 0) {
-    cols_50m <- grep("50.*m|50m|50 m", names(land_cover_data), value = TRUE)
-  }
-
-  if(length(cols_100m) == 0) {
-    cols_100m <- grep("100.*m|100m|100 m", names(land_cover_data), value = TRUE)
-  }
-
-  # Seleccionar columnas
+  cols_50m <- grep("50m", names(land_cover_data), value = TRUE)
+  cols_100m <- grep("100m", names(land_cover_data), value = TRUE)
+  
   distance_cols <- c(cols_50m, cols_100m)
   selected_cols <- c(id_col, distance_cols)
-
-  # Filtrar datos
-  filtered_data <- land_cover_data %>% select(all_of(selected_cols)) %>% distinct()
-
-  # Convertir columnas a numéricas si es necesario
+  
+  ## Filtrar y convertir tipos de datos
+  filtered_data <- land_cover_data %>% 
+    select(all_of(selected_cols)) %>% 
+    distinct()
+  
   for(col in distance_cols) {
     filtered_data[[col]] <- as.numeric(filtered_data[[col]])
   }
-
-  # Convertir columna ID a entero
+  
   filtered_data[[id_col]] <- as.integer(filtered_data[[id_col]])
-
+  
   return(filtered_data)
 }
 
-## Procesar cada hoja de cobertura del suelo
+## Procesar datos por provincia
 girona_land_cover <- process_land_cover("girona_land cover")
 barcelona_land_cover <- process_land_cover("barcelona_land cover")
 tarragona_land_cover <- process_land_cover("tarragona_land cover")
 
-## Crear una lista que contiene todos los conjuntos de datos de cobertura del suelo
 land_cover_data <- list(
   "Girona" = girona_land_cover,
   "Barcelona" = barcelona_land_cover,
   "Tarragona" = tarragona_land_cover
 )
 
-## Guardar los datos combinados de cobertura del suelo
-save(land_cover_data, file = "../data/all_land_cover_data.RData")
+save(land_cover_data, file = here("data","all_land_cover_data.RData"))
 ```
-
-Esta función de procesamiento:
-
-1. Identifica la columna ID (identificador de playa o parcela)
-2. Extrae columnas relacionadas con mediciones de cobertura del suelo de 50m y 100m
-3. Filtra para mantener solo las columnas necesarias
-4. Convierte todas las mediciones a formato numérico
-5. Devuelve un data frame estandarizado para cada provincia
-
-#### Procesamiento de Datos de Gestión
-
-Los datos de gestión siguieron un patrón de procesamiento similar, pero con manejo especial para variables categóricas como nombres de playas.
 
 ```{r}
 #| label: management-data-processing
 #| echo: false
 #| eval: true
 #| output: false
-## Función para procesar hojas de gestión
+## Función para procesar datos de gestión
 process_management <- function(sheet_name) {
-  cat("Procesando hoja:", sheet_name, "\n")
-
-  # Leer la hoja
-  management_data <- read_excel("../data/db_species_20250214.xlsx", sheet = sheet_name)
-
-  # Limpiar nombres de columnas
+  management_data <- read_excel(here("data","db_species_20250214.xlsx"), sheet = sheet_name)
   management_data <- management_data %>% janitor::clean_names()
-
-  # Estandarizar nombres de columnas clave basados en lo esperado
+  
+  ## Identificar columnas esperadas
   expected_cols <- c(
     "id_plot", "id_beach", "beach",
     "managed_paths", "rope_fences", "mechanical_cleaning",
@@ -229,577 +126,109 @@ process_management <- function(sheet_name) {
     "protection_of_the_system_and_the_immediate_environment",
     "degree_of_protection_according_to_the_iucn_classification"
   )
-
-  # Encontrar columnas coincidentes
+  
+  ## Buscar columnas coincidentes
   actual_cols <- vector("character", length(expected_cols))
   for (i in seq_along(expected_cols)) {
     pattern <- expected_cols[i]
     simple_pattern <- gsub("_", ".*", pattern)
     matches <- grep(simple_pattern, names(management_data), ignore.case = TRUE, value = TRUE)
-
+    
     if (length(matches) > 0) {
       actual_cols[i] <- matches[1]
     } else {
-      cat("Advertencia: No se pudo encontrar una columna que coincida con '", expected_cols[i], "'\n", sep = "")
       actual_cols[i] <- NA
     }
   }
-
-  # Eliminar valores NA
+  
   actual_cols <- actual_cols[!is.na(actual_cols)]
-
+  
   if (length(actual_cols) > 0) {
-    # Subconjunto de los datos originales
     filtered_data <- management_data %>% select(all_of(actual_cols))
-
-    # Detectar columnas ID
-    id_plot_col <- grep("id.*plot|plot.*id", names(filtered_data), ignore.case = TRUE, value = TRUE)[1]
-    id_beach_col <- grep("id.*beach|beach.*id", names(filtered_data), ignore.case = TRUE, value = TRUE)[1]
-
-    # Asegurar que las columnas ID sean enteros
+    
+    ## Convertir tipos de datos apropiados
+    id_plot_col <- grep("id.*plot", names(filtered_data), ignore.case = TRUE, value = TRUE)[1]
+    id_beach_col <- grep("id.*beach", names(filtered_data), ignore.case = TRUE, value = TRUE)[1]
+    
     if (!is.na(id_plot_col)) {
       filtered_data[[id_plot_col]] <- as.integer(filtered_data[[id_plot_col]])
     }
-
+    
     if (!is.na(id_beach_col)) {
       filtered_data[[id_beach_col]] <- as.integer(filtered_data[[id_beach_col]])
     }
-
-    # Convertir columnas apropiadas a factores si tienen valores categóricos
+    
+    ## Convertir variables categóricas a factores
     for (col in names(filtered_data)) {
       if (is.character(filtered_data[[col]]) &&
           !grepl("^id|^beach$", col, ignore.case = TRUE)) {
         unique_vals <- unique(na.omit(filtered_data[[col]]))
-        if (length(unique_vals) < 10) {  # Asumir categórica si hay menos de 10 valores únicos
+        if (length(unique_vals) < 10) {
           filtered_data[[col]] <- factor(filtered_data[[col]])
         }
       }
     }
-
+    
     return(filtered_data)
   } else {
-    warning("No se encontraron columnas útiles en la hoja de gestión")
     return(NULL)
   }
 }
 
-## Procesar cada hoja de gestión
+## Procesar datos de gestión por provincia
 girona_management <- process_management("girona_management")
 barcelona_management <- process_management("barcelona_management")
 tarragona_management <- process_management("tarragona_management")
 
-## Crear una lista que contiene todos los conjuntos de datos de gestión
 management_data <- list(
   "Girona" = girona_management,
   "Barcelona" = barcelona_management,
   "Tarragona" = tarragona_management
 )
 
-## Guardar los datos combinados de gestión
-save(management_data, file = "../data/all_management_data.RData")
+save(management_data, file = here("data","all_management_data.RData"))
 ```
-
-Esta función de procesamiento:
-
-1. Intenta localizar columnas que coincidan con variables de gestión esperadas
-2. Convierte columnas ID a formato entero
-3. Convierte inteligentemente variables categóricas a factores
-4. Devuelve un data frame estandarizado para cada provincia
 
 ### Validación de Datos
 
-Después del procesamiento inicial de datos, se ejecutó un script de validación para asegurar la calidad e integridad de los datos. El proceso de validación incluyó:
-
-1. Comprobar las dimensiones de los conjuntos de datos procesados
-2. Verificar la presencia y orden de las columnas
-3. Validar rangos y formatos de valores
-4. Verificar las relaciones entre campos identificadores
-
-#### Validación de Datos Principales
-
-La validación de datos principales incluyó estas verificaciones clave:
-
 ```{r}
-#| label: main-data-validation
-#| echo: false
-#| output: false
-#| eval: true
-validate_main_data <- function(data) {
-  cat("===== Validating main_data =====\n\n")
-
-  # Check dimensions
-  expected_rows <- 278
-  expected_cols <- 147 + 7  # Species columns + identifier columns
-
-  cat("Dimensions check:\n")
-  cat("  Expected: ", expected_cols, " columns by ", expected_rows, " rows\n", sep = "")
-  cat("  Actual:   ", ncol(data), " columns by ", nrow(data), " rows\n", sep = "")
-
-  if (nrow(data) != expected_rows) {
-    cat("  WARNING: Row count does not match expected value!\n")
-  }
-
-  if (ncol(data) < expected_cols - 5 || ncol(data) > expected_cols + 5) {
-    cat("  WARNING: Column count is significantly different from expected value!\n")
-  }
-
-  # Check column existence and order
-  expected_first_cols <- c("plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis")
-
-  cat("\nColumn presence check:\n")
-  for (col in expected_first_cols) {
-    if (col %in% names(data)) {
-      cat("  Column '", col, "' is present at position ", which(names(data) == col), "\n", sep = "")
-    } else {
-      cat("  WARNING: Column '", col, "' is missing!\n", sep = "")
-    }
-  }
-
-  # Validate column formats
-  cat("\nColumn format validation:\n")
-
-  # Check plot format (D+_D+_D+)
-  if ("plot" %in% names(data)) {
-    plot_format_check <- all(grepl("^\\d+_\\d+_\\d+$", data$plot))
-    cat("  'plot' format (D+_D+_D+): ", ifelse(plot_format_check, "VALID", "INVALID"), "\n", sep = "")
-    if (!plot_format_check) {
-      invalid_plots <- data$plot[!grepl("^\\d+_\\d+_\\d+$", data$plot)]
-      cat("    Invalid examples: ", toString(head(invalid_plots, 5)), "\n", sep = "")
-    }
-  }
-
-  # Check id_beach format (D+)
-  if ("id_beach" %in% names(data)) {
-    id_beach_format_check <- all(grepl("^\\d+$", as.character(data$id_beach)))
-    cat("  'id_beach' format (D+): ", ifelse(id_beach_format_check, "VALID", "INVALID"), "\n", sep = "")
-    if (!id_beach_format_check) {
-      invalid_id_beach <- data$id_beach[!grepl("^\\d+$", as.character(data$id_beach))]
-      cat("    Invalid examples: ", toString(head(invalid_id_beach, 5)), "\n", sep = "")
-    }
-  }
-
-  # Check id_transect format (D+)
-  if ("id_transect" %in% names(data)) {
-    id_transect_format_check <- all(grepl("^\\d+$", as.character(data$id_transect)))
-    cat("  'id_transect' format (D+): ", ifelse(id_transect_format_check, "VALID", "INVALID"), "\n", sep = "")
-    if (!id_transect_format_check) {
-      invalid_id_transect <- data$id_transect[!grepl("^\\d+$", as.character(data$id_transect))]
-      cat("    Invalid examples: ", toString(head(invalid_id_transect, 5)), "\n", sep = "")
-    }
-  }
-
-  # Check id_plot format (D+)
-  if ("id_plot" %in% names(data)) {
-    id_plot_format_check <- all(grepl("^\\d+$", as.character(data$id_plot)))
-    cat("  'id_plot' format (D+): ", ifelse(id_plot_format_check, "VALID", "INVALID"), "\n", sep = "")
-    if (!id_plot_format_check) {
-      invalid_id_plot <- data$id_plot[!grepl("^\\d+$", as.character(data$id_plot))]
-      cat("    Invalid examples: ", toString(head(invalid_id_plot, 5)), "\n", sep = "")
-    }
-  }
-
-  # Check transect format (D+_D+)
-  if ("transect" %in% names(data)) {
-    transect_format_check <- all(grepl("^\\d+_\\d+$", as.character(data$transect)))
-    cat("  'transect' format (D+_D+): ", ifelse(transect_format_check, "VALID", "INVALID"), "\n", sep = "")
-    if (!transect_format_check) {
-      invalid_transect <- data$transect[!grepl("^\\d+_\\d+$", as.character(data$transect))]
-      cat("    Invalid examples: ", toString(head(invalid_transect, 5)), "\n", sep = "")
-    }
-  }
-
-  # Validate that plot is the concatenation of id_beach, id_transect, and id_plot
-  if (all(c("plot", "id_beach", "id_transect", "id_plot") %in% names(data))) {
-    cat("\nValidating plot concatenation:\n")
-    # Build expected plot values
-    expected_plot <- paste(data$id_beach, data$id_transect, data$id_plot, sep = "_")
-    plot_match <- all(data$plot == expected_plot)
-
-    cat("  'plot' matches concatenation of id_beach_id_transect_id_plot: ",
-        ifelse(plot_match, "VALID", "INVALID"), "\n", sep = "")
-
-    if (!plot_match) {
-      # Find mismatches and display examples
-      mismatches <- which(data$plot != expected_plot)
-      if (length(mismatches) > 0) {
-        cat("    Mismatches (first 5):\n")
-        for (i in head(mismatches, 5)) {
-          cat("      Row ", i, ": plot='", data$plot[i],
-              "', expected='", expected_plot[i], "'\n", sep = "")
-        }
-      }
-    }
-  } else {
-    cat("\nCannot validate plot concatenation - one or more required columns missing\n")
-  }
-
-  # Validate all species columns (from column 8 to the end) have values between 0 and 5
-  cat("\nValidating species abundance values (0-5):\n")
-
-  # Find the index of the first species column
-  first_species_idx <- max(which(names(data) %in% expected_first_cols)) + 1
-
-  if (first_species_idx <= ncol(data)) {
-    species_cols <- names(data)[first_species_idx:ncol(data)]
-    cat("  Checking", length(species_cols), "species columns\n")
-
-    # Function to check if column has valid values (0-5)
-    check_species_col <- function(col_name) {
-      values <- data[[col_name]]
-      valid_values <- (values >= 0 & values <= 5 & values == floor(values))
-      return(all(valid_values))
-    }
-
-    # Apply check to all species columns
-    species_check_results <- sapply(species_cols, check_species_col)
-
-    # Report results
-    valid_cols <- sum(species_check_results)
-    invalid_cols <- sum(!species_check_results)
-
-    cat("  Valid columns (integers 0-5):", valid_cols, "\n")
-    cat("  Invalid columns:", invalid_cols, "\n")
-
-    if (invalid_cols > 0) {
-      cat("  Invalid column names: ",
-          toString(head(names(species_check_results)[!species_check_results], 5)), "\n", sep = "")
-
-      # Show examples of invalid values for the first few invalid columns
-      for (col in head(names(species_check_results)[!species_check_results], 3)) {
-        values <- data[[col]]
-        invalid_values <- values[!((values >= 0 & values <= 5 & values == floor(values)))]
-        cat("    Column '", col, "' invalid values: ", toString(head(invalid_values, 5)), "\n", sep = "")
-      }
-    }
-  } else {
-    cat("  WARNING: Could not find species columns after identifier columns!\n")
-  }
-
-  cat("\nMain data validation complete.\n")
-  cat("=============================================\n\n")
-}
-```
-
-#### Validación de Datos de Cobertura del Suelo
-
-La validación para los datos de cobertura del suelo se centró en:
-
-```{r}
-#| label: land-cover-validation
+#| label: validation-execution
 #| echo: false
 #| eval: true
 #| output: false
-validate_land_cover_data <- function(data) {
-  cat("===== Validating land_cover_data =====\n\n")
+## Cargar y validar datos principales
+if (file.exists(here("data","processed_data_clean.RData"))) {
+  load(here("data","processed_data_clean.RData"))
+  
+  ## Validaciones básicas
+  cat("Validación de datos principales:\n")
+  cat("- Dimensiones:", nrow(main_data), "filas x", ncol(main_data), "columnas\n")
+  cat("- Valores de abundancia válidos (0-5):", 
+      all(sapply(main_data[,8:ncol(main_data)], function(x) all(x >= 0 & x <= 5, na.rm = TRUE))), "\n")
+}
 
-  # Check if it's a list with expected regions
-  expected_regions <- c("Girona", "Barcelona", "Tarragona")
-  expected_rows <- c("Girona" = 19, "Barcelona" = 4, "Tarragona" = 16)
+## Cargar y validar datos de cobertura del suelo
+if (file.exists(here("data","all_land_cover_data.RData"))) {
+  load(here("data","all_land_cover_data.RData"))
+  
+  cat("\nValidación de datos de cobertura del suelo:\n")
+  for(region in names(land_cover_data)) {
+    cat("-", region, ":", nrow(land_cover_data[[region]]), "observaciones\n")
+  }
+}
 
-  cat("Region presence check:\n")
-  for (region in expected_regions) {
-    if (region %in% names(data)) {
-      cat("  Region '", region, "' is present with ", nrow(data[[region]]), " observations\n", sep = "")
-
-      # Check row count
-      if (nrow(data[[region]]) != expected_rows[region]) {
-        cat("  WARNING: Expected ", expected_rows[region], " rows for ",
-            region, ", but found ", nrow(data[[region]]), "\n", sep = "")
-      }
-    } else {
-      cat("  WARNING: Region '", region, "' is missing!\n", sep = "")
+## Cargar y validar datos de gestión
+if (file.exists(here("data","all_management_data.RData"))) {
+  load(here("data","all_management_data.RData"))
+  
+  cat("\nValidación de datos de gestión:\n")
+  for(region in names(management_data)) {
+    if(!is.null(management_data[[region]])) {
+      cat("-", region, ":", nrow(management_data[[region]]), "observaciones\n")
     }
   }
-
-  # Expected column patterns for land cover data
-  id_col_pattern <- "^id_beach$"
-  expected_50m_patterns <- c(
-    "scrubland", "grassland", "communication_routes", "urban",
-    "forestry_bare_soil", "forests", "lagoon_and_salt_marshes",
-    "crops", "freshwater"
-  )
-
-  # Validate each region's data structure
-  cat("\nValidating data structure for each region:\n")
-
-  for (region in intersect(names(data), expected_regions)) {
-    region_data <- data[[region]]
-    cat("\n  Region:", region, "\n")
-
-    # Check for 19 columns (id_beach + 9 for 50m + 9 for 100m)
-    cat("  Column count:", ncol(region_data), "(expected 19)\n")
-    if (ncol(region_data) != 19) {
-      cat("  WARNING: Expected 19 columns, found", ncol(region_data), "\n")
-    }
-
-    # Check for id_beach column
-    id_cols <- grep(id_col_pattern, names(region_data), value = TRUE)
-    if (length(id_cols) > 0) {
-      cat("  ID column found:", id_cols[1], "\n")
-    } else {
-      cat("  WARNING: No 'id_beach' column found!\n")
-    }
-
-    # Find 50m and 100m columns
-    cols_50m <- grep("50m|50 m|x50", names(region_data), ignore.case = TRUE, value = TRUE)
-    cols_100m <- grep("100m|100 m|x100", names(region_data), ignore.case = TRUE, value = TRUE)
-
-    cat("  Found", length(cols_50m), "columns for 50m land cover (expected 9)\n")
-    cat("  Found", length(cols_100m), "columns for 100m land cover (expected 9)\n")
-
-    # Check for expected land cover types in 50m columns
-    cat("\n  Checking for expected 50m land cover types:\n")
-    for (pattern in expected_50m_patterns) {
-      matches <- grep(pattern, cols_50m, ignore.case = TRUE, value = TRUE)
-      if (length(matches) <= 0) {
-        cat("    WARNING: No column matching '", pattern, "' pattern for 50m\n", sep = "")
-      }
-    }
-
-    # Check for expected land cover types in 100m columns
-    cat("\n  Checking for expected 100m land cover types:\n")
-    for (pattern in expected_50m_patterns) {
-      matches <- grep(pattern, cols_100m, ignore.case = TRUE, value = TRUE)
-      if (length(matches) <= 0) {
-        cat("    WARNING: No column matching '", pattern, "' pattern for 100m\n", sep = "")
-      }
-    }
-
-    # Check if all columns are numeric
-    numeric_cols <- sapply(region_data, is.numeric)
-    cat("\n  Numeric columns:", sum(numeric_cols), "out of", ncol(region_data), "\n")
-    if (sum(!numeric_cols) > 0) {
-      cat("  WARNING: The following columns are not numeric:\n")
-      for (col in names(region_data)[!numeric_cols]) {
-        cat("    '", col, "' (class: ", class(region_data[[col]]), ")\n", sep = "")
-      }
-    }
-
-    # Validate that 50m columns sum to 100 (allowing for rounding errors)
-    if (length(cols_50m) > 0) {
-      cat("\n  Validating 50m columns sum to 100%:\n")
-
-      # Calculate row sums for 50m columns
-      row_sums_50m <- rowSums(region_data[, cols_50m, drop = FALSE], na.rm = TRUE)
-      valid_sums <- abs(row_sums_50m - 100) <= 0.15  # Allow for small rounding errors
-
-      cat("    Rows with valid sums (approx 100%):", sum(valid_sums), "out of", length(row_sums_50m), "\n")
-      if (sum(!valid_sums) > 0) {
-        cat("    WARNING: The following rows have 50m sums significantly different from 100%:\n")
-        invalid_rows <- which(!valid_sums)
-        for (i in head(invalid_rows, 5)) {
-          cat("      Row ", i, " (id_beach=", region_data$id_beach[i],
-              "): sum = ", row_sums_50m[i], "\n", sep = "")
-        }
-      }
-    }
-
-    # Validate that 100m columns sum to 100 (allowing for rounding errors)
-    if (length(cols_100m) > 0) {
-      cat("\n  Validating 100m columns sum to 100%:\n")
-
-      # Calculate row sums for 100m columns
-      row_sums_100m <- rowSums(region_data[, cols_100m, drop = FALSE], na.rm = TRUE)
-      valid_sums <- abs(row_sums_100m - 100) <= 0.15  # Allow for small rounding errors
-
-      cat("    Rows with valid sums (approx 100%):", sum(valid_sums), "out of", length(row_sums_100m), "\n")
-      if (sum(!valid_sums) > 0) {
-        cat("    WARNING: The following rows have 100m sums significantly different from 100%:\n")
-        invalid_rows <- which(!valid_sums)
-        for (i in head(invalid_rows, 5)) {
-          cat("      Row ", i, " (id_beach=", region_data$id_beach[i],
-              "): sum = ", row_sums_100m[i], "\n", sep = "")
-        }
-      }
-    }
-  }
-
-  cat("\nLand cover data validation complete.\n")
-  cat("=============================================\n\n")
 }
 ```
 
-La validación clave para los datos de cobertura del suelo fue asegurar que los porcentajes para diferentes tipos de cobertura del suelo en cada distancia (50m y 100m) sumaran aproximadamente 100%.
+A partir de los archivos fuente de relevamiento, se generaron tres archivos de datos limpios mediante preprocesamiento: observaciones de especies, cobertura del suelo y prácticas de gestión, todos desagregados por provincia.
 
-#### Validación de Datos de Gestión
-
-La validación de datos de gestión se centró en:
-
-```{r}
-#| label: management-validation
-#| echo: false
-#| eval: true
-#| output: false
-validate_management_data <- function(data) {
-  cat("===== Validating management_data =====\n\n")
-
-  # Check if it's a list with expected regions
-  expected_regions <- c("Girona", "Barcelona", "Tarragona")
-  expected_rows <- c("Girona" = 19, "Barcelona" = 4, "Tarragona" = 16)
-
-  cat("Region presence check:\n")
-  for (region in expected_regions) {
-    if (region %in% names(data)) {
-      cat("  Region '", region, "' is present with ", nrow(data[[region]]), " observations\n", sep = "")
-
-      # Check row count
-      if (nrow(data[[region]]) != expected_rows[region]) {
-        cat("  WARNING: Expected ", expected_rows[region], " rows for ",
-            region, ", but found ", nrow(data[[region]]), "\n", sep = "")
-      }
-    } else {
-      cat("  WARNING: Region '", region, "' is missing!\n", sep = "")
-    }
-  }
-
-  # Expected columns for management data
-  expected_columns <- c("id_plot", "id_beach",
-                        "managed_paths", "rope_fences", "mechanical_cleaning",
-                        "surface_area_occupied_by_seasonal_services_and_amenities_on_or_less_than_5_m_from_the_dunes",
-                        "surface_area_of_parking_or_other_fixed_services_on_or_less_than_5_m_from_the_dunes",
-                        "protection_of_the_system_and_the_immediate_environment",
-                        "degree_of_protection_according_to_the_iucn_classification")
-
-  # Validate each region's data structure
-  cat("\nValidating data structure for each region:\n")
-
-  for (region in intersect(names(data), expected_regions)) {
-    region_data <- data[[region]]
-    cat("\n  Region:", region, "\n")
-
-    # Check columns exist
-    cat("  Column presence check:\n")
-    missing_cols <- setdiff(expected_columns, names(region_data))
-    present_cols <- intersect(expected_columns, names(region_data))
-
-    cat("  Present expected columns:", length(present_cols), "out of", length(expected_columns), "\n")
-    if (length(missing_cols) > 0) {
-      cat("  WARNING: Missing expected columns:", toString(missing_cols), "\n")
-    }
-
-    # Validate that management rating columns only contain integer values 0-5
-    # These are all columns from managed_paths onwards
-    management_cols <- expected_columns[4:length(expected_columns)]
-    present_management_cols <- intersect(management_cols, names(region_data))
-
-    cat("\n  Validating management rating columns (integers 0-5):\n")
-
-    # Function to check if column has valid values (0-5 integer values)
-    check_management_col <- function(col_name) {
-      values <- region_data[[col_name]]
-      valid_values <- (values >= 0 & values <= 5 & values == floor(values))
-      return(list(
-        valid = all(valid_values),
-        invalid_values = values[!valid_values]
-      ))
-    }
-
-    # Apply check to all management columns
-    for (col in present_management_cols) {
-      col_check <- check_management_col(col)
-      cat("  Column '", col, "': ", ifelse(col_check$valid, "VALID", "INVALID"), "\n", sep = "")
-
-      # If invalid, show examples
-      if (!col_check$valid) {
-        cat("    Invalid values: ", toString(head(col_check$invalid_values, 5)), "\n", sep = "")
-      }
-    }
-  }
-
-  cat("\nManagement data validation complete.\n")
-  cat("=============================================\n\n")
-}
-```
-
-La validación más importante para los datos de gestión fue asegurar que las columnas de calificación de gestión contuvieran solo valores enteros entre 0 y 5.
-
-### Ejecución de la Validación
-
-Después de crear las funciones de validación, necesitan ser ejecutadas en los archivos de datos procesados. Esto se hace cargando cada uno de los archivos RData guardados y pasándolos a la función de validación apropiada.
-
-#### Tabla Resumen de Validación
-
-La siguiente tabla proporciona una visión general completa de todas las validaciones realizadas en los diferentes dataframes en este proyecto:
-
-| Conjunto de Datos | Descripción de la Validación | Formato/Valor Esperado | Archivo |
-|------------|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|
-| Datos Principales | Recuento de filas | 278 observaciones | processed_data_clean.RData |
-| Datos Principales | Presencia de columnas | Incluye "plot", "id_beach", "beach", "id_transect", "id_plot", "transect", "eunis" | processed_data_clean.RData |
-| Datos Principales | Formato de parcela | "D+_D+_D+" (ej., "1_2_3") | processed_data_clean.RData |
-| Datos Principales | Formato id_beach | Valores enteros | processed_data_clean.RData |
-| Datos Principales | Formato id_transect | Valores enteros | processed_data_clean.RData |
-| Datos Principales | Formato id_plot | Valores enteros | processed_data_clean.RData |
-| Datos Principales | Formato de transecto | "D+_D+" (ej., "1_2") | processed_data_clean.RData |
-| Datos Principales | Concatenación de parcela | plot = id_beach_id_transect_id_plot | processed_data_clean.RData |
-| Datos Principales | Valores de abundancia de especies | Enteros entre 0-5 | processed_data_clean.RData |
-| Cobertura del Suelo | Presencia de regiones | Incluye "Girona", "Barcelona", "Tarragona" | all_land_cover_data.RData |
-| Cobertura del Suelo | Recuento de filas | Girona: 19, Barcelona: 4, Tarragona: 16 | all_land_cover_data.RData |
-| Cobertura del Suelo | Recuento de columnas | 19 columnas (id_beach + 9 para 50m + 9 para 100m) | all_land_cover_data.RData |
-| Cobertura del Suelo | Columna ID | Contiene columna "id_beach" | all_land_cover_data.RData |
-| Cobertura del Suelo | Tipos de cobertura del suelo | Contiene columnas para: matorral, pastizal, vías de comunicación, urbano, suelo forestal desnudo, bosques, laguna y marismas, cultivos, agua dulce | all_land_cover_data.RData |
-| Cobertura del Suelo | Tipos de columnas | Todas las columnas son numéricas (excepto ID) | all_land_cover_data.RData |
-| Cobertura del Suelo | Suma de columnas 50m | Cada fila suma aproximadamente 100% | all_land_cover_data.RData |
-| Cobertura del Suelo | Suma de columnas 100m | Cada fila suma aproximadamente 100% | all_land_cover_data.RData |
-| Gestión | Presencia de regiones | Incluye "Girona", "Barcelona", "Tarragona" | all_management_data.RData |
-| Gestión | Recuento de filas | Girona: 19, Barcelona: 4, Tarragona: 16 | all_management_data.RData |
-| Gestión | Presencia de columnas | Contiene columnas clave de gestión (ej., senderos gestionados, cercas de cuerda, etc.) | all_management_data.RData |
-| Gestión | Formato de calificación | Las calificaciones de gestión son enteros entre 0-5 | all_management_data.RData |
-
-Este marco de validación asegura que todos los conjuntos de datos mantengan una estructura, formato y calidad consistente en todas las etapas del análisis.
-
-```{r}
-#| label: execute-validation
-#| echo: false
-#| eval: true
-#| output: false
-## Cargar las bibliotecas requeridas
-cat("Iniciando validación de datos...\n\n")
-
-## Cargar main_data
-cat("Cargando main_data...\n")
-if (file.exists("../data/processed_data_clean.RData")) {
-  load("../data/processed_data_clean.RData")
-  validate_main_data(main_data)
-} else {
-  cat("ERROR: ¡Archivo 'data/processed_data_clean.RData' no encontrado!\n\n")
-}
-
-## Cargar land_cover_data
-cat("Cargando land_cover_data...\n")
-if (file.exists("../data/all_land_cover_data.RData")) {
-  load("../data/all_land_cover_data.RData")
-  validate_land_cover_data(land_cover_data)
-} else {
-  cat("ERROR: ¡Archivo 'data/all_land_cover_data.RData' no encontrado!\n\n")
-}
-
-## Cargar management_data (marcador de posición para implementación futura)
-cat("Cargando management_data...\n")
-if (file.exists("../data/all_management_data.RData")) {
-  load("../data/all_management_data.RData")
-  validate_management_data(management_data)
-} else {
-  cat("ERROR: ¡Archivo 'data/all_management_data.RData' no encontrado!\n\n")
-}
-
-cat("Validación completa.\n")
-```
-
-
-### Resumen
-
-El proceso de exploración y validación de datos estableció una base sólida para análisis posteriores al:
-
-1. Cargar y limpiar los datos brutos del libro de Excel
-2. Estandarizar nombres y formatos de columnas
-3. Convertir tipos de datos apropiadamente para análisis futuros
-4. Estructurar los datos consistentemente a través de regiones geográficas
-5. Validar la integridad y calidad de los conjuntos de datos procesados
-
-Los conjuntos de datos procesados resultantes se guardaron como archivos RData para una carga eficiente en pasos de análisis posteriores:
-
-1. `processed_data_clean.RData` - Conjunto de datos principal de observaciones de especies
-2. `all_land_cover_data.RData` - Porcentajes de cobertura del suelo para cada provincia
-3. `all_management_data.RData` - Prácticas de gestión para cada provincia
-
-Estos archivos procesados forman la base para el análisis exploratorio de datos y el modelado presentado en los capítulos siguientes.
