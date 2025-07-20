@@ -5,7 +5,7 @@ project:
 book:
   title: Análisis de la Relación entre la Gestión de Playas, la Cobertura del Suelo y la Diversidad Vegetal en Dunas Costeras de Cataluña
   output-file: "tfm_victor_chura"
-  date: May, 2025
+  date: Julio 2025
   author:
     name: Victor Miguel Chura Quispe
   downloads: [pdf]
@@ -16,9 +16,8 @@ book:
     - Chapters/04_Metodologia.qmd
     - Chapters/05_Resultados.qmd
     - Chapters/06_Conclusions.qmd
-    - references.qmd
 
-  repo-url: https://github.com/nmfs-opensci/quarto-thesis
+  repo-url: https://github.com/vmchura/analysismanagementdunes
   repo-actions: [edit, source, issue]
   search: true
 
@@ -35,7 +34,7 @@ thesis:
 bibliography: [example.bib]
 cite-method: biblatex
 biblio-style: alphabetic
-biblio-title: "Referencias"
+biblio-title: "Bibliografía"
 
 execute:
   echo: false

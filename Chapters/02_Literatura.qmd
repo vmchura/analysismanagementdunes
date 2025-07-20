@@ -34,9 +34,7 @@ La vegetación presente en los sistemas dunares es clave en la retención y tran
 
 La afectación de la superficie vegetal afecta negativamente al sistema dunar, impidiendo el trasvase natural de sedimentos de una zona a otra, así como afectando la morfología de la duna [@martin_prieto_rodriguez_1996].
 
-En Cataluña, la mayoría de los sistemas dunares poseen un desarrollo medio y bajo ecológico y geomorfológico, sin embargo, presentan valores altos de índice de restauración dunar [@garcia_lozano_et_al_2019]. Se han identificado diez hábitats dunares que albergan unas 37 especies vegetales (Figura \ref{fig:especies-vegetales}).
-
-FALTA AGREGAR IMAGEN
+En Cataluña, la mayoría de los sistemas dunares poseen un desarrollo medio y bajo ecológico y geomorfológico, sin embargo, presentan valores altos de índice de restauración dunar [@garcia_lozano_et_al_2019]. Se han identificado diez hábitats dunares que albergan unas 37 especies vegetales.
 
 ## Actividad antrópica e impacto en los ecosistemas dunares
 

@@ -6,7 +6,15 @@
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
 
+
 \begin{titlepage}
+$if(thesis.logo)$
+$if(thesis.logo-height)$
+\includegraphics[height=$thesis.logo-height$]{$thesis.logo$} % University/department logo
+$else$
+\includegraphics{$thesis.logo$}
+$endif$
+$endif$
 \begin{center}
 
 \vspace*{.06\textheight}
