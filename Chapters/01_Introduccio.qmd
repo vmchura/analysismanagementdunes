@@ -59,9 +59,8 @@ Analizar la relación entre las prácticas de gestión de playas y la diversidad
 
 Este trabajo se organiza en los siguientes capítulos:
 
-- **Capítulo 2 - Literatura Relacionada y Estado del Arte**: Revisa los trabajos previos relevantes sobre ecología dunar, gestión costera y metodologías de análisis
-- **Capítulo 3 - Preliminares**: Establece los conceptos fundamentales y la terminología necesaria
-- **Capítulo 4 - Metodología**: Describe la metodología empleada y los recursos utilizados
-- **Capítulo 5 - Contribución Metodológica**: Presenta las principales aportaciones metodológicas del trabajo
-- **Capítulo 6 - Resultados**: Expone los resultados obtenidos a partir de los análisis realizados
-- **Capítulo 7 - Conclusiones**: Sintetiza las conclusiones, limitaciones y líneas futuras de investigación
+- **Capítulo 2 - Marco Teórico: Antecedentes y
+Estado del Arte**: Revisa los trabajos previos relevantes sobre ecología dunar, gestión costera y metodologías de análisis
+- **Capítulo 3 - Metodología**: Describe la metodología empleada y los recursos utilizados
+- **Capítulo 4 - Resultados**: Expone los resultados obtenidos a partir de los análisis realizados
+- **Capítulo 5 - Conclusiones**: Sintetiza las conclusiones, limitaciones y líneas futuras de investigación
