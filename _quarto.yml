@@ -47,7 +47,7 @@ format:
   quarto-thesis-pdf:
     classoption: ["11pt", "singlespacing", "headsepline"]
     documentclass: MastersDoctoralThesis
-    urlcolor: red
+    urlcolor: blue
     toclinkcolor: black
     toc-depth: 2
     # Load babel early with all required options before any other packages
