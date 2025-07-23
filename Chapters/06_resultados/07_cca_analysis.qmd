@@ -533,11 +533,13 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
   env_var_table <- data.frame(
     Environmental_Variable = rownames(combined_sig$variables),
     F_Value = round(combined_sig$variables$F, 2),
-    P_Value = round(combined_sig$variables$`Pr(>F)`, 3),
-    Significance = ifelse(combined_sig$variables$`Pr(>F)` < 0.001, "***",
-                         ifelse(combined_sig$variables$`Pr(>F)` < 0.01, "**",
-                               ifelse(combined_sig$variables$`Pr(>F)` < 0.05, "*",
-                                     ifelse(combined_sig$variables$`Pr(>F)` < 0.1, ".", ""))))
+    P_Value_with_Sig = paste0(
+      round(combined_sig$variables$`Pr(>F)`, 3),
+      ifelse(combined_sig$variables$`Pr(>F)` < 0.001, " ***",
+             ifelse(combined_sig$variables$`Pr(>F)` < 0.01, " **",
+                   ifelse(combined_sig$variables$`Pr(>F)` < 0.05, " *",
+                         ifelse(combined_sig$variables$`Pr(>F)` < 0.1, " .", " ns"))))
+    )
   )
   
   # Eliminar la fila 'Residual' si existe
@@ -577,9 +579,9 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
   env_var_table <- env_var_table[order(-env_var_table$F_Value), ]
   
   knitr::kable(env_var_table,
-               col.names = c("Variable Ambiental", "Valor F", "Valor P", "Significancia"),
-               align = c("l", "c", "c", "c"),
-               caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1",
+               col.names = c("Variable Ambiental", "Valor F", "Valor P"),
+               align = c("l", "c", "c"),
+               caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, ns = no significativo",
                row.names = FALSE)
 } else {
   cat("Resultados de prueba de significancia de variables ambientales no disponibles.\n")
