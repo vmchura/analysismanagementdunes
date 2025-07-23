@@ -79,3 +79,90 @@ format:
               \renewcommand{\supervisor}{Tutor}
             }
           }
+          % Custom title page layout
+          \makeatletter
+          \renewcommand{\maketitle}{%
+            \begin{titlepage}
+              \newgeometry{margin=2.5cm}
+              
+              % University header with logo
+              \begin{minipage}[t]{0.3\textwidth}
+                \includegraphics[height=2cm]{images/logo.png}
+              \end{minipage}%
+              \begin{minipage}[t]{0.7\textwidth}
+                \raggedright
+                {\large\bfseries Universitat de Girona\\}
+                {\large\bfseries Escola Politècnica Superior\\}
+              \end{minipage}
+              
+              \vspace{2.5cm}
+              
+              % Title section
+              \begin{center}
+                {\huge\bfseries Trabajo Final de Máster}
+              \end{center}
+              
+              \vspace{1.5cm}
+              
+              % Study program in box
+              \noindent\fbox{\parbox{\textwidth}{%
+                \vspace{0.3cm}
+                {\large Estudio: Máster en Ciencia de Datos}
+                \vspace{0.3cm}
+              }}
+              
+              \vspace{0.8cm}
+              
+              % Title in box
+              \noindent\fbox{\parbox{\textwidth}{%
+                \vspace{0.3cm}
+                {\large Título: \@title}
+                \vspace{0.3cm}
+              }}
+              
+              \vspace{0.8cm}
+              
+              % Document type in box
+              \noindent\fbox{\parbox{\textwidth}{%
+                \vspace{0.3cm}
+                {\large Documento: Memoria}
+                \vspace{0.3cm}
+              }}
+              
+              \vspace{0.8cm}
+              
+              % Student info in box
+              \noindent\fbox{\parbox{\textwidth}{%
+                \vspace{0.3cm}
+                {\large Alumno: \@author}
+                \vspace{0.3cm}
+              }}
+              
+              \vspace{0.8cm}
+              
+              % Supervisor and department info in box
+              \noindent\fbox{\parbox{\textwidth}{%
+                \vspace{0.3cm}
+                {\large Tutor: Dr. Javier Palarea Albaladejo\\
+                Departamento: Escola Politècnica Superior\\
+                Área: Ciencia de Datos}
+                \vspace{0.3cm}
+              }}
+              
+              \vspace{0.8cm}
+              
+              % Date in box
+              \noindent\fbox{\parbox{\textwidth}{%
+                \vspace{0.3cm}
+                {\large Convocatoria (mes/año): \@date}
+                \vspace{0.3cm}
+              }}
+              
+              \restoregeometry
+            \end{titlepage}
+            \cleardoublepage
+          }
+          \makeatother
+          
+          % Force title page to appear first
+          \AtBeginDocument{\maketitle}
