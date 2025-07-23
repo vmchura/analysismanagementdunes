@@ -46,7 +46,7 @@
 {{< include 06_resultados/06_nmds_regional_analysis.qmd >}}
 :::
 
-## Análisis de Correspondencias Canónicas (CCA) {#sec-analisis-cca}
+## Análisis de Correspondencias Canónicas {#sec-analisis-cca}
 
 ::: {#sec-cca-50m-content}
 {{< include 06_resultados/07_cca_analysis.qmd >}}
