@@ -28,7 +28,7 @@ Se utilizaron múltiples índices de diversidad para caracterizar las comunidade
 
 $H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
 
-donde pi es la proporción de cada especie en la comunidad. Valores altos indican mayor diversidad.
+donde $p_i$ es la proporción de cada especie en la comunidad. Valores altos indican mayor diversidad.
 
 **Equitatividad de Pielou** (J') mide qué tan uniformemente están distribuidas las abundancias entre especies:
 
