@@ -799,11 +799,11 @@ if (interactive()) cat("Análisis RDA exitosos:", nrow(rda_summary), "\n")
 ```
 
 
-La @tbl-rda-summary presenta los resultados principales del análisis de redundancia (RDA) aplicado por separado a cada región. La significancia estadística indica que las relaciones observadas entre gestión y vegetación no alcanzan la significancia estadística. El número de variables de gestión seleccionadas mediante forward selection varió entre regiones, sugiriendo diferentes patrones de influencia de las prácticas de manejo.
+La @tbl-rda-summary presenta los resultados principales del RDA aplicado por separado a cada región. La significancia estadística indica que las relaciones observadas entre gestión y vegetación no alcanzan la significancia estadística. El número de variables de gestión seleccionadas mediante forward selection varió entre regiones, sugiriendo diferentes patrones de influencia de las prácticas de manejo.
 
 ```{r}
 #| label: tbl-rda-summary
-#| tbl-cap: "Resumen de resultados del análisis de redundancia (RDA) por región mostrando varianza explicada, significancia estadística y número de variables de gestión utilizadas y seleccionadas."
+#| tbl-cap: "Resumen de resultados del RDA por región mostrando varianza explicada, significancia estadística y número de variables de gestión utilizadas y seleccionadas."
 #| echo: false
 #| eval: true
 #| output: true
@@ -838,7 +838,7 @@ Los biplots RDA de la @fig-rda-biplots visualizan las relaciones entre la compos
 
 ```{r}
 #| label: fig-rda-biplots
-#| fig-cap: "Biplots del análisis de redundancia (RDA) por región. Las flechas rojas indican variables de gestión (longitud = importancia), puntos verdes muestran especies principales y puntos azules representan playas. La disposición espacial refleja las asociaciones entre gestión y composición vegetal."
+#| fig-cap: "Biplots del RDA por región. Las flechas rojas indican variables de gestión (longitud = importancia), puntos verdes muestran especies principales y puntos azules representan playas. La disposición espacial refleja las asociaciones entre gestión y composición vegetal."
 #| echo: false
 #| eval: true
 #| output: true
@@ -1110,7 +1110,7 @@ run_combined_rda <- function(all_region_datasets, verbose = TRUE) {
 ```
 ```{r}
 #| label: fig-combined-rda-summary
-#| fig-cap: "Análisis de redundancia combinado controlando por efectos regionales. El modelo permite separar los efectos puros de gestión de aquellos confundidos con diferencias regionales, proporcionando una evaluación más precisa del impacto de las prácticas de manejo."
+#| fig-cap: "RDA combinado controlando por efectos regionales. El modelo permite separar los efectos puros de gestión de aquellos confundidos con diferencias regionales, proporcionando una evaluación más precisa del impacto de las prácticas de manejo."
 #| echo: false
 #| eval: true
 #| output: true
@@ -1313,7 +1313,7 @@ La @fig-variance-partition cuantifica la contribución relativa de los efectos d
 
 ```{r}
 #| label: fig-variance-partition
-#| fig-cap: "Partición de varianza mediante análisis de redundancia combinado."
+#| fig-cap: "Partición de varianza mediante RDA combinado."
 #| echo: false
 #| eval: true
 #| output: true
@@ -1386,7 +1386,7 @@ if(!is.null(variance_partition_result)) {
 
 ```{r}
 #| label: fig-combined-triplot
-#| fig-cap: "Plot del análisis de redundancia combinado."
+#| fig-cap: "Plot del RDA combinado."
 #| echo: false
 #| eval: true
 #| output: true

@@ -80,7 +80,7 @@
 ::: {#sec-simper-management-content}
 {{< include 06_resultados/11_simper_management_analysis.qmd >}}
 :::
-### Análisis de redundancia - RDA {#sec-rda-management-analysis}
+### Análisis de redundancia {#sec-rda-management-analysis}
 ::: {#sec-rda-management-content}
 {{< include 06_resultados/12_rda_management_analysis.qmd >}}
 :::

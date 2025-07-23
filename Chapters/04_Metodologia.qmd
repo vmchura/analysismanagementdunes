@@ -16,7 +16,7 @@ La distancia Bray-Curtis es una medida de disimilitud comúnmente utilizada en e
 
 ### Transformación Hellinger
 
-La transformación Hellinger es una técnica de normalización aplicada a matrices de abundancia de especies, recomendada antes de realizar análisis multivariantes lineales como el Análisis de Redundancia (RDA). Consiste en calcular la raíz cuadrada de las proporciones relativas de cada especie por sitio. Esta transformación reduce la influencia de especies dominantes y permite trabajar con datos de abundancia en métodos basados en distancias euclidianas, respetando la naturaleza composicional de los datos ecológicos.
+La transformación Hellinger es una técnica de normalización aplicada a matrices de abundancia de especies, recomendada antes de realizar análisis multivariantes lineales como el Análisis de Redundancia. Consiste en calcular la raíz cuadrada de las proporciones relativas de cada especie por sitio. Esta transformación reduce la influencia de especies dominantes y permite trabajar con datos de abundancia en métodos basados en distancias euclidianas, respetando la naturaleza composicional de los datos ecológicos.
 
 ### Índices de Diversidad
 
