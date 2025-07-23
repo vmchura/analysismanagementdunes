@@ -765,7 +765,7 @@ for(region_name in names(valid_results)) {
 
 ```{r}
 #| label: tbl-mgmt-summary
-#| tbl-cap: "Resumen de efectos de variables de gestión entre regiones, mostrando qué prácticas de gestión son más importantes para la conservación de vegetación."
+#| tbl-cap: "Resumen de efectos de variables de gestión entre regiones. Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, (en blanco) = no significativo"
 #| echo: false
 #| eval: true
 #| output: true
@@ -806,12 +806,12 @@ if(length(valid_results) > 0) {
         Region = str_to_title(region_name),
         Management_Variable = names(var_importance),
         Importance = round(var_importance, 3),
-        P_Value = ifelse(is.na(p_values), NA, round(p_values, 4)),
-        Significance = ifelse(is.na(p_values), "", 
-                             ifelse(p_values < 0.001, "***",
-                                   ifelse(p_values < 0.01, "**",
-                                         ifelse(p_values < 0.05, "*",
-                                               ifelse(p_values < 0.1, ".", ""))))),
+        P_Value_with_Sig = ifelse(is.na(p_values), "N/A",
+                                 paste0(round(p_values, 4),
+                                       ifelse(p_values < 0.001, " ***",
+                                             ifelse(p_values < 0.01, " **",
+                                                   ifelse(p_values < 0.05, " *",
+                                                         ifelse(p_values < 0.1, " .", " ")))))),
         stringsAsFactors = FALSE
       )
       
@@ -827,14 +827,16 @@ if(length(valid_results) > 0) {
     # Replace NA with "N/A" for display
     mgmt_effects_summary$P_Value <- ifelse(is.na(mgmt_effects_summary$P_Value), "N/A", as.character(mgmt_effects_summary$P_Value))
     
-    knitr::kable(mgmt_effects_summary,
-                 col.names = c("Región", "Variable de Gestión", "Importancia", "Valor P", "Sig."),
-                 caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1",
-                 format = "latex", 
+    display_table <- mgmt_effects_summary %>%
+      select(Region, Management_Variable, Importance, P_Value_with_Sig)
+
+    knitr::kable(display_table,
+                 col.names = c("Región", "Variable de Gestión", "Importancia", "Valor P"),
+                 format = "latex",
                  booktabs = TRUE,
                  row.names = FALSE) %>%
-  kable_styling(latex_options = "hold_position") %>%
-  column_spec(2, width = "8cm")
+      kable_styling(latex_options = "hold_position") %>%
+      column_spec(2, width = "8cm")
   } else {
     cat("No se pudo crear el resumen de efectos de gestión.\n")
   }

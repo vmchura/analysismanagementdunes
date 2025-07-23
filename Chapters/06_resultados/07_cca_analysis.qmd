@@ -535,10 +535,10 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
     F_Value = round(combined_sig$variables$F, 2),
     P_Value_with_Sig = paste0(
       round(combined_sig$variables$`Pr(>F)`, 3),
-      ifelse(combined_sig$variables$`Pr(>F)` < 0.001, " ***",
-             ifelse(combined_sig$variables$`Pr(>F)` < 0.01, " **",
-                   ifelse(combined_sig$variables$`Pr(>F)` < 0.05, " *",
-                         ifelse(combined_sig$variables$`Pr(>F)` < 0.1, " .", " ns"))))
+      ifelse(combined_sig$variables$`Pr(>F)` < 0.001, " [***]",
+             ifelse(combined_sig$variables$`Pr(>F)` < 0.01, " [**]",
+                   ifelse(combined_sig$variables$`Pr(>F)` < 0.05, " [*]",
+                         ifelse(combined_sig$variables$`Pr(>F)` < 0.1, " [.]", " "))))
     )
   )
   
@@ -581,7 +581,7 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
   knitr::kable(env_var_table,
                col.names = c("Variable Ambiental", "Valor F", "Valor P"),
                align = c("l", "c", "c"),
-               caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, ns = no significativo",
+               caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, (en blanco) = no significativo",
                row.names = FALSE)
 } else {
   cat("Resultados de prueba de significancia de variables ambientales no disponibles.\n")
