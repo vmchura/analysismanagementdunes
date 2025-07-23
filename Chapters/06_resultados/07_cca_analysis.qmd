@@ -331,7 +331,7 @@ combined_sig <- test_env_significance(combined_cca)
 
 
 
-##### Análisis CCA Combinado para Todas las Regiones
+#### Análisis CCA Combinado para Todas las Regiones
 
 El análisis CCA combinado incluye 45 playas de las tres regiones catalanas, explicando el 23.4% de la varianza en composición de especies.
 La @fig-cca-combined identifica principalmente el eje Urbano-Natural; las flechas de "Urbano" y "Vías de Comunicación" se oponen a "Agua Dulce", "Pastizal" y "Matorral", indicando el contraste fundamental entre desarrollo humano y hábitats naturales.
@@ -410,13 +410,13 @@ if(length(regional_plots) > 0) {
 }
 ```
 
-##### Patrones Regionales Específicos
+**Patrones Regionales Específicos**
 
-**Girona** (47.4% varianza explicada): Dominan gradientes naturales con fuertes ejes de bosques y urbano. Las especies se distribuyen principalmente según la proximidad a bosques y otros tipo de suelos naturales.
+* Girona: (47.4% varianza explicada): Dominan gradientes naturales con fuertes ejes de bosques y urbano. Las especies se distribuyen principalmente según la proximidad a bosques y otros tipo de suelos naturales.
 
-**Barcelona** (100.0% varianza explicada): El gradiente urbano es el factor dominante, con "Urbano" y "Vías de Comunicación" como vectores más largos. Existen especies que se posicionan en dirección opuesta a la  influencia metropolitana.
+* Barcelona: (100.0% varianza explicada): El gradiente urbano es el factor dominante, con "Urbano" y "Vías de Comunicación" como vectores más largos. Existen especies que se posicionan en dirección opuesta a la  influencia metropolitana.
 
-**Tarragona** (52.9% varianza explicada): Muestra un patrón mixto con gradientes de humedad ("Lagunas y Marismas") y "Matorral" como principales estructuradores.
+* Tarragona: (52.9% varianza explicada): Muestra un patrón mixto con gradientes de humedad ("Lagunas y Marismas") y "Matorral" como principales estructuradores.
 
 ```{r}
 #| label: tbl-cca-summary
