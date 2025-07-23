@@ -199,6 +199,40 @@ girona_cca <- run_cca_analysis(beaches_by_region$Girona, land_cover_data$Girona,
 barcelona_cca <- run_cca_analysis(beaches_by_region$Barcelona, land_cover_data$Barcelona, "Barcelona")
 tarragona_cca <- run_cca_analysis(beaches_by_region$Tarragona, land_cover_data$Tarragona, "Tarragona")
 
+# Function to run comprehensive CCA diagnostics for any region
+run_cca_diagnostics <- function(cca_analysis, region_name) {
+
+  cat("=== ", toupper(region_name), " CCA DIAGNOSTICS ===\n")
+
+  # Basic data structure
+  n_beaches <- nrow(cca_analysis$species_matrix)
+  n_species <- ncol(cca_analysis$species_matrix)
+  n_env_vars <- ncol(cca_analysis$env_matrix)
+  df <- n_beaches - n_env_vars - 1
+
+  cat("Number of beaches:", n_beaches, "\n")
+  cat("Number of species:", n_species, "\n")
+  cat("Number of environmental variables:", n_env_vars, "\n")
+  cat("Degrees of freedom:", df, "\n")
+
+  # Check for potential issues
+  if(df <= 0) {
+    cat("⚠️  WARNING: Negative or zero degrees of freedom - model is overfitted!\n")
+  } else if(df < 3) {
+    cat("⚠️  WARNING: Very low degrees of freedom - results may be unreliable!\n")
+  }
+}
+
+# Run diagnostics for all three regions
+regions_list <- list(
+  list(name = "Girona", cca = girona_cca),
+  list(name = "Barcelona", cca = barcelona_cca),
+  list(name = "Tarragona", cca = tarragona_cca)
+)
+
+for(region in regions_list) {
+  run_cca_diagnostics(region$cca, region$name)
+}
 # Combinar todas las regiones para un análisis comprensivo
 # Preparar matriz combinada de especies
 all_species_data <- bind_rows(
@@ -414,7 +448,7 @@ if(length(regional_plots) > 0) {
 
 * Girona: (47.4% varianza explicada): Dominan gradientes naturales con fuertes ejes de bosques y urbano. Las especies se distribuyen principalmente según la proximidad a bosques y otros tipo de suelos naturales.
 
-* Barcelona: (100.0% varianza explicada): El gradiente urbano es el factor dominante, con "Urbano" y "Vías de Comunicación" como vectores más largos. Existen especies que se posicionan en dirección opuesta a la  influencia metropolitana.
+* Barcelona: (100.0% varianza explicada): El gradiente urbano es el factor dominante, con "Urbano" y "Vías de Comunicación" como vectores más largos. Existen especies que se posicionan en dirección opuesta a la influencia metropolitana.
 
 * Tarragona: (52.9% varianza explicada): Muestra un patrón mixto con gradientes de humedad ("Lagunas y Marismas") y "Matorral" como principales estructuradores.
 
@@ -483,7 +517,7 @@ if(nrow(cca_summary) > 0) {
                align = c("l", "c", "c", "c", "c", "c"))
 }
 ```
-
+En la @tbl-cca-summary los valores NA en los estadísticos F y P para Barcelona se deben a sobreajuste estadístico: con solo 4 playas y 7 variables ambientales, los grados de libertad son negativos (-4), creando un modelo matemáticamente sobredeterminado. El 100% de varianza explicada no necesariamente refleja una relación ecológica real.
 ```{r}
 #| label: tbl-env-variables
 #| tbl-cap: "Significancia de variables ambientales individuales en el modelo CCA combinado, mostrando qué tipos de cobertura del suelo son más importantes para explicar los patrones de vegetación."
