@@ -579,7 +579,7 @@ ggplot(gradient_data, aes(x = management_rounded, y = mean_abundance, color = sp
   theme_minimal() +
   labs(
     title = "Curvas de Respuesta de Especies a lo largo del Gradiente de Intensidad de Gestión",
-    subtitle = "Respuesta de abundancia de especies a la escala ordinal de gestión (0-5)",
+    subtitle = "Respuesta de abundancia de especies a la escala ordinal de gestión (0-5). Las barras verticales muestran error estándar (SE), menor barra corresponde a mayor precisión",
     x = "Intensidad de Gestión (0 = sin gestión, 5 = gestión de alta calidad)",
     y = "Abundancia Media (%)",
     color = "Especies"
