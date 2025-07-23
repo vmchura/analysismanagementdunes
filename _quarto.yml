@@ -29,7 +29,7 @@ thesis:
   university: Universitat de Girona
   faculty: Escola Politècnica Superior
   logo: images/logo.png
-  logo-height: "2cm"
+  logo-height: "1.7cm"
 
 bibliography: [example.bib]
 cite-method: biblatex
@@ -47,8 +47,10 @@ format:
   quarto-thesis-pdf:
     classoption: ["11pt", "singlespacing", "headsepline"]
     documentclass: MastersDoctoralThesis
-    urlcolor: red
-    toclinkcolor: black
+    urlcolor: blue              # External URLs (web links)
+    linkcolor: blue             # Internal references (citations, cross-refs)
+    citecolor: blue             # Bibliography citations specifically
+    toclinkcolor: black         # Table of contents links
     toc-depth: 2
     # Load babel early with all required options before any other packages
     include-before-body:

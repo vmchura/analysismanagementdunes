@@ -286,7 +286,7 @@ all_management_distribution <- all_management_distribution %>%
   mutate(Region = factor(Region, levels = PROVINCE_ORDER))
 ```
 
-Esta sección presenta un análisis regional comprensivo que combina el Escalamiento Multidimensional No Métrico (NMDS) de vegetación de dunas costeras con las prácticas de gestión para cada una de las tres regiones catalanas: Tarragona, Barcelona y Girona. Este enfoque integrado nos permite entender cómo la intensidad de gestión (medida en una escala ordinal de 0-5) afecta los patrones de vegetación dentro de cada región biogeográfica.
+Esta sección presenta un análisis regional comprensivo que combina el NMDS de vegetación de dunas costeras con las prácticas de gestión para cada una de las tres regiones catalanas: Tarragona, Barcelona y Girona. Este enfoque integrado nos permite entender cómo la intensidad de gestión (medida en una escala ordinal de 0-5) afecta los patrones de vegetación dentro de cada región biogeográfica.
 
 El análisis regional muestra considerable superposición entre categorías de gestión en las tres regiones (@fig-regional-management-categories). Tarragona, Barcelona y Girona presentan patrones similares con amplio solapamiento entre elipses de gestión, indicando que la intensidad de manejo tiene efectos limitados sobre la composición vegetal independientemente de la región.
 

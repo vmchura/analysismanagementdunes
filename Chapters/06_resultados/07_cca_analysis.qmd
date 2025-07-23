@@ -1,6 +1,6 @@
-### Análisis CCA con Cobertura del Suelo a 50m {#sec-cca-50m-content}
+### Análisis de Correspondencias Canónicas con Cobertura del Suelo a 50m {#sec-cca-50m-content}
 
-Esta sección presenta los resultados del Análisis de Correspondencia Canónica (CCA) para explorar las relaciones entre la composición de vegetación de dunas costeras y las variables de cobertura del suelo por región. El CCA es una técnica de ordenación restringida que relaciona directamente la composición de especies con gradientes ambientales, ayudándonos a entender qué factores de cobertura del suelo explican mejor los patrones de vegetación en cada región (Girona, Barcelona y Tarragona).
+Esta sección presenta los resultados del CCA para explorar las relaciones entre la composición de vegetación de dunas costeras y las variables de cobertura del suelo por región. El CCA es una técnica de ordenación restringida que relaciona directamente la composición de especies con gradientes ambientales, ayudándonos a entender qué factores de cobertura del suelo explican mejor los patrones de vegetación en cada región (Girona, Barcelona y Tarragona).
 
 
 
@@ -199,6 +199,40 @@ girona_cca <- run_cca_analysis(beaches_by_region$Girona, land_cover_data$Girona,
 barcelona_cca <- run_cca_analysis(beaches_by_region$Barcelona, land_cover_data$Barcelona, "Barcelona")
 tarragona_cca <- run_cca_analysis(beaches_by_region$Tarragona, land_cover_data$Tarragona, "Tarragona")
 
+# Function to run comprehensive CCA diagnostics for any region
+run_cca_diagnostics <- function(cca_analysis, region_name) {
+
+  cat("=== ", toupper(region_name), " CCA DIAGNOSTICS ===\n")
+
+  # Basic data structure
+  n_beaches <- nrow(cca_analysis$species_matrix)
+  n_species <- ncol(cca_analysis$species_matrix)
+  n_env_vars <- ncol(cca_analysis$env_matrix)
+  df <- n_beaches - n_env_vars - 1
+
+  cat("Number of beaches:", n_beaches, "\n")
+  cat("Number of species:", n_species, "\n")
+  cat("Number of environmental variables:", n_env_vars, "\n")
+  cat("Degrees of freedom:", df, "\n")
+
+  # Check for potential issues
+  if(df <= 0) {
+    cat("⚠️  WARNING: Negative or zero degrees of freedom - model is overfitted!\n")
+  } else if(df < 3) {
+    cat("⚠️  WARNING: Very low degrees of freedom - results may be unreliable!\n")
+  }
+}
+
+# Run diagnostics for all three regions
+regions_list <- list(
+  list(name = "Girona", cca = girona_cca),
+  list(name = "Barcelona", cca = barcelona_cca),
+  list(name = "Tarragona", cca = tarragona_cca)
+)
+
+for(region in regions_list) {
+  run_cca_diagnostics(region$cca, region$name)
+}
 # Combinar todas las regiones para un análisis comprensivo
 # Preparar matriz combinada de especies
 all_species_data <- bind_rows(
@@ -331,7 +365,7 @@ combined_sig <- test_env_significance(combined_cca)
 
 
 
-##### Análisis CCA Combinado para Todas las Regiones
+#### Análisis CCA Combinado para Todas las Regiones
 
 El análisis CCA combinado incluye 45 playas de las tres regiones catalanas, explicando el 23.4% de la varianza en composición de especies.
 La @fig-cca-combined identifica principalmente el eje Urbano-Natural; las flechas de "Urbano" y "Vías de Comunicación" se oponen a "Agua Dulce", "Pastizal" y "Matorral", indicando el contraste fundamental entre desarrollo humano y hábitats naturales.
@@ -410,13 +444,13 @@ if(length(regional_plots) > 0) {
 }
 ```
 
-##### Patrones Regionales Específicos
+**Patrones Regionales Específicos**
 
-**Girona** (47.4% varianza explicada): Dominan gradientes naturales con fuertes ejes de bosques y urbano. Las especies se distribuyen principalmente según la proximidad a bosques y otros tipo de suelos naturales.
+* Girona: (47.4% varianza explicada): Dominan gradientes naturales con fuertes ejes de bosques y urbano. Las especies se distribuyen principalmente según la proximidad a bosques y otros tipo de suelos naturales.
 
-**Barcelona** (100.0% varianza explicada): El gradiente urbano es el factor dominante, con "Urbano" y "Vías de Comunicación" como vectores más largos. Existen especies que se posicionan en dirección opuesta a la  influencia metropolitana.
+* Barcelona: (100.0% varianza explicada): El gradiente urbano es el factor dominante, con "Urbano" y "Vías de Comunicación" como vectores más largos. Existen especies que se posicionan en dirección opuesta a la influencia metropolitana.
 
-**Tarragona** (52.9% varianza explicada): Muestra un patrón mixto con gradientes de humedad ("Lagunas y Marismas") y "Matorral" como principales estructuradores.
+* Tarragona: (52.9% varianza explicada): Muestra un patrón mixto con gradientes de humedad ("Lagunas y Marismas") y "Matorral" como principales estructuradores.
 
 ```{r}
 #| label: tbl-cca-summary
@@ -483,7 +517,7 @@ if(nrow(cca_summary) > 0) {
                align = c("l", "c", "c", "c", "c", "c"))
 }
 ```
-
+En la @tbl-cca-summary los valores NA en los estadísticos F y P para Barcelona se deben a sobreajuste estadístico: con solo 4 playas y 7 variables ambientales, los grados de libertad son negativos (-4), creando un modelo matemáticamente sobredeterminado. El 100% de varianza explicada no necesariamente refleja una relación ecológica real.
 ```{r}
 #| label: tbl-env-variables
 #| tbl-cap: "Significancia de variables ambientales individuales en el modelo CCA combinado, mostrando qué tipos de cobertura del suelo son más importantes para explicar los patrones de vegetación."
@@ -499,11 +533,13 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
   env_var_table <- data.frame(
     Environmental_Variable = rownames(combined_sig$variables),
     F_Value = round(combined_sig$variables$F, 2),
-    P_Value = round(combined_sig$variables$`Pr(>F)`, 3),
-    Significance = ifelse(combined_sig$variables$`Pr(>F)` < 0.001, "***",
-                         ifelse(combined_sig$variables$`Pr(>F)` < 0.01, "**",
-                               ifelse(combined_sig$variables$`Pr(>F)` < 0.05, "*",
-                                     ifelse(combined_sig$variables$`Pr(>F)` < 0.1, ".", ""))))
+    P_Value_with_Sig = paste0(
+      round(combined_sig$variables$`Pr(>F)`, 3),
+      ifelse(combined_sig$variables$`Pr(>F)` < 0.001, " [***]",
+             ifelse(combined_sig$variables$`Pr(>F)` < 0.01, " [**]",
+                   ifelse(combined_sig$variables$`Pr(>F)` < 0.05, " [*]",
+                         ifelse(combined_sig$variables$`Pr(>F)` < 0.1, " [.]", " "))))
+    )
   )
   
   # Eliminar la fila 'Residual' si existe
@@ -543,9 +579,9 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
   env_var_table <- env_var_table[order(-env_var_table$F_Value), ]
   
   knitr::kable(env_var_table,
-               col.names = c("Variable Ambiental", "Valor F", "Valor P", "Significancia"),
-               align = c("l", "c", "c", "c"),
-               caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1",
+               col.names = c("Variable Ambiental", "Valor F", "Valor P"),
+               align = c("l", "c", "c"),
+               caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, (en blanco) = no significativo",
                row.names = FALSE)
 } else {
   cat("Resultados de prueba de significancia de variables ambientales no disponibles.\n")

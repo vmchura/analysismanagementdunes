@@ -209,7 +209,7 @@ top_species <- species_scores %>%
   slice_head(n = 10)
 ```
 
-Esta sección presenta los resultados de un análisis de Escalamiento Multidimensional No Métrico (NMDS) para examinar cómo las prácticas de gestión de playas influyen en la composición de vegetación de dunas costeras.
+Esta sección presenta los resultados de un análisis de NMDS para examinar cómo las prácticas de gestión de playas influyen en la composición de vegetación de dunas costeras.
 
 El análisis NMDS (@fig-nmds-management-plot) muestra una considerable superposición entre las comunidades vegetales de diferentes intensidades de gestión, indicando que las prácticas de manejo tienen un efecto relativamente débil sobre la composición específica. Las elipses de los tres tipos de gestión se solapan ampliamente en el espacio de ordenación, sugiriendo que otros factores ambientales pueden tener mayor influencia que la intensidad de gestión en la estructuración de las comunidades dunares.
 
@@ -395,7 +395,7 @@ ggplot(management_practices, aes(x = Region, y = mean_score, fill = practice)) +
   theme_minimal() +
   labs(
     title = "Intensidad Promedio de Prácticas de Gestión por Región",
-    subtitle = "Puntuaciones medias en escala 0-5 con barras de error estándar",
+    subtitle = "Puntuaciones medias en escala 0-5. Las barras negras muestran error estándar (SE), menor barra corresponde a mayor precisión",
     x = "Región",
     y = "Puntuación Promedio de Gestión (0-5)",
     fill = "Práctica de Gestión"
@@ -579,7 +579,7 @@ ggplot(gradient_data, aes(x = management_rounded, y = mean_abundance, color = sp
   theme_minimal() +
   labs(
     title = "Curvas de Respuesta de Especies a lo largo del Gradiente de Intensidad de Gestión",
-    subtitle = "Respuesta de abundancia de especies a la escala ordinal de gestión (0-5)",
+    subtitle = "Respuesta de abundancia de especies a la escala ordinal de gestión (0-5). Las barras verticales muestran error estándar (SE), menor barra corresponde a mayor precisión",
     x = "Intensidad de Gestión (0 = sin gestión, 5 = gestión de alta calidad)",
     y = "Abundancia Media (%)",
     color = "Especies"

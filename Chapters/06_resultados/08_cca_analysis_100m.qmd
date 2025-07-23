@@ -1,6 +1,6 @@
-### Análisis CCA con Cobertura del Suelo a 100m
+### Análisis de Correspondencias Canónicas con Cobertura del Suelo a 100m
 
-Esta sección presenta los resultados del Análisis de Correspondencia Canónica (CCA) usando variables de cobertura del suelo medidas a **100m de distancia** de los sitios de dunas costeras.
+Esta sección presenta los resultados del CCA usando variables de cobertura del suelo medidas a **100m de distancia** de los sitios de dunas costeras.
 
 ```{r 08_07_setup, include=FALSE}
 # Opciones globales de knitr - controla todos los fragmentos de código

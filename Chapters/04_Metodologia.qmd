@@ -16,7 +16,7 @@ La distancia Bray-Curtis es una medida de disimilitud comúnmente utilizada en e
 
 ### Transformación Hellinger
 
-La transformación Hellinger es una técnica de normalización aplicada a matrices de abundancia de especies, recomendada antes de realizar análisis multivariantes lineales como el Análisis de Redundancia (RDA). Consiste en calcular la raíz cuadrada de las proporciones relativas de cada especie por sitio. Esta transformación reduce la influencia de especies dominantes y permite trabajar con datos de abundancia en métodos basados en distancias euclidianas, respetando la naturaleza composicional de los datos ecológicos.
+La transformación Hellinger es una técnica de normalización aplicada a matrices de abundancia de especies, recomendada antes de realizar análisis multivariantes lineales como el Análisis de Redundancia. Consiste en calcular la raíz cuadrada de las proporciones relativas de cada especie por sitio. Esta transformación reduce la influencia de especies dominantes y permite trabajar con datos de abundancia en métodos basados en distancias euclidianas, respetando la naturaleza composicional de los datos ecológicos.
 
 ### Índices de Diversidad
 
@@ -26,13 +26,13 @@ Se utilizaron múltiples índices de diversidad para caracterizar las comunidade
 
 **Índice de Shannon** (H') incorpora tanto la diversidad vegetal como la abundancia relativa de especies:
 
-H' = -Σ(pi × ln(pi))
+$H' = -\sum_{i=1}^{S} p_i \ln(p_i)$
 
-donde pi es la proporción de cada especie en la comunidad. Valores altos indican mayor diversidad.
+donde $p_i$ es la proporción de cada especie en la comunidad. Valores altos indican mayor diversidad.
 
 **Equitatividad de Pielou** (J') mide qué tan uniformemente están distribuidas las abundancias entre especies:
 
-J' = H' / ln(S)
+$J' = \frac{H'}{\ln(S)}$
 
 donde S es el número de especies. Valores cercanos a 1 indican distribución uniforme de abundancias.
 
