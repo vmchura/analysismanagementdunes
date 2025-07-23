@@ -209,7 +209,7 @@ top_species <- species_scores %>%
   slice_head(n = 10)
 ```
 
-Esta sección presenta los resultados de un análisis de Escalamiento Multidimensional No Métrico (NMDS) para examinar cómo las prácticas de gestión de playas influyen en la composición de vegetación de dunas costeras.
+Esta sección presenta los resultados de un análisis de NMDS para examinar cómo las prácticas de gestión de playas influyen en la composición de vegetación de dunas costeras.
 
 El análisis NMDS (@fig-nmds-management-plot) muestra una considerable superposición entre las comunidades vegetales de diferentes intensidades de gestión, indicando que las prácticas de manejo tienen un efecto relativamente débil sobre la composición específica. Las elipses de los tres tipos de gestión se solapan ampliamente en el espacio de ordenación, sugiriendo que otros factores ambientales pueden tener mayor influencia que la intensidad de gestión en la estructuración de las comunidades dunares.
 
