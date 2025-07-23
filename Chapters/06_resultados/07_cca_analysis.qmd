@@ -1,6 +1,6 @@
 ### Análisis CCA con Cobertura del Suelo a 50m {#sec-cca-50m-content}
 
-Esta sección presenta los resultados del Análisis de Correspondencia Canónica (CCA) para explorar las relaciones entre la composición de vegetación de dunas costeras y las variables de cobertura del suelo por región. El CCA es una técnica de ordenación restringida que relaciona directamente la composición de especies con gradientes ambientales, ayudándonos a entender qué factores de cobertura del suelo explican mejor los patrones de vegetación en cada región (Girona, Barcelona y Tarragona).
+Esta sección presenta los resultados del Análisis de Correspondencias Canónicas (CCA) para explorar las relaciones entre la composición de vegetación de dunas costeras y las variables de cobertura del suelo por región. El CCA es una técnica de ordenación restringida que relaciona directamente la composición de especies con gradientes ambientales, ayudándonos a entender qué factores de cobertura del suelo explican mejor los patrones de vegetación en cada región (Girona, Barcelona y Tarragona).
 
 
 

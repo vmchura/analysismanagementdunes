@@ -46,7 +46,7 @@
 {{< include 06_resultados/06_nmds_regional_analysis.qmd >}}
 :::
 
-## Análisis de Correspondencia Canónica (CCA) {#sec-analisis-cca}
+## Análisis de Correspondencias Canónicas (CCA) {#sec-analisis-cca}
 
 ::: {#sec-cca-50m-content}
 {{< include 06_resultados/07_cca_analysis.qmd >}}
@@ -70,7 +70,7 @@
 {{< include 06_resultados/10_nmds_regional_management_analysis.qmd >}}
 :::
 
-### Análisis de Correspondencia Canónica con Variables de Gestión {#sec-cca-management-analysis}
+### Análisis de Correspondencias Canónicas con Variables de Gestión {#sec-cca-management-analysis}
 
 ::: {#sec-cca-management-content}
 {{< include 06_resultados/07_cca_analysis_management.qmd >}}

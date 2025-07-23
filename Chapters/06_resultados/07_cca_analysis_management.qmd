@@ -28,7 +28,7 @@ load(here("data","all_management_data.RData"))
 
 #### Análisis CCA con Variables de Gestión por Región y Especies
 
-Este capítulo presenta el Análisis de Correspondencia Canónica (CCA) examinando las relaciones entre la composición de vegetación de dunas costeras y las prácticas de gestión de playas en las tres regiones: Girona, Barcelona y Tarragona.
+Este capítulo presenta el Análisis de Correspondencias Canónicas (CCA) examinando las relaciones entre la composición de vegetación de dunas costeras y las prácticas de gestión de playas en las tres regiones: Girona, Barcelona y Tarragona.
 
 **Aspectos clave de este análisis:**
 
@@ -520,7 +520,7 @@ create_mgmt_importance_plot <- function(cca_results) {
 }
 ```
 
-El análisis de correspondencia canónica revela relaciones débiles entre prácticas de gestión y composición vegetal (@fig-cca-mgmt-combinado). Los vectores de gestión muestran direcciones dispersas sin agrupaciones claras, indicando que ninguna práctica de manejo estructura consistentemente las comunidades vegetales. Las especies como *Eryngium* y *Plantago* aparecen asociadas débilmente con gradientes específicos de gestión, pero la varianza explicada total sugiere efectos limitados del manejo sobre la vegetación dunar.
+El análisis de Correspondencias Canónicas revela relaciones débiles entre prácticas de gestión y composición vegetal (@fig-cca-mgmt-combinado). Los vectores de gestión muestran direcciones dispersas sin agrupaciones claras, indicando que ninguna práctica de manejo estructura consistentemente las comunidades vegetales. Las especies como *Eryngium* y *Plantago* aparecen asociadas débilmente con gradientes específicos de gestión, pero la varianza explicada total sugiere efectos limitados del manejo sobre la vegetación dunar.
 
 ```{r}
 #| label: fig-cca-mgmt-combinado
