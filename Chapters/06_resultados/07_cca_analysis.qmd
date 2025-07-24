@@ -605,9 +605,8 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
                align = c("l", "c", "c"),
                row.names = FALSE) %>%
     kableExtra::footnote(
-      general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05,",
-                  ". p<0.1, (n.s.) = no significativo"),
-      fixed_small_size=TRUE)
+      general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1,",
+                  paste0(paste(rep("\u00A0", 22), collapse = ""),"(n.s.) = no significativo")))
 } else {
   cat("Resultados de prueba de significancia de variables ambientales no disponibles.\n")
 }

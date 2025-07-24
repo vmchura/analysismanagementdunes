@@ -836,9 +836,9 @@ if(exists("rda_summary") && nrow(rda_summary) > 0) {
                align = c("l", "c", "c", "c", "c", "c", "c")) %>%
     kableExtra::kable_styling(latex_options = c("hold_position", "scale_down")) %>%
     kableExtra::footnote(general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1,",
-                                     " (n.s.) = no significativo",
-                                     "NA = No aplicable debido a sobreajuste estadístico (Barcelona: datos ",
-                                     "insuficientes para test de significancia)"))
+                                     paste0(paste(rep("\u00A0", 22), collapse = ""),"(n.s.) = no significativo"),
+                                     "NA = No aplicable debido a sobreajuste estadístico (Barcelona: datos insuficientes",
+                                     "para test de significancia)"))
 } else {
   if (interactive()) cat("No se pudieron generar resultados RDA para mostrar en tabla.\n")
 }
