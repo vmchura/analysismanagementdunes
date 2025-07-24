@@ -509,12 +509,34 @@ for(region in regions) {
   }
 }
 
-# Mostrar la tabla
+# Crear tabla formateada con significancia
 if(nrow(cca_summary) > 0) {
-  knitr::kable(cca_summary, 
+  cca_summary_display <- cca_summary %>%
+    mutate(
+      # Formatear valores F como texto para mostrar NA apropiadamente
+      F_Value_Display = ifelse(is.na(Model_F_Value), "NA", as.character(Model_F_Value)),
+      # Combinar valor P y significancia en una sola columna
+      P_Value_with_Significance = case_when(
+        is.na(Model_P_Value) ~ "NA",
+        Model_P_Value < 0.001 ~ paste0(Model_P_Value, " ***"),
+        Model_P_Value < 0.01 ~ paste0(Model_P_Value, " **"), 
+        Model_P_Value < 0.05 ~ paste0(Model_P_Value, " *"),
+        Model_P_Value < 0.1 ~ paste0(Model_P_Value, " ."),
+        TRUE ~ as.character(Model_P_Value)  # Sin símbolo para no significativo (en blanco)
+      )
+    )
+  
+  knitr::kable(cca_summary_display %>%
+               select(Region, Explained_Variance_Percent, Num_Environmental_Variables, 
+                     Num_Species, F_Value_Display, P_Value_with_Significance), 
                col.names = c("Región", "Varianza Explicada (%)", "Var. Ambientales", 
                            "Especies", "Valor F", "Valor P"),
-               align = c("l", "c", "c", "c", "c", "c"))
+               align = c("l", "c", "c", "c", "c", "c")) %>%
+    kableExtra::kable_styling(latex_options = c("hold_position", "scale_down")) %>%
+    kableExtra::footnote(
+      general = c("Códigos de significancia: ** p<0.01, * p<0.05, . p<0.1, (en blanco) = no significativo",
+                  "NA = No aplicable debido a sobreajuste estadístico (Barcelona: 4 playas, 7 variables)")
+    )
 }
 ```
 En la @tbl-cca-summary los valores NA en los estadísticos F y P para Barcelona se deben a sobreajuste estadístico: con solo 4 playas y 7 variables ambientales, los grados de libertad son negativos (-4), creando un modelo matemáticamente sobredeterminado. El 100% de varianza explicada no necesariamente refleja una relación ecológica real.
@@ -581,8 +603,11 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
   knitr::kable(env_var_table,
                col.names = c("Variable Ambiental", "Valor F", "Valor P"),
                align = c("l", "c", "c"),
-               caption = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, (en blanco) = no significativo",
-               row.names = FALSE)
+               row.names = FALSE) %>%
+    kableExtra::footnote(
+      general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05,",
+                  ". p<0.1, (en blanco) = no significativo"),
+      fixed_small_size=TRUE)
 } else {
   cat("Resultados de prueba de significancia de variables ambientales no disponibles.\n")
 }

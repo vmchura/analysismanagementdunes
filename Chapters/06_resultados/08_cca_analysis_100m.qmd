@@ -355,7 +355,11 @@ if(nrow(cca_summary_100m) > 0) {
   knitr::kable(cca_summary_100m, 
                col.names = c("Región", "Varianza Explicada (%)", "Var. Ambientales", 
                            "Especies", "Valor F", "Valor P"),
-               align = c("l", "c", "c", "c", "c", "c"))
+               align = c("l", "c", "c", "c", "c", "c"))%>%
+    kableExtra::footnote(
+      general = c("Códigos de significancia: ** p<0.01, * p<0.05, . p<0.1, (en blanco) = no significativo",
+                  "NA = No aplicable debido a sobreajuste estadístico (Barcelona: 4 playas, 7 variables)")
+    )
 }
 ```
 
