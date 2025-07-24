@@ -809,7 +809,7 @@ La @tbl-rda-summary presenta los resultados principales del RDA aplicado por sep
 #| output: true
 
 if(exists("rda_summary") && nrow(rda_summary) > 0) {
-  # Crear tabla formateada
+  # Crear tabla formateada con P valores y significancia combinados
   rda_summary_display <- rda_summary %>%
     mutate(
       Region = factor(Region, levels = c("Girona", "Barcelona", "Tarragona")),
@@ -817,18 +817,26 @@ if(exists("rda_summary") && nrow(rda_summary) > 0) {
       Variance_RDA1 = paste0(RDA1_Variance, "%"),
       Variance_RDA2 = ifelse(is.na(RDA2_Variance), "—", paste0(RDA2_Variance, "%")),
       Variables_Used = paste(N_Management_Vars, "/", N_Selected_Vars),
-      Significance = ifelse(is.na(Model_P_Value), "",
-                           ifelse(Model_P_Value < 0.001, "***",
-                                 ifelse(Model_P_Value < 0.01, "**",
-                                       ifelse(Model_P_Value < 0.05, "*", "(n.s.)"))))
+      # Formatear valores F como texto para mostrar NA apropiadamente
+      F_Value_Display = ifelse(is.na(Model_F_Value), "NA", as.character(Model_F_Value)),
+      # Combinar valor P y significancia en una sola columna
+      P_Value_with_Significance = case_when(
+        is.na(Model_P_Value) ~ "NA",
+        Model_P_Value < 0.001 ~ paste0(Model_P_Value, " ***"),
+        Model_P_Value < 0.01 ~ paste0(Model_P_Value, " **"), 
+        Model_P_Value < 0.05 ~ paste0(Model_P_Value, " *"),
+        Model_P_Value < 0.1 ~ paste0(Model_P_Value, " ."),
+        Model_P_Value >= 0.1 ~ paste0(Model_P_Value, " (n.s.)"),
+      )
     ) %>%
-    select(Region, Variance_Total, Variance_RDA1, Variance_RDA2, Variables_Used, Model_F_Value, Significance)
+    select(Region, Variance_Total, Variance_RDA1, Variance_RDA2, Variables_Used, F_Value_Display, P_Value_with_Significance)
 
   knitr::kable(rda_summary_display,
-               col.names = c("Región", "Var. Total", "RDA1", "RDA2", "Var. (Total/Selec.)", "F", "Sig."),
+               col.names = c("Región", "Var. Total", "RDA1", "RDA2", "Var. (Total/Selec.)", "F", "Valor P"),
                align = c("l", "c", "c", "c", "c", "c", "c")) %>%
     kableExtra::kable_styling(latex_options = c("hold_position", "scale_down")) %>%
-    kableExtra::footnote(general = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, (n.s.) = no significativo")
+    kableExtra::footnote(general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, (n.s.) = no significativo",
+                                     "NA = No aplicable debido a sobreajuste estadístico (Barcelona: datos insuficientes para test de significancia)"))
 } else {
   if (interactive()) cat("No se pudieron generar resultados RDA para mostrar en tabla.\n")
 }
