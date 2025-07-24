@@ -395,15 +395,17 @@ ggplot(management_practices, aes(x = Region, y = mean_score, fill = practice)) +
   theme_minimal() +
   labs(
     title = "Intensidad Promedio de Prácticas de Gestión por Región",
-    subtitle = "Puntuaciones medias en escala 0-5. Las barras negras muestran error estándar (SE), menor barra corresponde a mayor precisión",
+    subtitle = "Puntuaciones medias en escala 0-5",
     x = "Región",
     y = "Puntuación Promedio de Gestión (0-5)",
-    fill = "Práctica de Gestión"
+    fill = "Práctica de Gestión",
+    caption = "Las barras negras muestran error estándar (SE), menor barra corresponde a mayor precisión"
   ) +
   theme(
     axis.text.x = element_text(face = "bold"),
     legend.position = "bottom",
     plot.title = element_text(face = "bold"),
+    plot.caption = element_text(size = 12, hjust = 0.5),
     panel.grid.major.x = element_blank()
   ) +
   scale_fill_brewer(palette = "Set2") +
@@ -579,9 +581,11 @@ ggplot(gradient_data, aes(x = management_rounded, y = mean_abundance, color = sp
   theme_minimal() +
   labs(
     title = "Curvas de Respuesta de Especies a lo largo del Gradiente de Intensidad de Gestión",
-    subtitle = "Respuesta de abundancia de especies a la escala ordinal de gestión (0-5). Las barras verticales muestran error estándar (SE), menor barra corresponde a mayor precisión",
+    subtitle = "Respuesta de abundancia de especies a la escala ordinal de gestión (0-5).",
     x = "Intensidad de Gestión (0 = sin gestión, 5 = gestión de alta calidad)",
     y = "Abundancia Media (%)",
+    caption = "Las barras negras muestran error estándar (SE), menor barra corresponde a mayor precisión",
+    plot.caption = element_text(size = 14, hjust = 0.5),
     color = "Especies"
   ) +
   theme(
