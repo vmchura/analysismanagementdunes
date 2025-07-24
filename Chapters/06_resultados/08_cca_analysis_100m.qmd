@@ -364,7 +364,7 @@ if(nrow(cca_summary_100m) > 0) {
         Model_P_Value < 0.01 ~ paste0(Model_P_Value, " **"), 
         Model_P_Value < 0.05 ~ paste0(Model_P_Value, " *"),
         Model_P_Value < 0.1 ~ paste0(Model_P_Value, " ."),
-        TRUE ~ as.character(Model_P_Value)  # Sin símbolo para no significativo (en blanco)
+        Model_P_Value >= 0.1 ~ paste0(Model_P_Value, " (n.s.)")
       )
     )
   
@@ -375,7 +375,7 @@ if(nrow(cca_summary_100m) > 0) {
                            "Especies", "Valor F", "Valor P"),
                align = c("l", "c", "c", "c", "c", "c")) %>%
     kableExtra::footnote(
-      general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, (en blanco) = no significativo",
+      general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, (n.s.) = no significativo",
                   "NA = No aplicable debido a sobreajuste estadístico (Barcelona: 4 playas, 7 variables)")
     )
 }

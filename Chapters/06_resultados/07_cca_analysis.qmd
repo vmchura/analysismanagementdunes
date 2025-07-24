@@ -522,7 +522,7 @@ if(nrow(cca_summary) > 0) {
         Model_P_Value < 0.01 ~ paste0(Model_P_Value, " **"), 
         Model_P_Value < 0.05 ~ paste0(Model_P_Value, " *"),
         Model_P_Value < 0.1 ~ paste0(Model_P_Value, " ."),
-        TRUE ~ as.character(Model_P_Value)  # Sin símbolo para no significativo (en blanco)
+        Model_P_Value >= 0.1 ~ paste0(Model_P_Value, " (n.s.)"),
       )
     )
   
@@ -534,7 +534,7 @@ if(nrow(cca_summary) > 0) {
                align = c("l", "c", "c", "c", "c", "c")) %>%
     kableExtra::kable_styling(latex_options = c("hold_position", "scale_down")) %>%
     kableExtra::footnote(
-      general = c("Códigos de significancia: ** p<0.01, * p<0.05, . p<0.1, (en blanco) = no significativo",
+      general = c("Códigos de significancia: ** p<0.01, * p<0.05, . p<0.1, (n.s.) = no significativo",
                   "NA = No aplicable debido a sobreajuste estadístico (Barcelona: 4 playas, 7 variables)")
     )
 }
@@ -557,10 +557,10 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
     F_Value = round(combined_sig$variables$F, 2),
     P_Value_with_Sig = paste0(
       round(combined_sig$variables$`Pr(>F)`, 3),
-      ifelse(combined_sig$variables$`Pr(>F)` < 0.001, " [***]",
-             ifelse(combined_sig$variables$`Pr(>F)` < 0.01, " [**]",
-                   ifelse(combined_sig$variables$`Pr(>F)` < 0.05, " [*]",
-                         ifelse(combined_sig$variables$`Pr(>F)` < 0.1, " [.]", " "))))
+      ifelse(combined_sig$variables$`Pr(>F)` < 0.001, " ***",
+             ifelse(combined_sig$variables$`Pr(>F)` < 0.01, " **",
+                   ifelse(combined_sig$variables$`Pr(>F)` < 0.05, " *",
+                         ifelse(combined_sig$variables$`Pr(>F)` < 0.1, " .", " (n.s.)"))))
     )
   )
   
@@ -606,7 +606,7 @@ if(!is.null(combined_sig) && !is.null(combined_sig$variables)) {
                row.names = FALSE) %>%
     kableExtra::footnote(
       general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05,",
-                  ". p<0.1, (en blanco) = no significativo"),
+                  ". p<0.1, (n.s.) = no significativo"),
       fixed_small_size=TRUE)
 } else {
   cat("Resultados de prueba de significancia de variables ambientales no disponibles.\n")

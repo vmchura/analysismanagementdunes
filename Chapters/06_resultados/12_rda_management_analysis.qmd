@@ -817,10 +817,10 @@ if(exists("rda_summary") && nrow(rda_summary) > 0) {
       Variance_RDA1 = paste0(RDA1_Variance, "%"),
       Variance_RDA2 = ifelse(is.na(RDA2_Variance), "—", paste0(RDA2_Variance, "%")),
       Variables_Used = paste(N_Management_Vars, "/", N_Selected_Vars),
-      Significance = ifelse(is.na(Model_P_Value), "—",
+      Significance = ifelse(is.na(Model_P_Value), "",
                            ifelse(Model_P_Value < 0.001, "***",
                                  ifelse(Model_P_Value < 0.01, "**",
-                                       ifelse(Model_P_Value < 0.05, "*", "ns"))))
+                                       ifelse(Model_P_Value < 0.05, "*", "(n.s.)"))))
     ) %>%
     select(Region, Variance_Total, Variance_RDA1, Variance_RDA2, Variables_Used, Model_F_Value, Significance)
 
@@ -828,7 +828,7 @@ if(exists("rda_summary") && nrow(rda_summary) > 0) {
                col.names = c("Región", "Var. Total", "RDA1", "RDA2", "Var. (Total/Selec.)", "F", "Sig."),
                align = c("l", "c", "c", "c", "c", "c", "c")) %>%
     kableExtra::kable_styling(latex_options = c("hold_position", "scale_down")) %>%
-    kableExtra::footnote(general = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, ns = no significativo")
+    kableExtra::footnote(general = "Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, (n.s.) = no significativo")
 } else {
   if (interactive()) cat("No se pudieron generar resultados RDA para mostrar en tabla.\n")
 }
