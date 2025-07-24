@@ -833,12 +833,20 @@ if(exists("rda_summary") && nrow(rda_summary) > 0) {
 
   knitr::kable(rda_summary_display,
                col.names = c("Región", "Var. Total", "RDA1", "RDA2", "Var. (Total/Selec.)", "F", "Valor P"),
-               align = c("l", "c", "c", "c", "c", "c", "c")) %>%
-    kableExtra::kable_styling(latex_options = c("hold_position", "scale_down")) %>%
-    kableExtra::footnote(general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1,",
-                                     paste0(paste(rep("\u00A0", 22), collapse = ""),"(n.s.) = no significativo"),
-                                     "NA = No aplicable debido a sobreajuste estadístico (Barcelona: datos insuficientes",
-                                     "para test de significancia)"))
+               align = c("l", "c", "c", "c", "c", "c", "c"),
+               format = "latex",
+               booktabs = TRUE) %>%
+    kable_styling(latex_options = c("HOLD_position", "scale_down"),
+                  full_width = FALSE,
+                  position = "center") %>%
+    kableExtra::footnote(
+      general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1,",
+                  paste0(paste(rep("\u00A0", 22), collapse = ""),"(n.s.) = no significativo"),
+                  "NA = No aplicable debido a sobreajuste estadístico (Barcelona: datos insuficientes",
+                  "para test de significancia)"),
+      general_title = "Nota:",
+      escape = FALSE
+    )
 } else {
   if (interactive()) cat("No se pudieron generar resultados RDA para mostrar en tabla.\n")
 }
