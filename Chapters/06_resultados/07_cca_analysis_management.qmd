@@ -668,10 +668,10 @@ for(region_name in all_regions) {
   } else {
     results_summary <- rbind(results_summary, data.frame(
       Region = region_display,
-      Explained_Variance = "N/A",
-      Management_Variables = "N/A",
-      Species_Count = "N/A",
-      Beach_Count = "N/A",
+      Explained_Variance = "NA",
+      Management_Variables = "NA",
+      Species_Count = "NA",
+      Beach_Count = "NA",
       stringsAsFactors = FALSE
     ))
   }
@@ -806,7 +806,7 @@ if(length(valid_results) > 0) {
         Region = str_to_title(region_name),
         Management_Variable = names(var_importance),
         Importance = round(var_importance, 3),
-        P_Value_with_Sig = ifelse(is.na(p_values), "N/A",
+        P_Value_with_Sig = ifelse(is.na(p_values), "NA",
                                  paste0(round(p_values, 4),
                                        ifelse(p_values < 0.001, " ***",
                                              ifelse(p_values < 0.01, " **",
@@ -824,8 +824,8 @@ if(length(valid_results) > 0) {
     mgmt_effects_summary <- mgmt_effects_summary %>%
       arrange(Region, desc(Importance))
     
-    # Replace NA with "N/A" for display
-    mgmt_effects_summary$P_Value <- ifelse(is.na(mgmt_effects_summary$P_Value), "N/A", as.character(mgmt_effects_summary$P_Value))
+    # Replace NA with "NA" for display
+    mgmt_effects_summary$P_Value <- ifelse(is.na(mgmt_effects_summary$P_Value), "NA", as.character(mgmt_effects_summary$P_Value))
     
     display_table <- mgmt_effects_summary %>%
       select(Region, Management_Variable, Importance, P_Value_with_Sig)

@@ -251,7 +251,7 @@ show_data_preparation_summary <- function(simper_datasets) {
         Status = "ERROR",
         Beaches = 0,
         Species = 0,
-        Management_Groups = "N/A",
+        Management_Groups = "NA",
         stringsAsFactors = FALSE
       ))
     } else {
@@ -905,7 +905,7 @@ Las muestras de Barcelona no se consideraron en este análisis porque no existen
 
 ```{r}
 #| label: tbl-simper-species
-#| tbl-cap: "Especies discriminantes principales identificadas en el análisis SIMPER por región."
+#| tbl-cap: "Top 3 especies únicas con mayor contribución a la discriminación entre grupos por región"
 #| echo: false
 #| eval: true
 #| output: true
@@ -933,7 +933,6 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
 
   knitr::kable(species_summary,  # Show top 3 unique species per region
                col.names = c("Región", "Especie Principal", "Contribución (%)"),
-               caption = "Top 3 especies únicas con mayor contribución a la discriminación entre grupos por región",
                format = "latex",
                booktabs = TRUE) %>%
     kable_styling(latex_options = c("HOLD_position", "scale_down"),
@@ -950,7 +949,7 @@ if(exists("simper_summary") && nrow(simper_summary) > 0) {
 
 ```{r}
 #| label: tbl-simper-summary
-#| tbl-cap: "Resumen de análisis SIMPER mostrando disimilitud entre grupos de gestión y especies discriminantes principales por región."
+#| tbl-cap: "Resumen de análisis SIMPER mostrando disimilitud entre grupos de gestión y especies discriminantes principales por región. SG=Sin Gestión, GB=Gestión Baja, GM=Gestión Moderada, GA=Gestión Alta"
 #| echo: false
 #| eval: true
 #| output: true
@@ -987,7 +986,6 @@ if (exists("simper_summary") && nrow(simper_summary) > 0) {
 
   knitr::kable(display_summary,
                col.names = c("Región", "Comparación", "Disimilitud (%)", "N° Especies"),
-               caption = "SG=Sin Gestión, GB=Gestión Baja, GM=Gestión Moderada, GA=Gestión Alta",
                format = "latex",
                booktabs = TRUE) %>%
     kable_styling(latex_options = c("HOLD_position", "scale_down"),
