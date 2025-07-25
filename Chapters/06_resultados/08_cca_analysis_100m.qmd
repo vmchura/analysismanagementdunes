@@ -18,6 +18,7 @@ library(gridExtra) # Para organizar múltiples gráficos
 library(RColorBrewer) # Para paletas de colores
 library(patchwork)  # Para combinar gráficos
 library(ggrepel)   # Para etiquetas de texto sin solapamiento
+library(kableExtra) # Para tablas formateadas
 library(here)
 # Cargar configuración global
 source(here("R","global_config.R"))
@@ -351,11 +352,40 @@ for(region in regions_100m) {
   }
 }
 
+# Crear tabla formateada con significancia
 if(nrow(cca_summary_100m) > 0) {
-  knitr::kable(cca_summary_100m, 
+  cca_summary_display_100m <- cca_summary_100m %>%
+    mutate(
+      # Formatear valores F como texto para mostrar NA apropiadamente
+      F_Value_Display = ifelse(is.na(Model_F_Value), "NA", as.character(Model_F_Value)),
+      # Combinar valor P y significancia en una sola columna
+      P_Value_with_Significance = case_when(
+        is.na(Model_P_Value) ~ "NA",
+        Model_P_Value < 0.001 ~ paste0(Model_P_Value, " ***"),
+        Model_P_Value < 0.01 ~ paste0(Model_P_Value, " **"), 
+        Model_P_Value < 0.05 ~ paste0(Model_P_Value, " *"),
+        Model_P_Value < 0.1 ~ paste0(Model_P_Value, " ."),
+        Model_P_Value >= 0.1 ~ paste0(Model_P_Value, " (n.s.)")
+      )
+    )
+  
+  knitr::kable(cca_summary_display_100m %>%
+               select(Region, Explained_Variance_Percent, Num_Environmental_Variables, 
+                     Num_Species, F_Value_Display, P_Value_with_Significance), 
                col.names = c("Región", "Varianza Explicada (%)", "Var. Ambientales", 
                            "Especies", "Valor F", "Valor P"),
-               align = c("l", "c", "c", "c", "c", "c"))
+               align = c("l", "c", "c", "c", "c", "c"),
+               format = "latex",
+               booktabs = TRUE) %>%
+    kable_styling(latex_options = c("HOLD_position", "scale_down"),
+                  full_width = FALSE,
+                  position = "center") %>%
+    kableExtra::footnote(
+      general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, (n.s.) = no significativo",
+                  "NA = No aplicable debido a sobreajuste estadístico (Barcelona: 4 playas, 7 variables)"),
+      general_title = "Nota:",
+      escape = FALSE
+    )
 }
 ```
 

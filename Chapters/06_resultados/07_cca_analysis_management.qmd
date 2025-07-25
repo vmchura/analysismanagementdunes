@@ -668,10 +668,10 @@ for(region_name in all_regions) {
   } else {
     results_summary <- rbind(results_summary, data.frame(
       Region = region_display,
-      Explained_Variance = "N/A",
-      Management_Variables = "N/A",
-      Species_Count = "N/A",
-      Beach_Count = "N/A",
+      Explained_Variance = "NA",
+      Management_Variables = "NA",
+      Species_Count = "NA",
+      Beach_Count = "NA",
       stringsAsFactors = FALSE
     ))
   }
@@ -765,7 +765,7 @@ for(region_name in names(valid_results)) {
 
 ```{r}
 #| label: tbl-mgmt-summary
-#| tbl-cap: "Resumen de efectos de variables de gestión entre regiones. Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, (en blanco) = no significativo"
+#| tbl-cap: "Resumen de efectos de variables de gestión entre regiones."
 #| echo: false
 #| eval: true
 #| output: true
@@ -806,12 +806,12 @@ if(length(valid_results) > 0) {
         Region = str_to_title(region_name),
         Management_Variable = names(var_importance),
         Importance = round(var_importance, 3),
-        P_Value_with_Sig = ifelse(is.na(p_values), "N/A",
+        P_Value_with_Sig = ifelse(is.na(p_values), "NA",
                                  paste0(round(p_values, 4),
                                        ifelse(p_values < 0.001, " ***",
                                              ifelse(p_values < 0.01, " **",
                                                    ifelse(p_values < 0.05, " *",
-                                                         ifelse(p_values < 0.1, " .", " ")))))),
+                                                         ifelse(p_values < 0.1, " .", " (n.s.)")))))),
         stringsAsFactors = FALSE
       )
       
@@ -824,8 +824,8 @@ if(length(valid_results) > 0) {
     mgmt_effects_summary <- mgmt_effects_summary %>%
       arrange(Region, desc(Importance))
     
-    # Replace NA with "N/A" for display
-    mgmt_effects_summary$P_Value <- ifelse(is.na(mgmt_effects_summary$P_Value), "N/A", as.character(mgmt_effects_summary$P_Value))
+    # Replace NA with "NA" for display
+    mgmt_effects_summary$P_Value <- ifelse(is.na(mgmt_effects_summary$P_Value), "NA", as.character(mgmt_effects_summary$P_Value))
     
     display_table <- mgmt_effects_summary %>%
       select(Region, Management_Variable, Importance, P_Value_with_Sig)
@@ -835,8 +835,16 @@ if(length(valid_results) > 0) {
                  format = "latex",
                  booktabs = TRUE,
                  row.names = FALSE) %>%
-      kable_styling(latex_options = "hold_position") %>%
-      column_spec(2, width = "8cm")
+      kable_styling(latex_options = c("HOLD_position", "scale_down"),
+                    full_width = FALSE,
+                    position = "center") %>%
+      column_spec(2, width = "8cm") %>%
+    kableExtra::footnote(
+      general = c("Códigos de significancia: *** p<0.001, ** p<0.01, * p<0.05, . p<0.1, (n.s.) = no significativo",
+                  "NA = No aplicable debido a sobreajuste estadístico (Barcelona: 4 playas, 7 variables)"),
+      general_title = "Nota:",
+      escape = FALSE
+    )
   } else {
     cat("No se pudo crear el resumen de efectos de gestión.\n")
   }
