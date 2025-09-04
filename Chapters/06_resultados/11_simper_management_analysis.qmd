@@ -960,8 +960,8 @@ if (exists("simper_summary") && nrow(simper_summary) > 0) {
   display_summary <- simper_summary %>%
     select(Region, Group1_Spanish, Group2_Spanish, Dissimilarity, N_Discriminant) %>%
     arrange(Region, desc(Dissimilarity)) %>%
+    distinct(Region, Group1_Spanish, Group2_Spanish, .keep_all = TRUE) %>%
     group_by(Region) %>%
-    slice_head(n = 3) %>%
     ungroup() %>%
     mutate(
       G1 = case_when(
